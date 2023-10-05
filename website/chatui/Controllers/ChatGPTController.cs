@@ -15,6 +15,13 @@ namespace chatui.Controllers
 
     public class ChatGPTController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
+
+        public ChatGPTController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [HttpPost]
         [Route("AskChatGPT")]
         public async Task<IActionResult> AskChatGPT([FromBody] string query)
@@ -39,10 +46,11 @@ namespace chatui.Controllers
 
             var requestBody = JsonConvert.SerializeObject(chatstmt);
 
-            const string apiKey = "";
+            var apiEndpoint = _configuration["chatApiEndpoint"];
+            var apiKey = _configuration["chatApiKey"];
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-            client.BaseAddress = new Uri("https://ept-bagbyfred.eastus.inference.ml.azure.com/score");
+            client.BaseAddress = new Uri(apiEndpoint);
 
             var content = new StringContent(requestBody);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
