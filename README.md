@@ -2,7 +2,7 @@
 
 This repository contains the Bicep code to deploy an OpenAI chat baseline architecture with Azure ML and Azure App Services baseline. 
 
-![Diagram of the app services baseline architecture.](docs/media/app-services-baseline-architecture.png)
+![Diagram of the app services baseline architecture.](docs/media/openai-end-to-end.png)
 
 ## Deploy
 
