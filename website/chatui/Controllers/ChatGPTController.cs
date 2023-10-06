@@ -54,7 +54,6 @@ namespace chatui.Controllers
 
             var content = new StringContent(requestBody);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-            content.Headers.Add("azureml-model-deployment", "ept-bagbyfred-blue");
 
             HttpResponseMessage response = await client.PostAsync("", content);
 
@@ -66,7 +65,7 @@ namespace chatui.Controllers
                 HttpChatGPTResponse oHttpResponse = new()
                 {
                     Success = true,
-                    Data = JsonConvert.DeserializeObject<JObject>(result)["chat_output"].Value<string>()
+                    Data = JsonConvert.DeserializeObject<JObject>(result)["answer"].Value<string>()
                 };
                 return Ok(oHttpResponse);
             }

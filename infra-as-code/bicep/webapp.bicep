@@ -26,6 +26,8 @@ var appServiceManagedIdentityName = 'id-${appName}'
 var packageLocation = 'https://${storageName}.blob.${environment().suffixes.storage}/deploy/${publishFileName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
 var appInsightsName= 'appinsights-${appName}'
+var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
+var chatApiEndpoint = 'https://ept-${baseName}.${location}.inference.ml.azure.com/score'
 
 var appServicePlanPremiumSku = 'Premium'
 var appServicePlanStandardSku = 'Standard'
@@ -156,10 +158,11 @@ resource appsettings 'Microsoft.Web/sites/config@2022-09-01' = {
   properties: {
     WEBSITE_RUN_FROM_PACKAGE: packageLocation
     WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
-    adWorksConnString: '@Microsoft.KeyVault(SecretUri=https://${keyVault.name}.vault.azure.net/secrets/adWorksConnString)'
     APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
     ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
+    chatApiKey: chatApiKey
+    chatApiEndpoint: chatApiEndpoint
   }
 }
 

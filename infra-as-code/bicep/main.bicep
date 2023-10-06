@@ -17,7 +17,7 @@ param customDomainName string = 'contoso.com'
 param appGatewayListenerCertificate string
 
 @description('The name of the web deploy file. The file should reside in a deploy container in the storage account. Defaults to SimpleWebApp.zip')
-param publishFileName string = 'SimpleWebApp.zip'
+param publishFileName string = 'chatui.zip'
 
 // ---- Availability Zones ----
 var availabilityZones = [ '1', '2', '3' ]
