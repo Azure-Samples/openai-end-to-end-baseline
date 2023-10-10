@@ -106,7 +106,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Open the [Machine Learning Workspace](https://ml.azure.com/) and choose your workspace. Ensure you have [enabled Prompt flow in your Azure Machine Learning workspace](https://learn.microsoft.com/azure/machine-learning/prompt-flow/get-started-prompt-flow?view=azureml-api-2#prerequisites-enable-prompt-flow-in-your-azure-machine-learning-workspace).
 
-1. Create a new Prompt flow with a single python step and save the flow.  **Important: make sure the output name on the flow is 'answer'. The sample application is looking for that in the response.**
+1. Create a new Prompt flow with a single python step and save the flow.  **Important: make sure the input name is 'question' and output name on the flow is 'answer'. If your input or output names differ, change the chatInputName or chatOutputName environment variables for the web app either in the Bicep or in the deployed App Service.*
 
 ```python
 from promptflow import tool

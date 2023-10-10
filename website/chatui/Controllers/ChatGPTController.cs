@@ -8,11 +8,6 @@ namespace chatui.Controllers
 {
     [ApiController]
 
-    internal class ChatStatement
-    {
-        public string? chat_input { get; set; }
-    }
-
     public class ChatGPTController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -26,6 +21,11 @@ namespace chatui.Controllers
         [Route("AskChatGPT")]
         public async Task<IActionResult> AskChatGPT([FromBody] string query)
         {
+            var apiEndpoint = _configuration["chatApiEndpoint"];
+            var apiKey = _configuration["chatApiKey"];
+
+            var chatInputName = _configuration["chatInputName"] ?? "chat_input";
+            var chatOutputName = _configuration["chatOutputName"] ?? "chat_output";
 
             var handler = new HttpClientHandler()
             {
@@ -35,19 +35,9 @@ namespace chatui.Controllers
             };
             using var client = new HttpClient(handler);
 
-
-            ChatStatement chatstmt = new()
-            {
-                chat_input = query
-            };
-
-            Console.WriteLine("Query: {0}", query);
-
-
+            Dictionary<string, string> chatstmt = new Dictionary<string, string>();
+            chatstmt.Add(chatInputName, query);
             var requestBody = JsonConvert.SerializeObject(chatstmt);
-
-            var apiEndpoint = _configuration["chatApiEndpoint"];
-            var apiKey = _configuration["chatApiKey"];
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
             client.BaseAddress = new Uri(apiEndpoint);
@@ -65,7 +55,7 @@ namespace chatui.Controllers
                 HttpChatGPTResponse oHttpResponse = new()
                 {
                     Success = true,
-                    Data = JsonConvert.DeserializeObject<JObject>(result)["answer"].Value<string>()
+                    Data = JsonConvert.DeserializeObject<JObject>(result)[chatOutputName].Value<string>()
                 };
                 return Ok(oHttpResponse);
             }

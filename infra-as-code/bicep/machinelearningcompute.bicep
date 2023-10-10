@@ -51,7 +51,7 @@ resource machineLearningCluster 'Microsoft.MachineLearningServices/workspaces/co
   }
 }
 
-resource machineLearningComputeInstance 'Microsoft.MachineLearningServices/workspaces/computes@2022-05-01' = {
+resource machineLearningComputeInstance 'Microsoft.MachineLearningServices/workspaces/computes@2022-10-01' = {
   name: computeInstanceName
   location: location
   identity: {
