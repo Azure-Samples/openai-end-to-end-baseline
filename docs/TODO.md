@@ -16,103 +16,103 @@
 - Migrate DiagnosticSettings to storage retention. This was removed from the below templates Migrate diagnostic settings storage retention to Azure Storage lifecycle management - Azure Monitor | Microsoft Learn
   - gateway.bicep
 
-    ``` Bicep
+    ```Bicep
 
-   // App Gateway diagnostics
-    resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-        name: '${appGateWay.name}-diagnosticSettings'
-        scope: appGateWay
-        properties: {
-        workspaceId: logWorkspace.id
-        logs: [
-            {
-            categoryGroup: 'allLogs'
-            enabled: true
-            retentionPolicy: {
-                days: 7
+       // App Gateway diagnostics
+        resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+            name: '${appGateWay.name}-diagnosticSettings'
+            scope: appGateWay
+            properties: {
+            workspaceId: logWorkspace.id
+            logs: [
+                {
+                categoryGroup: 'allLogs'
                 enabled: true
+                retentionPolicy: {
+                    days: 7
+                    enabled: true
+                }
+                }
+            ]
+            metrics: [
+                {
+                category: 'AllMetrics'
+                enabled: true
+                }
+            ]
             }
-            }
-        ]
-        metrics: [
-            {
-            category: 'AllMetrics'
-            enabled: true
-            }
-        ]
         }
-    }
 
     ```
 
   - webapp.bicep
 
-    ``` Bicep
+    ```Bicep
 
-    // App service plan diagnostic settings
-    resource appServicePlanDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-        name: '${appServicePlan.name}-diagnosticSettings'
-        scope: appServicePlan
-        properties: {
-        workspaceId: logWorkspace.id
-        metrics: [
-            {
-            category: 'AllMetrics'
-            enabled: true
-            retentionPolicy: {
-                days: 7
+        // App service plan diagnostic settings
+        resource appServicePlanDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+            name: '${appServicePlan.name}-diagnosticSettings'
+            scope: appServicePlan
+            properties: {
+            workspaceId: logWorkspace.id
+            metrics: [
+                {
+                category: 'AllMetrics'
                 enabled: true
+                retentionPolicy: {
+                    days: 7
+                    enabled: true
+                }
+                }
+            ]
             }
-            }
-        ]
         }
-    }
-    //Web App diagnostic settings
-    resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-        name: '${webApp.name}-diagnosticSettings'
-        scope: webApp
-        properties: {
-        workspaceId: logWorkspace.id
-        logs: [
-            {
-            category: 'AppServiceHTTPLogs'
-            categoryGroup: null
-            enabled: true
-            retentionPolicy: {
-                days: 7
+        //Web App diagnostic settings
+        resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+            name: '${webApp.name}-diagnosticSettings'
+            scope: webApp
+            properties: {
+            workspaceId: logWorkspace.id
+            logs: [
+                {
+                category: 'AppServiceHTTPLogs'
+                categoryGroup: null
                 enabled: true
-            }
-            }
-            {
-            category: 'AppServiceConsoleLogs'
-            categoryGroup: null
-            enabled: true
-            retentionPolicy: {
-                days: 7
+                retentionPolicy: {
+                    days: 7
+                    enabled: true
+                }
+                }
+                {
+                category: 'AppServiceConsoleLogs'
+                categoryGroup: null
                 enabled: true
-            }
-            }
-            {
-            category: 'AppServiceAppLogs'
-            categoryGroup: null
-            enabled: true
-            retentionPolicy: {
-                days: 7
+                retentionPolicy: {
+                    days: 7
+                    enabled: true
+                }
+                }
+                {
+                category: 'AppServiceAppLogs'
+                categoryGroup: null
                 enabled: true
-            }
-            }
-        ]
-        metrics: [
-            {
-            category: 'AllMetrics'
-            enabled: true
-            retentionPolicy: {
-                days: 7
+                retentionPolicy: {
+                    days: 7
+                    enabled: true
+                }
+                }
+            ]
+            metrics: [
+                {
+                category: 'AllMetrics'
                 enabled: true
+                retentionPolicy: {
+                    days: 7
+                    enabled: true
+                }
+                }
+            ]
             }
-            }
-        ]
         }
-    }
-
+    
     ```
