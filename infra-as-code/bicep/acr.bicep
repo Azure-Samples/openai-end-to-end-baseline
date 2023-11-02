@@ -106,3 +106,4 @@ resource acrDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroup
 
 @description('Output the login server property for later use')
 output loginServer string = acrResource.properties.loginServer
+

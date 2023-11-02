@@ -86,8 +86,8 @@ The following steps are required to deploy the infrastructure from the command l
    - You choose a valid resource group name
 
 ```bash
-   LOCATION=eastus
-   BASE_NAME=<base-resource-name (between 3 and 6 characters)>
+   export LOCATION=eastus
+   export BASE_NAME=<base-resource-name (between 3 and 6 characters)>
 
    RESOURCE_GROUP=<resource-group-name>
    az group create --location $LOCATION --resource-group $RESOURCE_GROUP
@@ -120,11 +120,11 @@ def process_search_result(search_result):
         return "error"
 ```
 
-1. Add runtime
+1. Add runtime 
 
    - Click Add runtime
    - Add compute instance runtime and give it a name
-   - Choose the compute instance created by the Bicep
+   - Choose the compute instance created by the Bicep  *TODO ==> existing instance? I had to creat a new ONE
    - Accept the other defaults and click 'Create'
 
 1. Test the flow
@@ -160,10 +160,10 @@ def process_search_result(search_result):
 <!-- ## Update the App Service Environment variables
 
 1. Open the App Service 'Environment variables' tab
-1. Add a new environment variable
+1. Add a new environment variable ==> Modify value of existing variable
     1. name: chatApiEndpoint
     1. value: <REST endpoint from consume tab of endpoint>
-1. Add a new environment variable
+1. Add a new environment variable ==> Modify or verify value of existing variable
     1. name: chatApiKey
     1. value: @Microsoft.KeyVault(SecretUri=https://vault-name.vault.azure.net/secrets/chatApiKey) -->
 
@@ -207,7 +207,7 @@ STORAGE_ACCOUNT_PREFIX=st
 WEB_APP_PREFIX=app-
 NAME_OF_STORAGE_ACCOUNT="$STORAGE_ACCOUNT_PREFIX$BASE_NAME"
 NAME_OF_WEB_APP="$WEB_APP_PREFIX$BASE_NAME"
-LOGGED_IN_USER_ID=$(az ad signed-in-user show --query id -o tsv)
+LOGGED_IN_USER_ID=$(az ad signed-in-user show --query objectId -o tsv)
 RESOURCE_GROUP_ID=$(az group show --resource-group $RESOURCE_GROUP --query id -o tsv)
 STORAGE_BLOB_DATA_CONTRIBUTOR=ba92f5b4-2d11-453d-a403-e96b0029c9fe
 
@@ -261,3 +261,78 @@ After you are done exploring your deployed AppService reference implementation, 
 az group delete --name $RESOURCE_GROUP -y
 az keyvault purge  -n kv-${BASE_NAME}
 ```
+
+
+# Authoring Experience
+
+ - A new Flow with LLM AzureOpen AI
+ - Configure a connection to Azure OpenAI in the Flow
+ - Add a User-defined outbound rule to ML Workspace to allow connectivity to Azure OpenAI private endpoint
+  ![Azure ML Configuration outbound rules.](docs/media/ml-outbound-rules.png)
+ - Add AzureML Data Scientist to your published Endpoint
+ - ![Azure ML RBAC.](docs/media/az-ml-data-scientist-rbac.png) 
+
+
+# Build a docker container for the flow
+
+Using Azure ML Studio save the flow as a file
+Create a new folder called /connections
+add the file for the connection, for example AzureOpenAIConnection.yaml with the following content:
+
+$schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
+name: OpenAIConnection
+type: azure_open_ai
+api_key: "" ==> Replace with your own values
+api_base: "" ==> Replace with your own values
+api_type: "azure"
+api_version: "2023-07-01-preview"
+
+you should have python, promptflow, wsl, docker installed (WSL is needed to build docker image).
+
+# Create a new promptflow connection
+
+pf connection create -f '.\AzureOpenAIConnection yaml'                               
+
+generate the docker container configurationb using promptflow
+
+pf flow build --source ./  --output dist --format docker                             
+
+it will generate files in the /dist folder of the flow
+
+once that is done go inside that folder to modify the environment variables needed (you can find a complete example in the flows folder) 
+
+In your Azure Container Registry, allow public access or add your machine ip to the allowed ip list then do the following steps
+
+# Build docker image locally 
+
+In your development environment or local machine, login into acr using the admin credentials of your ACR
+
+docker login -u ${user_name} ${private_registry_domain} 
+
+
+
+docker build . -t craoaitst2.azurecr.io/aoai/testflow:1.1
+
+docker push . -t craoaitst2.azurecr.io/aoai/testflow:1.1
+
+
+
+# Deploy image to web app
+
+image is available inside ACR for deployment you can use the following command to update your app service to pull image from container:
+
+Activate admin user in ACR
+
+- Update the Azure Web App configuration to use the image from your ACR:
+
+az webapp config container set --name "app-aoaitst2-pf" --resource-group "rg-aoaiblarc-02" --docker-custom-image-name craoaitst2.azurecr.io/aoai/testflow:1.1 --docker-registry-server-url https://craoaitst2.azurecr.io --docker-registry-server-user craoaitst2 --docker-registry-server-password <yourpwd>
+
+az webapp deployment container config --enable-cd true --name "app-aoaitst2-pf" --resource-group "rg-aoaiblarc-02"
+
+# Modify the configuration setting in the app service that has the chat ui and point it towards your deployed promptflow endpoint:
+
+chatApiEndpoint = <yourendpoint.azurewebsites.net/score>
+
+Restart the azure webapp
+
+

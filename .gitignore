@@ -35,3 +35,7 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
+README.md
+appgw.key
+appgw.pfx
+appgw.crt

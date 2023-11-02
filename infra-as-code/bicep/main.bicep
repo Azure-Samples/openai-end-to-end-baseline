@@ -71,23 +71,6 @@ module keyVaultModule 'keyvault.bicep' = {
   }
 }
 
-// Deploy a web app
-module webappModule 'webapp.bicep' = {
-  name: 'webappDeploy'
-  params: {
-    location: location
-    baseName: baseName
-    developmentEnvironment: developmentEnvironment
-    publishFileName: publishFileName
-    keyVaultName: keyVaultModule.outputs.keyVaultName
-    storageName: storageModule.outputs.appDeployStorageName
-    vnetName: networkModule.outputs.vnetNName
-    appServicesSubnetName: networkModule.outputs.appServicesSubnetName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    logWorkspaceName: logWorkspace.name
-   }
-}
-
 // Deploy container registry with private endpoint and private DNS zone
 module acrModule 'acr.bicep' = {
   name: 'acrDeploy'
@@ -152,3 +135,27 @@ module gatewayModule 'gateway.bicep' = {
     logWorkspaceName: logWorkspace.name
    }
 }
+
+// Deploy the web apps for the front end demo ui and the containerised promptflow endpoint
+module webappModule 'webapp.bicep' = {
+  name: 'webappDeploy'
+  params: {
+    location: location
+    baseName: baseName
+    developmentEnvironment: developmentEnvironment
+    publishFileName: publishFileName
+    keyVaultName: keyVaultModule.outputs.keyVaultName
+    storageName: storageModule.outputs.appDeployStorageName
+    vnetName: networkModule.outputs.vnetNName
+    appServicesSubnetName: networkModule.outputs.appServicesSubnetName
+    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
+   }
+   dependsOn: [
+    openaiModule
+    acrModule
+  ]
+}
+
+
+

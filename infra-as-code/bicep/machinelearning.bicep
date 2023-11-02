@@ -196,6 +196,12 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
+
+var openaiName = 'oai-${baseName}'
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' existing = {
+  name: openaiName  
+  
+}
 // ---- Machine Learning Workspace assets ----
 
 resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
@@ -229,9 +235,23 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2022-05-0
     
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
+      outboundRules: {
+       /* openai: {
+          type: 'PrivateEndpoint'
+          destination: {
+            serviceResourceId: resourceId('Microsoft.CognitiveServices/accounts', 'oai-${baseName}')
+            subresourceTarget: 'registry'
+            sparkEnabled: false
+            sparkStatus: 'Inactive'
+          }
+          status: 'Active'
+          category: 'Required'
+        }*/
+      }      
     }      
   }
   dependsOn: [
+    openAiAccount 
     workspaceKeyVaultAdministratorRoleAssignmentModule
     workspaceKeyVaultContributorRoleAssignmentModule
   ]

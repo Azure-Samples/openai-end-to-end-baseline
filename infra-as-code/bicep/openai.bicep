@@ -30,6 +30,9 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
   properties: {
     customSubDomainName: 'oai${baseName}'
     publicNetworkAccess: 'Disabled'
+    networkAcls: {
+      defaultAction: 'Deny'
+      }
   }
   sku: {
     name: 'S0'
