@@ -326,14 +326,13 @@ resource appsettingsPf 'Microsoft.Web/sites/config@2022-09-01' = {
   name: 'appsettings'
   parent: webAppPf
   properties: {
-    WEBSITE_RUN_FROM_PACKAGE: packageLocation
-    WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
     APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
     ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
     WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
-    OPENAICONNECTION_API_BASE: 'https://oai-${baseName}.openai.azure.com/'
+    OPENAICONNECTION_API_BASE: 'https://oai${baseName}.openai.azure.com/'
     OPENAICONNECTION_API_KEY: openai.listKeys().key1
+    WEBSITES_PORT: '8080'
   }
 }
 
