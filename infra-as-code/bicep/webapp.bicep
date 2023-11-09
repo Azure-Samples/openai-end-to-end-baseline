@@ -363,11 +363,12 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2019-05-01' e
 resource openai 'Microsoft.CognitiveServices/accounts@2022-03-01' existing = { 
   name:  'oai-${baseName}'
 }
-resource roleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(containerRegistry.id, appServiceManagedIdentity.id)
   scope: containerRegistry
   properties: {
     roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role
+    principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
 }
