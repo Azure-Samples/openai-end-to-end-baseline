@@ -11,6 +11,7 @@ param location string = resourceGroup().location
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
+param logWorkspaceName string
 
 // variables
 var storageSkuName = 'Standard_LRS'
@@ -33,6 +34,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }  
+}
+
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
 }
 
 // ---- Storage resources ----
@@ -63,6 +68,38 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
       defaultAction: 'Deny'
     }
     supportsHttpsTrafficOnly: true
+  }
+  resource Blob 'blobServices' existing = {
+    name: 'default' 
+  }
+}
+
+// resource DeployBlob 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
+//   name: appDeployStorageName
+
+//   resource Blob 'blobServices' existing = {
+//     name: 'default' 
+//   }
+// }
+
+//Deploy Storage Account Blob diagnostic settings
+resource appDeployStorageDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${appDeployStorage.name}-diagnosticSettings'
+  // scope: DeployBlob::Blob
+  scope: appDeployStorage::Blob
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
   }
 }
 
@@ -114,6 +151,54 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2022-09-01' = {
       defaultAction: 'Deny'
     }
     supportsHttpsTrafficOnly: true
+  }
+  resource Blob 'blobServices' existing = {
+    name: 'default' 
+  }
+  resource File 'fileServices' existing = {
+    name: 'default' 
+  }
+}
+
+//ML Storage Account Blob diagnostic settings
+resource mlStorageBlobDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${mlStorage.name}-blobdiagnosticSettings'
+  // scope: DeployBlob::Blob
+  scope: mlStorage::Blob
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
+  }
+}
+
+//ML Storage Account File diagnostic settings
+resource mlStorageFileDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${mlStorage.name}-filediagnosticSettings'
+  // scope: DeployBlob::Blob
+  scope: mlStorage::File
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
   }
 }
 

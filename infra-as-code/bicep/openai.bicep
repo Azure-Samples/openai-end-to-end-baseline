@@ -7,6 +7,8 @@ param location string = resourceGroup().location
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
+param logWorkspaceName string
+param keyVaultName string
 
 //variables
 var openaiName = 'oai-${baseName}'
@@ -23,6 +25,20 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   }  
 }
 
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
+  name: keyVaultName
+  resource kvsGatewayPublicCert 'secrets' = {
+    name: 'openai-key'
+    properties: {
+      value: openAiAccount.listKeys().key1
+    }
+  }
+}
+
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
   name: openaiName  
   location: location
@@ -36,6 +52,26 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
   }
   sku: {
     name: 'S0'
+  }
+}
+
+//OpenAI diagnostic settings
+resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${openAiAccount.name}-diagnosticSettings'
+  scope: openAiAccount
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
   }
 }
 

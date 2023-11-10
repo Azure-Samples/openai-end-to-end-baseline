@@ -53,6 +53,7 @@ module storageModule 'storage.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
     // createPrivateEndpoints: true
   }
 }
@@ -68,6 +69,7 @@ module keyVaultModule 'keyvault.bicep' = {
     createPrivateEndpoints: true
     appGatewayListenerCertificate: appGatewayListenerCertificate
     apiKey: 'key'
+    logWorkspaceName: logWorkspace.name
   }
 }
 
@@ -80,6 +82,7 @@ module acrModule 'acr.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     createPrivateEndpoints: true
+    logWorkspaceName: logWorkspace.name
   }
 }
 
@@ -104,6 +107,7 @@ module mlwModule 'machinelearning.bicep' = {
     keyVaultName: keyVaultModule.outputs.keyVaultName
     mlStorageAccountName: storageModule.outputs.mlDeployStorageName
     containerRegistryName: 'cr${baseName}'
+    logWorkspaceName: logWorkspace.name
   }
 }
 
@@ -115,6 +119,8 @@ module openaiModule 'openai.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
+    keyVaultName: keyVaultModule.outputs.keyVaultName
   }
 }
 
