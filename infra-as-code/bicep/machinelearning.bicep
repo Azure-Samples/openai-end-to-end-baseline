@@ -15,6 +15,7 @@ param applicationInsightsName string
 param containerRegistryName string
 param keyVaultName string
 param mlStorageAccountName string
+param logWorkspaceName string
 
 //variables
 var workspaceName = 'mlw-${baseName}'
@@ -41,6 +42,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }  
+}
+
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
 }
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
@@ -255,6 +260,28 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2022-05-0
     workspaceKeyVaultAdministratorRoleAssignmentModule
     workspaceKeyVaultContributorRoleAssignmentModule
   ]
+}
+
+
+//Deploy Storage Account Blob diagnostic settings
+resource machineLearningDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${machineLearning.name}-diagnosticSettings'
+  // scope: DeployBlob::Blob
+  scope: machineLearning
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'audit'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
+  }
 }
 
 resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-01-01' = {

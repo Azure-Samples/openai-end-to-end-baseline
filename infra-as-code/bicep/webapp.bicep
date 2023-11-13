@@ -25,12 +25,17 @@ var appServicePlanName = 'asp-${appName}${uniqueString(subscription().subscripti
 var appServiceManagedIdentityName = 'id-${appName}'
 var packageLocation = 'https://${storageName}.blob.${environment().suffixes.storage}/deploy/${publishFileName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
+var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
+
+
 var appInsightsName = 'appinsights-${appName}'
 
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
 var chatApiEndpoint = 'https://ept-${baseName}.${location}.inference.ml.azure.com/score'
 var chatInputName = 'question'
 var chatOutputName = 'answer'
+
+var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)'
 
 var appServicePlanPremiumSku = 'Premium'
 var appServicePlanStandardSku = 'Standard'
@@ -47,6 +52,7 @@ var appServicePlanSettings = {
 
 var appServicesDnsZoneName = 'privatelink.azurewebsites.net'
 var appServicesDnsGroupName = '${appServicePrivateEndpointName}/default'
+var appServicesPfDnsGroupName = '${appServicePfPrivateEndpointName}/default'
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -58,10 +64,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }
-}
-
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: keyVaultName
 }
 
 resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
@@ -147,6 +149,9 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
       http20Enabled: true
       publicNetworkAccess: 'Disabled'
       alwaysOn: true
+      linuxFxVersion: 'DOTNETCORE|7.0'
+      netFrameworkVersion: null
+      windowsFxVersion: null
     }
   }
   dependsOn: [
@@ -169,6 +174,43 @@ resource appsettings 'Microsoft.Web/sites/config@2022-09-01' = {
     chatApiEndpoint: chatApiEndpoint
     chatInputName: chatInputName
     chatOutputName: chatOutputName
+  }
+}
+
+//Web App diagnostic settings
+resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${webApp.name}-diagnosticSettings'
+  scope: webApp
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServicePlatformLogs'
+        categoryGroup: null
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 
@@ -307,6 +349,7 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
     httpsOnly: false
     keyVaultReferenceIdentity: appServiceManagedIdentity.id
     hostNamesDisabled: false
+    vnetImagePullEnabled: true
     siteConfig: {
 
       linuxFxVersion: 'DOCKER|mcr.microsoft.com/appsvc/staticsite:latest'
@@ -314,6 +357,8 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
       http20Enabled: true
       publicNetworkAccess: 'Disabled'
       alwaysOn: true
+      acrUseManagedIdentityCreds: true
+      acrUserManagedIdentityID: appServiceManagedIdentity.properties.clientId
     }
   }
   dependsOn: [
@@ -321,6 +366,7 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
     blobDataReaderRoleAssignment
   ]
 }
+
 // App Settings
 resource appsettingsPf 'Microsoft.Web/sites/config@2022-09-01' = {
   name: 'appsettings'
@@ -331,13 +377,51 @@ resource appsettingsPf 'Microsoft.Web/sites/config@2022-09-01' = {
     ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
     WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
     OPENAICONNECTION_API_BASE: 'https://oai${baseName}.openai.azure.com/'
-    OPENAICONNECTION_API_KEY: openai.listKeys().key1
+    OPENAICONNECTION_API_KEY: openAIApiKey
     WEBSITES_PORT: '8080'
   }
 }
 
+
+//Web App diagnostic settings
+resource webAppPfDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${webAppPf.name}-diagnosticSettings'
+  scope: webAppPf
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServicePlatformLogs'
+        categoryGroup: null
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
 resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: '${appServicePrivateEndpointName}-pf'
+  name: appServicePfPrivateEndpointName
   location: location
   properties: {
     subnet: {
@@ -345,7 +429,7 @@ resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2022-11
     }
     privateLinkServiceConnections: [
       {
-        name: '${appServicePrivateEndpointName}-pf'
+        name: appServicePfPrivateEndpointName
         properties: {
           privateLinkServiceId: webAppPf.id
           groupIds: [
@@ -355,6 +439,23 @@ resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2022-11
       }
     ]
   }
+}
+
+resource appServicePfDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
+  name: appServicesPfDnsGroupName
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink.azurewebsites.net'
+        properties: {
+          privateDnsZoneId: appServiceDnsZone.id
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    appServicePrivateEndpointPf
+  ]
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2019-05-01' existing = {

@@ -279,5 +279,25 @@ resource appGateWay 'Microsoft.Network/applicationGateways@2022-11-01' = {
   ]
 }
 
+//Application Gateway diagnostic settings
+resource appGateWayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${appGateWay.name}-diagnosticSettings'
+  scope: appGateWay
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
+  }
+}
+
 @description('The name of the app gateway resource.')
 output appGateWayName string = appGateWay.name
