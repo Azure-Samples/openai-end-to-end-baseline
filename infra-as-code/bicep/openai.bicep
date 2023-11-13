@@ -17,12 +17,12 @@ var openaiDnsGroupName = '${openaiPrivateEndpointName}/default'
 var openaiDnsZoneName = 'privatelink.openai.azure.com'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }  
+  }
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
@@ -39,8 +39,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   }
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
-  name: openaiName  
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = {
+  name: openaiName
   location: location
   kind: 'OpenAI'
   properties: {
@@ -48,10 +48,27 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
     publicNetworkAccess: 'Disabled'
     networkAcls: {
       defaultAction: 'Deny'
-      }
+    }
   }
   sku: {
     name: 'S0'
+  }
+
+  resource gpt35 'deployments' = {
+    name: 'gpt35'
+    sku: {
+      name: 'Standard'
+      capacity: 120
+    }
+    properties: {
+      model: {
+        format: 'OpenAI'
+        name: 'gpt-35-turbo'
+        version: '0301'
+      }
+      raiPolicyName: 'Microsoft.Default'
+      versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+    }
   }
 }
 
@@ -62,14 +79,14 @@ resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'allLogs'
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
   }
