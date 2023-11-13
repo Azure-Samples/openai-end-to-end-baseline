@@ -22,7 +22,7 @@ var workspaceName = 'mlw-${baseName}'
 var workspacePrivateEndpointName = 'pep-${workspaceName}'
 //var workspaceDnsGroupName = '${workspacePrivateEndpointName}/default'
 var workspaceManagedIdentityName = 'id-${workspaceName}'
-var notebookDnsZoneName = 'privatelink.notebooks.azure.net' 
+var notebookDnsZoneName = 'privatelink.notebooks.azure.net'
 var workspaceDnsZoneName = 'privatelink.api.azureml.ms'
 
 var clusterName = 'computeCluster1'
@@ -36,12 +36,12 @@ var instanceVMSize = 'Standard_DS11_v2'
 var computeInstanceName = '${workspaceName}/${instanceName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }  
+  }
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
@@ -78,7 +78,7 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions
   scope: subscription()
 }
 
-resource storageAccountContributorRole  'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource storageAccountContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '17d1049b-9a84-46fb-8f53-869881c3d3ab'
   scope: subscription()
 }
@@ -201,15 +201,13 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
-
-var openaiName = 'oai-${baseName}'
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' existing = {
-  name: openaiName  
-  
+  name: 'oai-${baseName}'
 }
+
 // ---- Machine Learning Workspace assets ----
 
-resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2022-05-01' = {
+resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-01' = {
   name: workspaceName
   location: location
   identity: {
@@ -237,11 +235,11 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2022-05-0
     v1LegacyMode: false
 
     allowPublicAccessWhenBehindVnet: false
-    
+
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
       outboundRules: {
-       /* openai: {
+        /* openai: {
           type: 'PrivateEndpoint'
           destination: {
             serviceResourceId: resourceId('Microsoft.CognitiveServices/accounts', 'oai-${baseName}')
@@ -252,35 +250,82 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2022-05-0
           status: 'Active'
           category: 'Required'
         }*/
-      }      
-    }      
+      }
+    }
   }
   dependsOn: [
-    openAiAccount 
+    openAiAccount
     workspaceKeyVaultAdministratorRoleAssignmentModule
     workspaceKeyVaultContributorRoleAssignmentModule
   ]
+
+  resource onlineEndpoint 'onlineEndpoints' = {
+    name: 'ept-${baseName}'
+    location: location
+    kind: 'Managed'
+    identity: {
+      type: 'UserAssigned'
+      userAssignedIdentities: {
+        '${workspaceManagedIdentity.id}': {}
+      }
+    }
+    properties: {
+      authMode: 'Key'
+      description: 'Managed online endpoint for the /score API, to be used by the Chat UI app.'
+      publicNetworkAccess: 'Enabled'
+    }
+  }
 }
 
-
-//Deploy Storage Account Blob diagnostic settings
+// Enable Machine Learning diagnostic settings
 resource machineLearningDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: '${machineLearning.name}-diagnosticSettings'
-  // scope: DeployBlob::Blob
   scope: machineLearning
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'audit'
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'audit'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
+  }
+}
+
+// Enable Managed Online Endpoint diagnostics
+resource endpointDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: machineLearning::onlineEndpoint
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+    ]
+  }
+}
+
+// Store the Managed Online Endpoint key in KeyVault to be referenced from the Chat UI app.
+resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'chatApiKey'
+  properties: {
+    value: machineLearning::onlineEndpoint.listKeys().primaryKey
+    contentType: 'text/plain'
+    attributes: {
+      enabled: true
+    }
   }
 }
 
@@ -343,17 +388,17 @@ resource notebookPrivateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtu
 resource privateEndpointDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
   parent: machineLearningPrivateEndpoint
   name: 'amlworkspace-PrivateDnsZoneGroup'
-  properties:{
+  properties: {
     privateDnsZoneConfigs: [
       {
         name: 'privatelink.api.azureml.ms'
-        properties:{
+        properties: {
           privateDnsZoneId: amlPrivateDnsZone.id
         }
       }
       {
         name: 'privatelink.notebooks.azure.net'
-        properties:{
+        properties: {
           privateDnsZoneId: notebookPrivateDnsZone.id
         }
       }
