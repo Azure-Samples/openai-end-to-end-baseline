@@ -146,24 +146,6 @@ def process_search_result(search_result):
    - Choose a small Virtual Machine size for testing and set the number of instances.
    - Deploy
 
-## Store the endpoint key in Key Vault
-
-1. Wait for the deployment to complete
-1. Click on 'Endpoints'
-1. Get the key from the 'Consume' tab
-1. Add the key as a secret to key vault with secret name: 'chatApiKey'
-
-
-<!-- ## Update the App Service Environment variables
-
-1. Open the App Service 'Environment variables' tab
-1. Add a new environment variable ==> Modify value of existing variable
-    1. name: chatApiEndpoint
-    1. value: <REST endpoint from consume tab of endpoint>
-1. Add a new environment variable ==> Modify or verify value of existing variable
-    1. name: chatApiKey
-    1. value: @Microsoft.KeyVault(SecretUri=https://vault-name.vault.azure.net/secrets/chatApiKey) -->
-
 ### Publish the web app
 
 The baseline architecture uses [run from zip file in App Services](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
