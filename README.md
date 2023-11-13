@@ -140,32 +140,11 @@ def process_search_result(search_result):
 1. Create a deployment in the UI
 
    - Click on 'Deploy' in the UI
-   - Choose 'New' Endpoint
-   - Choose 'Key-based authentication'
-   - Choose 'User-assigned' Identity type
-   - Choose the identity created by the deployment. It should start with 'id-mlw'. That identity has the correct role assignments listed in the UI.
+   - Choose 'Existing' Endpoint and select the one called _ept-<basename>_
    - Choose Next and name the deployment ept-<basename>, leaving the defaults on the Deployment screen. **Make sure you name the deployment ept-<basename>. An App Service environment variable is set, assuming that naming convention**
    - Choose Next, Next, Next
    - Choose a small Virtual Machine size for testing and set the number of instances.
    - Deploy
-
-## Store the endpoint key in Key Vault
-
-1. Wait for the deployment to complete
-1. Click on 'Endpoints'
-1. Get the key from the 'Consume' tab
-1. Add the key as a secret to key vault with secret name: 'chatApiKey'
-
-
-<!-- ## Update the App Service Environment variables
-
-1. Open the App Service 'Environment variables' tab
-1. Add a new environment variable ==> Modify value of existing variable
-    1. name: chatApiEndpoint
-    1. value: <REST endpoint from consume tab of endpoint>
-1. Add a new environment variable ==> Modify or verify value of existing variable
-    1. name: chatApiKey
-    1. value: @Microsoft.KeyVault(SecretUri=https://vault-name.vault.azure.net/secrets/chatApiKey) -->
 
 ### Publish the web app
 
