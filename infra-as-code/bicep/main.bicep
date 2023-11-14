@@ -45,6 +45,15 @@ module networkModule 'network.bicep' = {
   }
 }
 
+module jumpBoxModule 'jumpBox.bicep' = {
+  name: 'jumpBoxDeploy'
+  params: {
+    location: location
+    baseName: baseName
+    virtualNetworkName: networkModule.outputs.vnetNName
+  }
+}
+/*
 // Deploy storage account with private endpoint and private DNS zone
 module storageModule 'storage.bicep' = {
   name: 'storageDeploy'
@@ -161,7 +170,7 @@ module webappModule 'webapp.bicep' = {
     openaiModule
     acrModule
   ]
-}
+}*/
 
 
 
