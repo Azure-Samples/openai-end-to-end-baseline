@@ -78,7 +78,6 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       name: 'deploy'
       properties: {
         publicAccess: 'None'
-        denyEncryptionScopeOverride: false
       }
     }
   }
