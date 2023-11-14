@@ -173,10 +173,9 @@ Because we have not implemented a CI/CD pipeline with a self-hosted agent, we ne
 
 Run the following to:
 
-- Allow public access from your IP address, g
+- Allow public access from your IP address.
 - Give the logged in user permissions to upload a blob
-- Create the `deploy` container
-- Upload the zip file `./website/chatui.zip` to the `deploy` container
+- Upload the zip file `./website/chatui.zip` to the existing `deploy` container
 - Tell the web app to restart
 
 ```bash
@@ -186,17 +185,12 @@ STORAGE_ACCOUNT_PREFIX=st
 WEB_APP_PREFIX=app-
 NAME_OF_STORAGE_ACCOUNT="$STORAGE_ACCOUNT_PREFIX$BASE_NAME"
 NAME_OF_WEB_APP="$WEB_APP_PREFIX$BASE_NAME"
-LOGGED_IN_USER_ID=$(az ad signed-in-user show --query objectId -o tsv)
+LOGGED_IN_USER_ID=$(az ad signed-in-user show --query id -o tsv)
 RESOURCE_GROUP_ID=$(az group show --resource-group $RESOURCE_GROUP --query id -o tsv)
 STORAGE_BLOB_DATA_CONTRIBUTOR=ba92f5b4-2d11-453d-a403-e96b0029c9fe
 
 az storage account network-rule add -g $RESOURCE_GROUP --account-name "$NAME_OF_STORAGE_ACCOUNT" --ip-address $CLIENT_IP_ADDRESS
 az role assignment create --assignee-principal-type User --assignee-object-id $LOGGED_IN_USER_ID --role $STORAGE_BLOB_DATA_CONTRIBUTOR --scope $RESOURCE_GROUP_ID
-
-az storage container create  \
-  --account-name $NAME_OF_STORAGE_ACCOUNT \
-  --auth-mode login \
-  --name deploy
 
 az storage blob upload -f ./website/chatui.zip \
   --account-name $NAME_OF_STORAGE_ACCOUNT \
