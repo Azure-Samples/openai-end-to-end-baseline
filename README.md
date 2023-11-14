@@ -87,7 +87,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 ```bash
    export LOCATION=eastus
-   export BASE_NAME=<base-resource-name (between 3 and 6 characters)>
+   export BASE_NAME=<base-resource-name (between 3 and 6 lowercase characters)>
 
    RESOURCE_GROUP=<resource-group-name>
    az group create --location $LOCATION --resource-group $RESOURCE_GROUP
