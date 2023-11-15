@@ -69,8 +69,8 @@ The following steps are required to deploy the infrastructure from the command l
 1. Login and set subscription if it is needed
 
 ```bash
-  az login
-  az account set --subscription xxxxx
+az login
+az account set --subscription xxxxx
 ```
 
 1. Obtain App gateway certificate
@@ -125,27 +125,29 @@ The following steps are required to deploy the infrastructure from the command l
 1. Run the following command to create a resource group and deploy the infrastructure. Make sure:
 
    - The location you choose [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support)
-   - The BASE_NAME contains only lowercase letters and is between 6 and 12 characters. All resources will be named given this basename.
-   - You choose a valid resource group name
+   - The BASE_NAME contains only lowercase letters and is between 6 and 12 characters. Most resource names will include this text.
+   - You choose a valid resource group name.
+   - You will be prompted for an admin password for the jump box, it must satasify the complexity requirements for Windows.
 
 ```bash
-   export LOCATION=eastus
-   export BASE_NAME=<base-resource-name (between 3 and 6 lowercase characters)>
+LOCATION=eastus
+BASE_NAME=<base-resource-name (between 6 and 12 lowercase characters)>
 
-   RESOURCE_GROUP=<resource-group-name>
-   az group create --location $LOCATION --resource-group $RESOURCE_GROUP
+RESOURCE_GROUP=<resource-group-name>
+az group create -l $LOCATION -n $RESOURCE_GROUP
 
-   az deployment group create --template-file ./infra-as-code/bicep/main.bicep \
-     --resource-group $RESOURCE_GROUP \
-     --parameters @./infra-as-code/bicep/parameters.json \
-     --parameters baseName=$BASE_NAME
+# This takes about 30 minutes to run.
+az deployment group create -f ./infra-as-code/bicep/main.bicep \
+  -g $RESOURCE_GROUP \
+  -p @./infra-as-code/bicep/parameters.json \
+  -p baseName=$BASE_NAME
 ```
 
 1. TEMPORARY - Set public network access to 'All networks' for the Azure Container Registry and the machine learning Storage Account. There is a known bug that requires these to be accessible publicly.
 
 ## Create, test, and deploy a Prompt flow
 
-1. Connect to the virtual network via Azure Bastion and a Virtual Machine jumpbox or through VNet peering. 'Windows 11 Pro, version 22H2 - x64 Gen2' is a suitable jumpbox VM image.
+1. Connect to the virtual network via Azure Bastion and a the jump box (deployed as part of this solution) or through a VPN or virtual network peering that you manually configure.
 
 1. Open the [Machine Learning Workspace](https://ml.azure.com/) and choose your workspace. Ensure you have [enabled Prompt flow in your Azure Machine Learning workspace](https://learn.microsoft.com/azure/machine-learning/prompt-flow/get-started-prompt-flow?view=azureml-api-2#prerequisites-enable-prompt-flow-in-your-azure-machine-learning-workspace).
 
