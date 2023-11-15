@@ -10,17 +10,32 @@ param location string = resourceGroup().location
 @minLength(1)
 param virtualNetworkName string
 
-// Variables
+@description('The name of the Log Analytics Workspace used as the workload\'s common log sink.')
+@minLength(4)
+param logWorkspaceName string
+
+@description('Specifies the name of the administrator account on the Windows jump box. Cannot end in "."\n\nDisallowed values: "administrator", "admin", "user", "user1", "test", "user2", "test1", "user3", "admin1", "1", "123", "a", "actuser", "adm", "admin2", "aspnet", "backup", "console", "david", "guest", "john", "owner", "root", "server", "sql", "support", "support_388945a0", "sys", "test2", "test3", "user4", "user5".\n\nDefault: vmadmin')
+@minLength(4)
+@maxLength(20)
+param jumpBoxAdminName string = 'vmadmin'
+
+@description('Specifies the password of the administrator account on the Windows jump box.\n\nComplexity requirements: 3 out of 4 conditions below need to be fulfilled:\n- Has lower characters\n- Has upper characters\n- Has a digit\n- Has a special character\n\nDisallowed values: "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word", "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"')
+@secure()
+@minLength(8)
+@maxLength(123)
+param jumpBoxAdminPassword string
+
+// ---- Variables ----
 
 var bastionHostName = 'ab-${baseName}'
 var jumpBoxName = 'jmp-${baseName}'
 
-// Existing resources
+// ---- Existing resources ----
 
 @description('Existing virtual network for the solution.')
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: virtualNetworkName
-  
+
   resource jumpBoxSubnet 'subnets' existing = {
     name: 'snet-jumpbox'
   }
@@ -30,8 +45,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing 
   }
 }
 
+@description('Existing Log Analyitics workspace, used as the common log sink for the workload.')
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
+}
+
 // New resources
 
+@description('Required public IP for the Azure Bastion service, used for jump box access.')
 resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   name: 'pip-${bastionHostName}'
   location: location
@@ -86,13 +107,104 @@ resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = {
   }
 }
 
-@description('The managed identity for all backend virtual machines.')
-resource miVmssBackend 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'mi-vm-${jumpBoxName}'
-  location: location
+@description('Diagnostics settings for Azure Bastion')
+resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: bastion
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+  }
 }
 
-resource jumpBoxVm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+@description('Default VM Insights DCR rule, to be applied to the jump box.')
+resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+  name: 'dcr-${jumpBoxName}'
+  location: location
+  kind: 'Windows'
+  properties: {
+    description: 'Standard data collection rule for VM Insights'
+    dataSources: {
+      performanceCounters: [
+        {
+          name: 'VMInsightsPerfCounters'
+          streams: [
+            'Microsoft-InsightsMetrics'
+          ]
+          samplingFrequencyInSeconds: 60
+          counterSpecifiers: [
+            '\\VMInsights\\DetailedMetrics'
+          ]
+        }
+      ]
+      extensions: [
+        {
+          name: 'DependencyAgentDataSource'
+          extensionName: 'DependencyAgent'
+          streams: [
+            'Microsoft-ServiceMap'
+          ]
+          extensionSettings: {}
+        }
+      ]
+    }
+    destinations: {
+      logAnalytics: [
+        {
+          name: logWorkspace.name
+          workspaceResourceId: logWorkspace.id
+        }
+      ]
+    }
+    dataFlows: [
+      {
+        streams: [
+          'Microsoft-InsightsMetrics'
+          'Microsoft-ServiceMap'
+        ]
+        destinations: [
+          logWorkspace.name
+        ]
+      }
+    ]
+  }
+}
+
+@description('VM will only receive a private IP.')
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+  name: 'nic-${jumpBoxName}'
+  location: location
+  properties: {
+    nicType: 'Standard'
+    auxiliaryMode: 'None'
+    auxiliarySku: 'None'
+    enableIPForwarding: false
+    enableAcceleratedNetworking: false
+    ipConfigurations: [
+      {
+        name: 'primary'
+        properties: {
+          primary: true
+          subnet: {
+            id: virtualNetwork::jumpBoxSubnet.id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+          privateIPAddressVersion: 'IPv4'
+          publicIPAddress: null
+          applicationSecurityGroups: []
+        }
+      }
+    ]
+  }
+}
+
+@description('The Azure ML and Azure OpenAI portal experiences are only able to be accessed from the virtual network, this jump box gives you access to those UIs.')
+resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
   name: 'vm-${jumpBoxName}'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachines', location, 1)
@@ -117,51 +229,16 @@ resource jumpBoxVm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
     licenseType: 'Windows_Client'
     networkProfile: {
-      networkApiVersion: '2023-05-01'
-      networkInterfaceConfigurations: [
+      networkInterfaces: [
         {
-          name: 'nic-${jumpBoxName}'
-          properties: {
-            auxiliaryMode: 'None'
-            auxiliarySku: 'None'
-            deleteOption: 'Delete'
-            enableAcceleratedNetworking: false
-            enableIPForwarding: false
-            enableFpga: false
-            primary: true
-            ipConfigurations: [
-              {
-                name: 'default'
-                properties: {
-                  primary: true
-                  privateIPAddressVersion: 'IPv4'
-                  publicIPAddressConfiguration: {
-                    name: 'default-outbound'
-                    sku: {
-                      name: 'Standard'
-                      tier: 'Regional'
-                    }
-                    properties: {
-                      publicIPAddressVersion: 'IPv4'
-                      publicIPAllocationMethod: 'Static'
-                      deleteOption: 'Delete'
-                    }
-                  }
-                  subnet: {
-                    id: virtualNetwork::jumpBoxSubnet.id
-                  }
-                  applicationSecurityGroups: []
-                }
-              }
-            ]
-          }
+          id: jumpBoxPrivateNic.id
         }
       ]
     }
     osProfile: {
       computerName: jumpBoxName
-      adminUsername: 'vmadmin'
-      adminPassword: ''
+      adminUsername: jumpBoxAdminName
+      adminPassword: jumpBoxAdminPassword
       allowExtensionOperations: true
       windowsConfiguration: {
         enableAutomaticUpdates: true
@@ -215,6 +292,7 @@ resource jumpBoxVm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
   }
 
+  @description('Support remote admin password changes.')
   resource vmAccessExtension 'extensions' = {
     name: 'VMAccessAgent'
     location: location
@@ -224,9 +302,11 @@ resource jumpBoxVm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       publisher: 'Microsoft.Compute'
       type: 'VMAccessAgent'
       typeHandlerVersion: '2.4'
+      settings: {}
     }
   }
 
+  @description('Enable Azure Monitor Agent for observability though VM Insights.')
   resource amaExtension 'extensions' = {
     name: 'AzureMonitorWindowsAgent'
     location: location
@@ -239,27 +319,13 @@ resource jumpBoxVm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
     }
   }
 
-  resource amaChangeTracking 'extensions' = {
-    name: 'ChangeTracking-Windows'
-    location: location
-    properties: {
-      autoUpgradeMinorVersion: true
-      enableAutomaticUpgrade: false
-      publisher: 'Microsoft.Azure.ChangeTrackingAndInventory'
-      type: 'ChangeTracking-Windows'
-      typeHandlerVersion: '2.0'
-      provisionAfterExtensions: [
-        'AzureMonitorWindowsAgent'
-      ]
-    }
-  }
-
+  @description('Dependency Agent for service map support in Azure Monitor Agent.')
   resource amaDependencyAgent 'extensions' = {
     name: 'DependencyAgentWindows'
     location: location
     properties: {
       autoUpgradeMinorVersion: true
-      enableAutomaticUpgrade: false
+      enableAutomaticUpgrade: true
       publisher: 'Microsoft.Azure.Monitoring.DependencyAgent'
       type: 'DependencyAgentWindows'
       typeHandlerVersion: '9.10'
@@ -271,4 +337,17 @@ resource jumpBoxVm 'Microsoft.Compute/virtualMachines@2023-07-01' = {
       ]
     }
   }
+}
+
+@description('Associate jump box with Azure Monitor Agent VM Insights DCR.')
+resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = {
+  name: 'dcra-vminsights'
+  scope: jumpBoxVirtualMachine
+  properties: {
+    dataCollectionRuleId: virtualMachineInsightsDcr.id
+    description: 'VM Insights DCR association with the jump box.'
+  }
+  dependsOn: [
+    jumpBoxVirtualMachine::amaDependencyAgent
+  ]
 }
