@@ -332,9 +332,6 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
       settings: {
         enableAMA: 'true'
       }
-      provisionAfterExtensions: [
-        'AzureMonitorWindowsAgent'
-      ]
     }
   }
 }
