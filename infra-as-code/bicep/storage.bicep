@@ -15,13 +15,12 @@ param privateEndpointsSubnetName string
 param logWorkspaceName string
 
 // variables
-var blobStorageDnsZoneName = 'privatelink.blob.${environment().suffixes.storage}'
-
 var appDeployStorageName = 'st${baseName}'
 var appDeployStoragePrivateEndpointName = 'pep-${appDeployStorageName}'
 
 var mlStorageName = 'stml${baseName}'
-var mlStoragePrivateEndpointName = 'pep-${mlStorageName}'
+var mlBlobStoragePrivateEndpointName = 'pep-blob-${mlStorageName}'
+var mlFileStoragePrivateEndpointName = 'pep-file-${mlStorageName}'
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -205,8 +204,9 @@ resource mlStorageFileDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-0
   }
 }
 
-resource mlStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: mlStoragePrivateEndpointName
+@description('Azure Machine Learning Blob Storage Private Endpoint')
+resource mlBlobStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+  name: mlBlobStoragePrivateEndpointName
   location: location
   properties: {
     subnet: {
@@ -214,7 +214,7 @@ resource mlStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01
     }
     privateLinkServiceConnections: [
       {
-        name: mlStoragePrivateEndpointName
+        name: mlBlobStoragePrivateEndpointName
         properties: {
           groupIds: [
             'blob'
@@ -224,22 +224,92 @@ resource mlStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01
       }
     ]
   }
+
+  resource dnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: blobStorageDnsZone.name
+          properties: {
+            privateDnsZoneId: blobStorageDnsZone.id
+          }
+        }
+      ]
+    }
+  }
 }
 
-resource storageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: blobStorageDnsZoneName
+@description('Azure Machine Learning File Storage Private Endpoint')
+resource mlFileStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+  name: mlFileStoragePrivateEndpointName
+  location: location
+  properties: {
+    subnet: {
+      id: vnet::privateEndpointsSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: mlFileStoragePrivateEndpointName
+        properties: {
+          groupIds: [
+            'file'
+          ]
+          privateLinkServiceId: mlStorage.id
+        }
+      }
+    ]
+  }
+
+  resource dnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: fileStorageDnsZone.name
+          properties: {
+            privateDnsZoneId: fileStorageDnsZone.id
+          }
+        }
+      ]
+    }
+  }
+}
+
+@description('Azure Storage - Blob private DNS zone.')
+resource blobStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.blob.${environment().suffixes.storage}'
   location: 'global'
   properties: {}
+
+  @description('Link private DNS zone to our workload virtual network')
+  resource vnetLink 'virtualNetworkLinks' = {
+    name: '${blobStorageDnsZone.name}-to-${vnet.name}'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
+    }
+  }
 }
 
-resource storageDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: storageDnsZone
-  name: '${blobStorageDnsZoneName}-link'
+@description('Azure Storage - File private DNS zone.')
+resource fileStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.file.${environment().suffixes.storage}'
   location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  properties: {}
+
+  @description('Link private DNS zone to our workload virtual network')
+  resource vnetLink 'virtualNetworkLinks' = {
+    name: '${fileStorageDnsZone.name}-to-${vnet.name}'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
 }
@@ -250,24 +320,9 @@ resource appDeployStorageDnsZoneGroup 'Microsoft.Network/privateEndpoints/privat
   properties: {
     privateDnsZoneConfigs: [
       {
-        name: blobStorageDnsZoneName
+        name: blobStorageDnsZone.name
         properties: {
-          privateDnsZoneId: storageDnsZone.id
-        }
-      }
-    ]
-  }
-}
-
-resource mlStorageDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
-  name: 'default'
-  parent: mlStoragePrivateEndpoint
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: blobStorageDnsZoneName
-        properties: {
-          privateDnsZoneId: storageDnsZone.id
+          privateDnsZoneId: blobStorageDnsZone.id
         }
       }
     ]
