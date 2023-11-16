@@ -16,6 +16,7 @@ param containerRegistryName string
 param keyVaultName string
 param mlStorageAccountName string
 param logWorkspaceName string
+param openAiResourceName string
 
 // ---- Variables ----
 var workspaceName = 'mlw-${baseName}'
@@ -50,7 +51,7 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
 }
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
-  name: 'oai-${baseName}'
+  name: openAiResourceName
 }
 
 // ---- RBAC built-in role definitions and role assignments ----
@@ -110,12 +111,31 @@ resource keyVaultAdministratorRole 'Microsoft.Authorization/roleDefinitions@2022
 
 // ---- New Resources ----
 
-@description('User managed identity to be used across the Azure Machine Learning workspace and its components.')
-resource workspaceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: 'id-${workspaceName}'
+//@description('User managed identity to be used across the Azure Machine Learning workspace and its components.')
+//resource workspaceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+//  name: 'id-${workspaceName}'
+//  location: location
+//}
+
+@description('TODO1')
+resource azureMachineLearningWorkspaceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-amlworkspace'
   location: location
 }
 
+@description('TODO2')
+resource azureMachineLearningOnlineEndpointManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-amlonlineendpoint'
+  location: location
+}
+
+@description('TODO3')
+resource azureMachineLearningInstanceComputeManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-amlinstancecompute'
+  location: location
+}
+
+/*
 @description('Assign AML Workspace\'s ID: Storage Blob Data Contributor to workload\'s storage account.')
 resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
@@ -214,6 +234,8 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
+*/
+
 // ---- Machine Learning Workspace assets ----
 
 @description('The Azure Machine Learning Workspace.')
@@ -223,7 +245,8 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '${workspaceManagedIdentity.id}': {}
+      //'${workspaceManagedIdentity.id}': {}
+      '${azureMachineLearningWorkspaceManagedIdentity.id}': {}
     }
   }
   sku: {
@@ -234,7 +257,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     friendlyName: workspaceName
     description: 'Azure Machine Learning workspace for this solution. Using platform-managed virtual network. Outbound access fully restricted.'
     hbiWorkspace: false
-    primaryUserAssignedIdentity: workspaceManagedIdentity.id
+    primaryUserAssignedIdentity: azureMachineLearningWorkspaceManagedIdentity.id
 
     // dependent resources
     applicationInsights: applicationInsights.id
@@ -271,14 +294,14 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     }
   }
   dependsOn: [
-    workspaceKeyVaultAdministratorRoleAssignmentModule
+    /*workspaceKeyVaultAdministratorRoleAssignmentModule
     workspaceKeyVaultContributorRoleAssignmentModule
     containerRegistryPullRoleAssignment
     contributorRoleAssignment
     storageAccountContributorRoleRoleAssignment
     storageBlobDataContributorRoleAssignment
     storageTableDataContributorRoleAssignment
-    storageFileDataContributorRoleAssignment
+    storageFileDataContributorRoleAssignment*/
   ]
 
   @description('Online endpoint for the /score API.')
@@ -289,7 +312,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     identity: {
       type: 'UserAssigned'
       userAssignedIdentities: {
-        '${workspaceManagedIdentity.id}': {}
+        '${azureMachineLearningOnlineEndpointManagedIdentity.id}': {}
       }
     }
     properties: {
@@ -306,7 +329,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     identity: {
       type: 'UserAssigned'
       userAssignedIdentities: {
-        '${workspaceManagedIdentity.id}': {}
+        '${azureMachineLearningInstanceComputeManagedIdentity.id}': {}
       }
     }
     properties: {
