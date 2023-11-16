@@ -16,6 +16,7 @@ param containerRegistryName string
 param keyVaultName string
 param mlStorageAccountName string
 param logWorkspaceName string
+param openAiResourceName string
 
 // ---- Variables ----
 var workspaceName = 'mlw-${baseName}'
@@ -50,7 +51,7 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
 }
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
-  name: 'oai-${baseName}'
+  name: openAiResourceName
 }
 
 // ---- RBAC built-in role definitions and role assignments ----
