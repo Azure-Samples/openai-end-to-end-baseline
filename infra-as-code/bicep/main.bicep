@@ -114,6 +114,19 @@ module appInsightsModule 'applicationinsignts.bicep' = {
   }
 }
 
+// Deploy azure openai service with private endpoint and private DNS zone
+module openaiModule 'openai.bicep' = {
+  name: 'openaiDeploy'
+  params: {
+    location: location
+    baseName: baseName
+    vnetName: networkModule.outputs.vnetNName
+    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
+    keyVaultName: keyVaultModule.outputs.keyVaultName
+  }
+}
+
 // Deploy machine learning workspace with private endpoint and private DNS zone
 module mlwModule 'machinelearning.bicep' = {
   name: 'mlwDeploy'
@@ -127,19 +140,7 @@ module mlwModule 'machinelearning.bicep' = {
     mlStorageAccountName: storageModule.outputs.mlDeployStorageName
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
-  }
-}
-
-// Deploy azure openai service with private endpoint and private DNS zone
-module openaiModule 'openai.bicep' = {
-  name: 'openaiDeploy'
-  params: {
-    location: location
-    baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    logWorkspaceName: logWorkspace.name
-    keyVaultName: keyVaultModule.outputs.keyVaultName
+    openAiResourceName: openaiModule.outputs.openAiResourceName
   }
 }
 
