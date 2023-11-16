@@ -1,9 +1,9 @@
 # OpenAI end-to-end baseline reference implementation
 
-This reference implementation illustrates an approach for authoring and running a chat appplication in a single region with Azure Machine Learning and OpenAI. It implements a secure environment for authoring a chat flow with Azure Machine Learning prompt flow and for deploying the flow in 2 environments:
+This reference implementation illustrates an approach for authoring and running a chat application in a single region with Azure Machine Learning and OpenAI. It implements a secure environment for authoring a chat flow with Azure Machine Learning prompt flow and two options for deploying the flow:
 
-- An Azure Machine Learning managed online endpoint with a compute cluster in a managed virtual network. If your application requires high-availability and you favor Azure Machine Learning compute, it is suggested you extend this architecture to deploy endpoints and compute in multiple regions behind a load balancer.
-- A network isolated, zone-redundant, highly available deployment in Azure App Services.
+- An Azure Machine Learning managed online endpoint in a managed virtual network. If your application requires high-availability and you favor Azure Machine Learning compute, it is suggested you extend this architecture to deploy endpoints in multiple regions behind a load balancer.
+- A network isolated, zone-redundant, highly available deployment in Azure App Service.
 
 The implementation takes advantage of [Prompt flow](https://microsoft.github.io/promptflow/) in [Azure Machine Learning](https://azure.microsoft.com/products/machine-learning) to build and deploy flows that can link the following actions required by an LLM chat application:
 
@@ -24,12 +24,12 @@ The reference implementation focuses on enterprise requirements such as:
 The implementation covers the following scenarios:
 
 1. Authoring a flow - Authoring a flow using prompt flow in an Azure Machine Learning workspace
-1. Deploying a flow to Azure Machine Learning - The deployment of an executable flow to an Azure Machine Learning online endpoint and compute cluster
-1. Deploying a flow to Azure App Services - The deployment of an executable flow as a container to Azure App Services
+1. Deploying a flow to Azure Machine Learning (AML hosted option) - The deployment of an executable flow to an Azure Machine Learning online endpoint. The client UI that is hosted in Azure App Service access the deployed flow.
+1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
 
 ### Authoring a flow
 
-![Diagram of the authoring architecture.](docs/media/azure-machine-learning-authoring.png)
+![Diagram of the authoring architecture using Azure Machine Learning.](docs/media/azure-machine-learning-authoring.png)
 
 The authoring architecture diagram illustrates how flow authors [connect to an Azure Machine Learning Workspace through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine jumpbox. Connectivity to the virtual network is more commonly done in enterprises through ExpressRoute or virtual network peering.
 
@@ -39,13 +39,15 @@ The diagram further illustrates how the Machine Learning Workspace is configured
 
 ![Diagram of the deploying a flow to Azure Machine Learning.](docs/media/openai-chat-e2e-deployment-amlcompute.png)
 
-The Azure Machine Learning deployment architecture diagram illustrates how a network-secured App Service, based on the [App Services Baseline Architecture](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the Authoring flow, the diagram illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources through managed private endpoints.
+The Azure Machine Learning deployment architecture diagram illustrates how a network-secured App Service, based on the [App Service Baseline Architecture](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the Authoring flow, the diagram illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources such as openai and cognitive search through managed private endpoints.
 
-### Deploying a flow to Azure App Services
+### Deploying a flow to Azure App Service
 
-![Diagram of the deploying a flow to Azure App Services.](docs/media/openai-chat-e2e-deployment-appservices.png)
+![Diagram of the deploying a flow to Azure App Service.](docs/media/openai-chat-e2e-deployment-appservices.png)
 
-The Azure App Services deployment architecture diagram illustrates how the containerized prompt flow can be deployed to Azure App Services along with the client UI. The Azure App Services deployment is based on the [App Services Baseline Architecture](https://github.com/Azure-Samples/app-service-baseline-implementation). The flow is still authored in a network-isolated Azure Machine Learning workspace. To deploy in App Services in this architecture, the flows need to be containerized and pushed to tht Azure Container Registry accessible through private endpoints to the App Service.
+The Azure App Service deployment architecture diagram illustrates how the containerized prompt flow can be deployed to Azure App Service. The client UI is also deployed to App Service. The Azure App Service deployment is based on the [App Service Baseline Architecture](https://github.com/Azure-Samples/app-service-baseline-implementation).
+
+The flow is still authored in a network-isolated Azure Machine Learning workspace. To deploy in App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints to the App Service.
 
 ## Deploy
 
@@ -193,7 +195,7 @@ def process_search_result(search_result):
 
 ### Publish the web app
 
-The baseline architecture uses [run from zip file in App Services](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
+The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
 
 To use run from zip, you do the following:
 
@@ -321,8 +323,13 @@ once that is done go inside that folder to modify the environment variables need
 
 In your Azure Container Registry, allow public access or add your machine ip to the allowed ip list then do the following steps
 
-# Build docker image locally 
+# Build docker image in ACR 
 
+In a terminal, log in to Azure and build and push the image to ACR
+
+```bash
+
+```
 In your development environment or local machine, login into acr using the admin credentials of your ACR
 
 docker login -u ${user_name} ${private_registry_domain} 
