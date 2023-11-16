@@ -17,26 +17,11 @@ param keyVaultName string
 param mlStorageAccountName string
 param logWorkspaceName string
 
-//variables
+// ---- Variables ----
 var workspaceName = 'mlw-${baseName}'
-var workspacePrivateEndpointName = 'pep-${workspaceName}'
-//var workspaceDnsGroupName = '${workspacePrivateEndpointName}/default'
-var workspaceManagedIdentityName = 'id-${workspaceName}'
-var notebookDnsZoneName = 'privatelink.notebooks.azure.net'
-var workspaceDnsZoneName = 'privatelink.api.azureml.ms'
-
-var clusterName = 'computeCluster1'
-var computeClusterName = '${workspaceName}/${clusterName}'
-var computeClusterHasPublicIP = true
-var computeClusterVMSize = 'STANDARD_DS3_V2'
-
-var instanceName = '${baseName}Instance'
-var instanceVMSize = 'Standard_DS11_v2'
-
-var computeInstanceName = '${workspaceName}/${instanceName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
@@ -52,70 +37,86 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   name: applicationInsightsName
 }
 
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-08-01-preview' existing = {
   name: containerRegistryName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
-resource mlStorage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
+resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
   name: mlStorageAccountName
 }
 
-// ---- User-assigned Managed Identity ----
-// Managed Identity for App Service
-resource workspaceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: workspaceManagedIdentityName
-  location: location
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
+  name: 'oai-${baseName}'
 }
 
 // ---- RBAC built-in role definitions and role assignments ----
-// Built-in Azure RBAC role that is applied to a Storage Account to grant blob contributor permissions. 
+@description('Built-in Role: [Storage Blob Data Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor)')
 resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   scope: subscription()
 }
 
+@description('Built-in Role: [Storage Account Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-account-contributor)')
 resource storageAccountContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '17d1049b-9a84-46fb-8f53-869881c3d3ab'
   scope: subscription()
 }
 
-// Built-in Azure RBAC role that is applied to a Storage Account to grant table contributor permissions. 
+@description('Built-in Role: [Storage Table Data Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-table-data-contributor)')
 resource storageTableDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
   scope: subscription()
 }
 
-// Built-in Azure RBAC role that is applied to an Azure ML Workspace to grant Data Scientist permissions. 
+@description('Built-in Role: [Storage File Data Privileged Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-file-data-privileged-contributor)')
+resource storageFileDataContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '69566ab7-960f-475b-8e7c-b3118f30c6bd'
+  scope: subscription()
+}
+
+@description('Built-in Role: [AzureML Data Scientist](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#azureml-data-scientist)')
 resource azureMlDataScientistRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'f6c7c914-8db3-469d-8ca1-694a8f32e121'
   scope: subscription()
 }
 
+@description('Built-in Role: [AcrPull](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpull)')
 resource containerRegistryPullRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
   scope: subscription()
 }
 
+@description('Built-in Role: [Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#contributor)')
 resource contributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   scope: subscription()
 }
 
+@description('Built-in Role: [Key Vault Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-contributor)')
 resource keyVaultContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'f25e0fa2-a7c8-4377-a976-54943a77a395'
   scope: subscription()
 }
 
+@description('Built-in Role: [Key Vault Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-administrator)')
 resource keyVaultAdministratorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '00482a5a-887f-4fb3-b363-3b7fe8e74483'
   scope: subscription()
 }
 
-// Grant the Azure ML Workspace managed identity storage blob data contributor role permissions
+// ---- New Resources ----
+
+@description('User managed identity to be used across the Azure Machine Learning workspace and its components.')
+resource workspaceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-${workspaceName}'
+  location: location
+}
+
+@description('Assign AML Workspace\'s ID: Storage Blob Data Contributor to workload\'s storage account.')
 resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
   name: guid(resourceGroup().id, workspaceManagedIdentity.name, storageBlobDataContributorRole.id)
@@ -126,7 +127,7 @@ resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleA
   }
 }
 
-// Grant the Azure ML Workspace managed identity storage account contributor role permissions
+@description('Assign AML Workspace\'s ID: Storage Account Contributor to workload\'s storage account.')
 resource storageAccountContributorRoleRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
   name: guid(resourceGroup().id, workspaceManagedIdentity.name, storageAccountContributorRole.id)
@@ -137,7 +138,18 @@ resource storageAccountContributorRoleRoleAssignment 'Microsoft.Authorization/ro
   }
 }
 
-// Grant the Azure ML Workspace managed identity storage table data contributor role permissions
+@description('Assign AML Workspace\'s ID: Storage File Data Privileged Contributor to workload\'s storage account.')
+resource storageFileDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: mlStorage
+  name: guid(resourceGroup().id, workspaceManagedIdentity.name, storageFileDataContributor.id)
+  properties: {
+    roleDefinitionId: storageFileDataContributor.id
+    principalType: 'ServicePrincipal'
+    principalId: workspaceManagedIdentity.properties.principalId
+  }
+}
+
+@description('Assign AML Workspace\'s ID: Storage Table Data Contributor to workload\'s storage account.')
 resource storageTableDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
   name: guid(resourceGroup().id, workspaceManagedIdentity.name, storageTableDataContributorRole.id)
@@ -148,7 +160,7 @@ resource storageTableDataContributorRoleAssignment 'Microsoft.Authorization/role
   }
 }
 
-// Grant the Azure ML Workspace managed identity acr pull role permissions
+@description('Assign AML Workspace\'s ID: AcrPull to workload\'s container registry.')
 resource containerRegistryPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
   name: guid(resourceGroup().id, workspaceManagedIdentity.name, containerRegistryPullRole.id)
@@ -160,6 +172,7 @@ resource containerRegistryPullRoleAssignment 'Microsoft.Authorization/roleAssign
 }
 
 // Grant the Azure ML Workspace managed identity acr pull role permissions
+@description('Assign AML Workspace\'s ID: AzureML Data Scientist to itself.')
 resource azureMlDataScientistRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: machineLearning
   name: guid(resourceGroup().id, workspaceManagedIdentity.name, azureMlDataScientistRole.id)
@@ -170,7 +183,7 @@ resource azureMlDataScientistRoleAssignment 'Microsoft.Authorization/roleAssignm
   }
 }
 
-// Grant the Azure ML Workspace managed identity key vault secrets role permissions
+@description('Assign AML Workspace\'s ID: Key Vault Contributor to Key Vault.')
 module workspaceKeyVaultContributorRoleAssignmentModule './modules/keyvaultRoleAssignment.bicep' = {
   name: 'workspaceKeyVaultContributorRoleAssignmentDeploy'
   params: {
@@ -180,7 +193,7 @@ module workspaceKeyVaultContributorRoleAssignmentModule './modules/keyvaultRoleA
   }
 }
 
-// Grant the Azure ML Workspace managed identity key vault key vault administrator role permissions
+@description('Assign AML Workspace\'s ID: Key Vault Administrator to Key Vault.')
 module workspaceKeyVaultAdministratorRoleAssignmentModule './modules/keyvaultRoleAssignment.bicep' = {
   name: 'workspaceKeyVaultAdministratorRoleAssignmentDeploy'
   params: {
@@ -190,7 +203,7 @@ module workspaceKeyVaultAdministratorRoleAssignmentModule './modules/keyvaultRol
   }
 }
 
-// Grant the Azure ML Workspace managed identity contributor role on the RG
+@description('Assign AML Workspace\'s ID: Contributor to this whole resource group.')
 resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: resourceGroup()
   name: guid(resourceGroup().id, workspaceManagedIdentity.name, contributorRole.id)
@@ -201,12 +214,9 @@ resource contributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' existing = {
-  name: 'oai-${baseName}'
-}
-
 // ---- Machine Learning Workspace assets ----
 
+@description('The Azure Machine Learning Workspace.')
 resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-01' = {
   name: workspaceName
   location: location
@@ -216,11 +226,14 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
       '${workspaceManagedIdentity.id}': {}
     }
   }
+  sku: {
+    name: 'Basic'
+    tier: 'Basic'
+  }
   properties: {
-    // workspace organization
     friendlyName: workspaceName
-    description: workspaceName
-
+    description: 'Azure Machine Learning workspace for this solution. Using platform-managed virtual network. Outbound access fully restricted.'
+    hbiWorkspace: false
     primaryUserAssignedIdentity: workspaceManagedIdentity.id
 
     // dependent resources
@@ -230,7 +243,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     storageAccount: mlStorage.id
 
     // configuration for workspaces with private link endpoint
-    imageBuildCompute: clusterName
+    imageBuildCompute: 'computeCluster1'
     publicNetworkAccess: 'Disabled'
     v1LegacyMode: false
 
@@ -239,26 +252,36 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
       outboundRules: {
-        /* openai: {
+        wikipedia: {
+          type: 'FQDN'
+          destination: 'en.wikipedia.org'
+          category: 'UserDefined'
+          status: 'Active'
+        }
+        OpenAI: {
           type: 'PrivateEndpoint'
           destination: {
-            serviceResourceId: resourceId('Microsoft.CognitiveServices/accounts', 'oai-${baseName}')
-            subresourceTarget: 'registry'
+            serviceResourceId: openAiAccount.id
+            subresourceTarget: 'account'
             sparkEnabled: false
             sparkStatus: 'Inactive'
           }
-          status: 'Active'
-          category: 'Required'
-        }*/
+        }
       }
     }
   }
   dependsOn: [
-    openAiAccount
     workspaceKeyVaultAdministratorRoleAssignmentModule
     workspaceKeyVaultContributorRoleAssignmentModule
+    containerRegistryPullRoleAssignment
+    contributorRoleAssignment
+    storageAccountContributorRoleRoleAssignment
+    storageBlobDataContributorRoleAssignment
+    storageTableDataContributorRoleAssignment
+    storageFileDataContributorRoleAssignment
   ]
 
+  @description('Online endpoint for the /score API.')
   resource onlineEndpoint 'onlineEndpoints' = {
     name: 'ept-${baseName}'
     location: location
@@ -275,11 +298,44 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
       publicNetworkAccess: 'Enabled'
     }
   }
+
+  @description('Azure Machine Learning Compute Instance - Ideal for development and testing from the Azure Machine Learning Studio.')
+  resource instanceCompute 'computes' = {
+    name: 'amli-${baseName}'
+    location: location
+    identity: {
+      type: 'UserAssigned'
+      userAssignedIdentities: {
+        '${workspaceManagedIdentity.id}': {}
+      }
+    }
+    properties: {
+      computeType: 'ComputeInstance'
+      computeLocation: location
+      description: 'Machine Learning compute instance'
+      disableLocalAuth: true
+      properties: {
+        customServices: null
+        enableNodePublicIp: false
+        personalComputeInstanceSettings: null
+        schedules: {
+          computeStartStop: []
+        }
+        setupScripts: null
+        applicationSharingPolicy: 'Personal'
+        computeInstanceAuthorizationType: 'personal'
+        sshSettings: {
+          sshPublicAccess: 'Disabled'
+        }
+        vmSize: 'STANDARD_DS3_V2'
+      }
+    }
+  }
 }
 
-// Enable Machine Learning diagnostic settings
+@description('Azure Diagnostics: Machine Learning Workspace - audit')
 resource machineLearningDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${machineLearning.name}-diagnosticSettings'
+  name: 'default'
   scope: machineLearning
   properties: {
     workspaceId: logWorkspace.id
@@ -297,7 +353,7 @@ resource machineLearningDiagSettings 'Microsoft.Insights/diagnosticSettings@2021
   }
 }
 
-// Enable Managed Online Endpoint diagnostics
+@description('Azure Diagnostics: Online Endpoint - allLogs')
 resource endpointDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: machineLearning::onlineEndpoint
@@ -316,7 +372,7 @@ resource endpointDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
   }
 }
 
-// Store the Managed Online Endpoint key in KeyVault to be referenced from the Chat UI app.
+@description('Key Vault Secret: The Managed Online Endpoint key to be referenced from the Chat UI app.')
 resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name: 'chatApiKey'
@@ -329,13 +385,13 @@ resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-
   }
 }
 
-resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-01-01' = {
-  name: workspacePrivateEndpointName
+resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
+  name: 'pep-${workspaceName}'
   location: location
   properties: {
     privateLinkServiceConnections: [
       {
-        name: workspacePrivateEndpointName
+        name: 'pep-${workspaceName}'
         properties: {
           groupIds: [
             'amlworkspace'
@@ -348,80 +404,59 @@ resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022
       id: vnet::privateEndpointsSubnet.id
     }
   }
+
+  resource privateEndpointDns 'privateDnsZoneGroups' = {
+    name: 'amlworkspace-PrivateDnsZoneGroup'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: 'privatelink.api.azureml.ms'
+          properties: {
+            privateDnsZoneId: amlPrivateDnsZone.id
+          }
+        }
+        {
+          name: 'privatelink.notebooks.azure.net'
+          properties: {
+            privateDnsZoneId: notebookPrivateDnsZone.id
+          }
+        }
+      ]
+    }
+  }
 }
 
 resource amlPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: workspaceDnsZoneName
+  name: 'privatelink.api.azureml.ms'
   location: 'global'
-}
 
-resource amlPrivateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: amlPrivateDnsZone
-  name: '${amlPrivateDnsZone.name}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource amlPrivateDnsZoneVnetLink 'virtualNetworkLinks' = {
+    name: '${amlPrivateDnsZone.name}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
 }
 
 // Notebook
 resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: notebookDnsZoneName
+  name: 'privatelink.notebooks.azure.net'
   location: 'global'
-}
 
-resource notebookPrivateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: notebookPrivateDnsZone
-  name: '${notebookPrivateDnsZone.name}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource notebookPrivateDnsZoneVnetLink 'virtualNetworkLinks' = {
+    name: '${notebookPrivateDnsZone.name}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
-}
-
-resource privateEndpointDns 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-01-01' = {
-  parent: machineLearningPrivateEndpoint
-  name: 'amlworkspace-PrivateDnsZoneGroup'
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'privatelink.api.azureml.ms'
-        properties: {
-          privateDnsZoneId: amlPrivateDnsZone.id
-        }
-      }
-      {
-        name: 'privatelink.notebooks.azure.net'
-        properties: {
-          privateDnsZoneId: notebookPrivateDnsZone.id
-        }
-      }
-    ]
-  }
-}
-
-module machineLearningCompute 'machinelearningcompute.bicep' = {
-  name: 'machineLearningComputes'
-  scope: resourceGroup()
-  params: {
-    location: location
-    computeClusterName: computeClusterName
-    computeClusterVMSize: computeClusterVMSize
-    computeClusterHasPublicIp: computeClusterHasPublicIP
-    computeInstanceName: computeInstanceName
-    computeInstanceVMSize: instanceVMSize
-    managedIdentityId: workspaceManagedIdentity.id
-  }
-  dependsOn: [
-    machineLearning
-    machineLearningPrivateEndpoint
-  ]
 }
 
 output machineLearningId string = machineLearning.id

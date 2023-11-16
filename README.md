@@ -100,7 +100,7 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
   -p baseName=$BASE_NAME
 ```
 
-1. TEMPORARY - Set public network access to 'All networks' for the Azure Container Registry and the machine learning Storage Account. There is a known bug that requires these to be accessible publicly.
+1. TEMPORARY - Set public network access to 'All networks' for the Azure Container Registry. There is a known bug that requires these to be publicly accessible.
 
 ## Create, test, and deploy a Prompt flow
 
