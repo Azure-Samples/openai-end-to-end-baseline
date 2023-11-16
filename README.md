@@ -145,11 +145,9 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
   -p baseName=$BASE_NAME
 ```
 
-1. TEMPORARY - Set public network access to 'All networks' for the Azure Container Registry and the machine learning Storage Account. There is a known bug that requires these to be accessible publicly.
-
 ## Create, test, and deploy a Prompt flow
 
-1. Connect to the virtual network via Azure Bastion and a the jump box (deployed as part of this solution) or through a VPN or virtual network peering that you manually configure.
+1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
 1. Open the [Machine Learning Workspace](https://ml.azure.com/) and choose your workspace. Ensure you have [enabled Prompt flow in your Azure Machine Learning workspace](https://learn.microsoft.com/azure/machine-learning/prompt-flow/get-started-prompt-flow?view=azureml-api-2#prerequisites-enable-prompt-flow-in-your-azure-machine-learning-workspace).
 

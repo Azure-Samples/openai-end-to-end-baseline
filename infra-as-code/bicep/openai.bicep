@@ -147,3 +147,7 @@ resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGr
     openaiPrivateEndpoint
   ]
 }
+
+// ---- Outputs ----
+
+output openAiResourceName string = openAiAccount.name
