@@ -294,14 +294,14 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
 
   @description('Support remote admin password changes.')
   resource vmAccessExtension 'extensions' = {
-    name: 'VMAccessAgent'
+    name: 'enablevmAccess'
     location: location
     properties: {
       autoUpgradeMinorVersion: true
       enableAutomaticUpgrade: false
       publisher: 'Microsoft.Compute'
       type: 'VMAccessAgent'
-      typeHandlerVersion: '2.4'
+      typeHandlerVersion: '2.0'
       settings: {}
     }
   }

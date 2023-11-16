@@ -243,7 +243,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     storageAccount: mlStorage.id
 
     // configuration for workspaces with private link endpoint
-    imageBuildCompute: 'computeCluster1'
+    imageBuildCompute: null
     publicNetworkAccess: 'Disabled'
     v1LegacyMode: false
 
