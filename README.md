@@ -53,7 +53,7 @@ The flow is still authored in a network-isolated Azure Machine Learning workspac
 
 The following are prerequisites.
 
-## Prerequisites
+### Prerequisites
 
 1. Ensure you have an [Azure Account](https://azure.microsoft.com/free/)
 1. The deployment must be started by a user who has sufficient permissions to assign [roles](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles), such as a User Access Administrator or Owner.
@@ -145,7 +145,7 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
   -p baseName=$BASE_NAME
 ```
 
-## Create, test, and deploy a Prompt flow
+### Create, test, and deploy a Prompt flow
 
 1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
@@ -180,7 +180,7 @@ def process_search_result(search_result):
    - Enter a question
    - The response should echo your question with 'Echo' appended
 
-## Create a deployment
+### Deploy to Azure Machine Learning online endpoint
 
 1. Create a deployment in the UI
 
@@ -249,7 +249,7 @@ az webapp restart --name $NAME_OF_WEB_APP --resource-group $RESOURCE_GROUP
 
 This section will help you to validate the workload is exposed correctly and responding to HTTP requests.
 
-### Steps
+#### Steps
 
 1. Get the public IP address of Application Gateway.
 
@@ -271,6 +271,135 @@ This section will help you to validate the workload is exposed correctly and res
 
    > :bulb: Remember to include the protocol prefix `https://` in the URL you type in the address bar of your browser. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
+## Deploying to Azure App Service option
+
+This is a second option for deploying the flow. With this option, you are deploying the flow to Azure App Service. At a high-level, you must do the following:
+
+- Prerequisites - Ensure you have the prerequisites
+- Download your flow - Download the flow from the Machine Learning Workspace
+- Build the flow - Use the ```pf``` CLI to build your flow
+- Build and push the image - Containerize the flow and push to your Azure Container Registry
+- Publish the image to Azure App Service
+
+### Prerequisites
+
+The following are requirements for building the image, pushing to ACR, and deploying to Azure App Service:
+
+- az CLI
+- Python
+- Anaconda
+- Promptflow pf CLI
+
+Below are commands to create and activate a conda environment and install the promptflow tools. See [Set up your dev environment](https://microsoft.github.io/promptflow/how-to-guides/quick-start.html#set-up-your-dev-environment) for more information.
+
+```bash
+conda create --name pf python=3.11.4
+conda activate pf
+pip install promptflow promptflow-tools
+
+# You will need to install the following if you build the docker image locally
+pip install keyrings.alt
+pip install bs4
+```
+
+### Download your flow
+
+1. Open the Prompt flow UI in Azure Machine Learning Studio
+1. Expand the 'Files' tab in the right pane of the UI
+1. Click on the download icon to download the flow as a zip file
+
+> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the prerequisites installed on the jumpbox or you will need to transfer the zip file to a system that has the prerequisites.
+
+### Build the flow
+
+> :bulb: This example assumes your flow has a connection to Azure OpenAI
+
+1. Unzip the prompt flow zip file you downloaded
+1. In your terminal, change directory to the root of the unzipped flow
+1. Create a folder called 'connections'
+1. Create a file for each connection you created in the Prompt flow UI
+    1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in Prompt flow, create a file called 'gpt35.yaml' under the connections folder.
+    1. Enter the following values in the file:
+
+        ```bash
+        $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
+        name: gpt35
+        type: azure_open_ai
+        api_key: "${env:OPENAICONNECTION_API_KEY}"
+        api_base: "${env:OPENAICONNECTION_API_BASE}"
+        api_type: "azure"
+        api_version: "2023-07-01-preview"
+        ```
+
+        > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_KEY``` and ```OPENAICONNECTION_API_BASE```.
+
+1. Build the flow
+
+    ```bash
+    pf connection create -f '.\connections\gpt35.yaml'
+    pf flow build --source ./ --output dist --format docker
+    ```
+
+    The following code will create a folder named 'dist' with a docker file, and all the required flow files.
+
+### Build and push the image
+
+1. Ensure requirements.txt has the appropriate requirements. At the time of writing, they were, as follows:
+
+    ```bash
+    promptflow[azure]
+    promptflow-tools==0.1.0.b5
+    python-dotenv
+    bs4
+    ```
+
+1. Ensure the connections folder with the connection was created in the dist folder. If not, copy the connections folder, along with the connection file to the dist folder.
+
+1. Make sure you have network access to your Azure Container Registry and have an RBAC role such as ACRPush that will allow you to push an image. If you are running on a local workstation, you can set ```Public network access``` to ```All networks``` or ```Selected networks``` and add your machine ip to the allowed ip list.
+
+1. Build and push the image
+
+    Run the following commands in your terminal:
+
+    ```azurecli
+    az login
+
+    NAME_OF_ACR="cr$BASE_NAME"
+    ACR_CONTAINER_NAME="aoai"
+    IMAGE_NAME="bagflow"
+    IMAGE_TAG="1.1"
+    FULL_IMAGE_NAME="$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
+
+    az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
+    ```
+
+### Publish the image to Azure App Service
+
+Perform the following steps to deploy the container image to Azure App Service:
+
+1. Set the container image on the pf App Service
+
+    ```azurecli
+    PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
+    ACR_IMAGE_NAME="$NAME_OF_ACR.azurecr.io/$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
+    az webapp config container set --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --docker-custom-image-name $ACR_IMAGE_NAME --docker-registry-server-url https://$NAME_OF_ACR.azurecr.io
+    ```
+
+ <!-- az webapp deployment container config --enable-cd true --name "app-bagbytst27-pf" --resource-group "rg-bagbytst27" 
+az webapp deployment container config --enable-cd true --name "app-aoaitst2-pf" --resource-group "rg-aoaiblarc-02"-->
+
+1. Modify the configuration setting in the App Service that has the chat ui and point it towards your deployed promptflow endpoint:
+
+    ```azurecli
+    UI_APP_SERVICE_NAME="app-$BASE_NAME"
+    ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
+    
+    az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint="<value>"
+    az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
+    ```
+
+1. Test
+
 ## Clean Up
 
 After you are done exploring your deployed AppService reference implementation, you'll want to delete the created Azure resources to prevent undesired costs from accruing.
@@ -279,83 +408,3 @@ After you are done exploring your deployed AppService reference implementation, 
 az group delete --name $RESOURCE_GROUP -y
 az keyvault purge  -n kv-${BASE_NAME}
 ```
-
-
-# Authoring Experience
-
- - A new Flow with LLM AzureOpen AI
- - Configure a connection to Azure OpenAI in the Flow
- - Add a User-defined outbound rule to ML Workspace to allow connectivity to Azure OpenAI private endpoint
-  ![Azure ML Configuration outbound rules.](docs/media/ml-outbound-rules.png)
- - Add AzureML Data Scientist to your published Endpoint
- - ![Azure ML RBAC.](docs/media/az-ml-data-scientist-rbac.png) 
-
-
-# Build a docker container for the flow
-
-Using Azure ML Studio save the flow as a file
-Create a new folder called /connections
-add the file for the connection, for example AzureOpenAIConnection.yaml with the following content:
-
-$schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
-name: OpenAIConnection
-type: azure_open_ai
-api_key: "" ==> Replace with your own values
-api_base: "" ==> Replace with your own values
-api_type: "azure"
-api_version: "2023-07-01-preview"
-
-you should have python, promptflow, wsl, docker installed (WSL is needed to build docker image).
-
-# Create a new promptflow connection
-
-pf connection create -f '.\AzureOpenAIConnection yaml'                               
-
-generate the docker container configurationb using promptflow
-
-pf flow build --source ./  --output dist --format docker                             
-
-it will generate files in the /dist folder of the flow
-
-once that is done go inside that folder to modify the environment variables needed (you can find a complete example in the flows folder) 
-
-In your Azure Container Registry, allow public access or add your machine ip to the allowed ip list then do the following steps
-
-# Build docker image in ACR 
-
-In a terminal, log in to Azure and build and push the image to ACR
-
-```bash
-
-```
-In your development environment or local machine, login into acr using the admin credentials of your ACR
-
-docker login -u ${user_name} ${private_registry_domain} 
-
-
-
-docker build . -t craoaitst2.azurecr.io/aoai/testflow:1.1
-
-docker push . -t craoaitst2.azurecr.io/aoai/testflow:1.1
-
-
-
-# Deploy image to web app
-
-image is available inside ACR for deployment you can use the following command to update your app service to pull image from container:
-
-Activate admin user in ACR
-
-- Update the Azure Web App configuration to use the image from your ACR:
-
-az webapp config container set --name "app-aoaitst2-pf" --resource-group "rg-aoaiblarc-02" --docker-custom-image-name craoaitst2.azurecr.io/aoai/testflow:1.1 --docker-registry-server-url https://craoaitst2.azurecr.io --docker-registry-server-user craoaitst2 --docker-registry-server-password <yourpwd>
-
-az webapp deployment container config --enable-cd true --name "app-aoaitst2-pf" --resource-group "rg-aoaiblarc-02"
-
-# Modify the configuration setting in the app service that has the chat ui and point it towards your deployed promptflow endpoint:
-
-chatApiEndpoint = <yourendpoint.azurewebsites.net/score>
-
-Restart the azure webapp
-
-
