@@ -151,32 +151,40 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
 
 1. Open the [Machine Learning Workspace](https://ml.azure.com/) and choose your workspace. Ensure you have [enabled Prompt flow in your Azure Machine Learning workspace](https://learn.microsoft.com/azure/machine-learning/prompt-flow/get-started-prompt-flow?view=azureml-api-2#prerequisites-enable-prompt-flow-in-your-azure-machine-learning-workspace).
 
-1. Create a new Prompt flow with a single python step and save the flow.  **Important: make sure the input name is 'question' and output name on the flow is 'answer'. If your input or output names differ, change the chatInputName or chatOutputName environment variables for the web app either in the Bicep or in the deployed App Service.*
-
-```python
-from promptflow import tool
-
-@tool
-def process_search_result(search_result):
-    
-    try:
-       return search_result+"Echo"
-    except Exception as e:
-        return "error"
-```
+1. Create a prompt flow connection to your gpt35 Azure OpenAI deployment. This will be used by the prompt flow you clone in the next step.
+    1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
+    1. Click on the 'Connections' tab and click 'Create' 'Azure OpenAI'
+    1. Fill out the properties:
+        1. Name: 'gpt35'   ** Make sure you use this name
+        1. Provider: Azure OpenAI
+        1. Subscription Id: <Choose your subscription>
+        1. Azure OpenAI Account Names: <Choose the Azure OpenAI Account created in this deployment>
+        1. API Key: <Choose a key from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
+        1. API Base: <Choose the endpoint from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
+        1. API type: azure
+        1. API version: <Leave default>
+1. Clone an existing prompt flow
+    1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
+    1. Click on the 'Flows' tab and click 'Create'
+    1. Click 'Clone' under 'Chat with Wikipedia'
+    1. Name it 'chat_wiki' and Press 'Clone'
+    1. Set the 'Connection' and 'deployment_name' for the following steps to 'gpt35':
+        1. extract_query_from_question 
+        1. augmented_chat
+    1. Save
 
 1. Add runtime 
 
    - Click Add runtime
    - Add compute instance runtime and give it a name
-   - Choose the compute instance created by the Bicep  *TODO ==> existing instance? I had to creat a new ONE
+   - Choose the compute instance created by the Bicep  
    - Accept the other defaults and click 'Create'
 
 1. Test the flow
 
    - Wait for the runtime to be created
    - Select the runtime in the UI
-   - Click on Chat
+   - Click on 'Chat' on the UI
    - Enter a question
    - The response should echo your question with 'Echo' appended
 
@@ -186,14 +194,16 @@ def process_search_result(search_result):
 
    - Click on 'Deploy' in the UI
    - Choose 'Existing' Endpoint and select the one called _ept-<basename>_
-   - Choose Next and name the deployment ept-<basename>, leaving the defaults on the Deployment screen. **Make sure you name the deployment ept-<basename>. An App Service environment variable is set, assuming that naming convention**
-   - Choose Next, Next, Next
+   - Name the deployment ept-<basename>. **Make sure you name the deployment ept-<basename>. An App Service environment variable is set, assuming that naming convention**
    - Choose a small Virtual Machine size for testing and set the number of instances.
-   - Deploy
+   - Press 'Review + Create'
+   - Press 'Create'
 
 ### Publish the web app
 
 The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
+
+> :bulb: Read through the next steps, but follow the guidance in the **Workaround** section.
 
 To use run from zip, you do the following:
 
@@ -269,7 +279,7 @@ This section will help you to validate the workload is exposed correctly and res
 
 1. Browse to the site (e.g. <https://www.contoso.com>).
 
-   > :bulb: Remember to include the protocol prefix `https://` in the URL you type in the address bar of your browser. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
+   > :bulb: It may take up to a couple of minutes for the App Service to properly start. Remember to include the protocol prefix `https://` in the URL you type in the address bar of your browser. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
 ## Deploying to Azure App Service option
 
@@ -336,7 +346,6 @@ pip install bs4
 1. Build the flow
 
     ```bash
-    pf connection create -f '.\connections\gpt35.yaml'
     pf flow build --source ./ --output dist --format docker
     ```
 
@@ -344,7 +353,7 @@ pip install bs4
 
 ### Build and push the image
 
-1. Ensure requirements.txt has the appropriate requirements. At the time of writing, they were, as follows:
+1. Ensure the requirements.txt in the dist/flow folder has the appropriate requirements. At the time of writing, they were, as follows:
 
     ```bash
     promptflow[azure]
@@ -359,7 +368,7 @@ pip install bs4
 
 1. Build and push the image
 
-    Run the following commands in your terminal:
+    Run the following commands from the dist folder in your terminal:
 
     ```azurecli
     az login
@@ -382,7 +391,9 @@ Perform the following steps to deploy the container image to Azure App Service:
     ```azurecli
     PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
     ACR_IMAGE_NAME="$NAME_OF_ACR.azurecr.io/$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
+
     az webapp config container set --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --docker-custom-image-name $ACR_IMAGE_NAME --docker-registry-server-url https://$NAME_OF_ACR.azurecr.io
+    az webapp deployment container config --enable-cd true --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
  <!-- az webapp deployment container config --enable-cd true --name "app-bagbytst27-pf" --resource-group "rg-bagbytst27" 
@@ -394,7 +405,7 @@ az webapp deployment container config --enable-cd true --name "app-aoaitst2-pf" 
     UI_APP_SERVICE_NAME="app-$BASE_NAME"
     ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
     
-    az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint="<value>"
+    az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
     az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
