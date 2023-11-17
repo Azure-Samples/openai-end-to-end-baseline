@@ -35,17 +35,18 @@ The authoring architecture diagram illustrates how flow authors [connect to an A
 
 The diagram further illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints that enable connectivity to private required resources such as the workplace Azure Storage and Azure Container Registry. You are also able to create user-defined connections like private endpoints to connect to resources like OpenAI and Cognitive Search.
 
-### Deploying a flow to Azure Machine Learning
+### Deploying a flow to Azure Machine Learning managed online endpoint
 
-![Diagram of the deploying a flow to Azure Machine Learning.](docs/media/openai-chat-e2e-deployment-amlcompute.png)
+![Diagram of the deploying a flow to Azure Machine Learning managed online endpoint.](docs/media/openai-chat-e2e-deployment-amlcompute.png)
 
-The Azure Machine Learning deployment architecture diagram illustrates how a network-secured App Service, based on the [App Service Baseline Architecture](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the Authoring flow, the diagram illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources such as openai and cognitive search through managed private endpoints.
 
-### Deploying a flow to Azure App Service
+The Azure Machine Learning deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources such as Azure OpenAI and Cognitive Search through managed private endpoints.
+
+### Deploying a flow to Azure App Service (alternative)
 
 ![Diagram of the deploying a flow to Azure App Service.](docs/media/openai-chat-e2e-deployment-appservices.png)
 
-The Azure App Service deployment architecture diagram illustrates how the containerized prompt flow can be deployed to Azure App Service. The client UI is also deployed to App Service. The Azure App Service deployment is based on the [App Service Baseline Architecture](https://github.com/Azure-Samples/app-service-baseline-implementation).
+The Azure App Service deployment architecture diagram illustrates how the same prompt flow can be containerized and deployed to Azure App Service alongside of the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure Machine Learning managed online endpoint.
 
 The flow is still authored in a network-isolated Azure Machine Learning workspace. To deploy in App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints to the App Service.
 
@@ -155,22 +156,22 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
     1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
     1. Click on the 'Connections' tab and click 'Create' 'Azure OpenAI'
     1. Fill out the properties:
-        1. Name: 'gpt35'   ** Make sure you use this name
-        1. Provider: Azure OpenAI
-        1. Subscription Id: <Choose your subscription>
-        1. Azure OpenAI Account Names: <Choose the Azure OpenAI Account created in this deployment>
-        1. API Key: <Choose a key from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
-        1. API Base: <Choose the endpoint from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
-        1. API type: azure
-        1. API version: <Leave default>
+        - Name: 'gpt35'   **Make sure you use this name.**
+        - Provider: Azure OpenAI
+        - Subscription Id: <Choose your subscription>
+        - Azure OpenAI Account Names: <Choose the Azure OpenAI Account created in this deployment>
+        - API Key: <Choose a key from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
+        - API Base: <Choose the endpoint from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
+        - API type: azure
+        - API version: <Leave default>
 1. Clone an existing prompt flow
     1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
     1. Click on the 'Flows' tab and click 'Create'
     1. Click 'Clone' under 'Chat with Wikipedia'
     1. Name it 'chat_wiki' and Press 'Clone'
     1. Set the 'Connection' and 'deployment_name' for the following steps to 'gpt35':
-        1. extract_query_from_question 
-        1. augmented_chat
+        - extract_query_from_question 
+        - augmented_chat
     1. Save
 
 1. Add runtime 
@@ -188,7 +189,7 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
    - Enter a question
    - The response should echo your question with 'Echo' appended
 
-### Deploy to Azure Machine Learning online endpoint
+### Deploy to Azure Machine Learning managed online endpoint
 
 1. Create a deployment in the UI
 
@@ -281,9 +282,9 @@ This section will help you to validate the workload is exposed correctly and res
 
    > :bulb: It may take up to a couple of minutes for the App Service to properly start. Remember to include the protocol prefix `https://` in the URL you type in the address bar of your browser. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-## Deploying to Azure App Service option
+## Deploying the flow to Azure App Service option
 
-This is a second option for deploying the flow. With this option, you are deploying the flow to Azure App Service. At a high-level, you must do the following:
+This is a second option for deploying the flow. With this option, you are deploying the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
 
 - Prerequisites - Ensure you have the prerequisites
 - Download your flow - Download the flow from the Machine Learning Workspace
@@ -366,7 +367,7 @@ pip install bs4
 
 1. Make sure you have network access to your Azure Container Registry and have an RBAC role such as ACRPush that will allow you to push an image. If you are running on a local workstation, you can set ```Public network access``` to ```All networks``` or ```Selected networks``` and add your machine ip to the allowed ip list.
 
-1. Build and push the image
+1. Build and push the container image
 
     Run the following commands from the dist folder in your terminal:
 
@@ -375,14 +376,14 @@ pip install bs4
 
     NAME_OF_ACR="cr$BASE_NAME"
     ACR_CONTAINER_NAME="aoai"
-    IMAGE_NAME="bagflow"
+    IMAGE_NAME="wikichatflow"
     IMAGE_TAG="1.1"
     FULL_IMAGE_NAME="$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
 
     az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
     ```
 
-### Publish the image to Azure App Service
+### Host the chat flow container image in Azure App Service
 
 Perform the following steps to deploy the container image to Azure App Service:
 
@@ -399,7 +400,7 @@ Perform the following steps to deploy the container image to Azure App Service:
  <!-- az webapp deployment container config --enable-cd true --name "app-bagbytst27-pf" --resource-group "rg-bagbytst27" 
 az webapp deployment container config --enable-cd true --name "app-aoaitst2-pf" --resource-group "rg-aoaiblarc-02"-->
 
-1. Modify the configuration setting in the App Service that has the chat ui and point it towards your deployed promptflow endpoint:
+1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed promptflow endpoint hosted in App Service instead of the managed online endpoint.
 
     ```azurecli
     UI_APP_SERVICE_NAME="app-$BASE_NAME"
