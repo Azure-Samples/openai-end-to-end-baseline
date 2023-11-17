@@ -282,8 +282,8 @@ resource appServicePlanAutoScaleSettings 'Microsoft.Insights/autoscalesettings@2
         name: 'Scale out condition'
         capacity: {
           maximum: '5'
-          default: '1'
-          minimum: '1'
+          default: '3'
+          minimum: '3'
         }
         rules: [
           {
