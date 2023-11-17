@@ -409,7 +409,7 @@ az webapp deployment container config --enable-cd true --name "app-aoaitst2-pf" 
     az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
-1. Test
+1. Validate the client application that is now pointing at the flow deployed in a container still works
 
 ## Clean Up
 
