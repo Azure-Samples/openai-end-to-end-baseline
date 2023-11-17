@@ -74,12 +74,6 @@ resource storageFileDataContributor 'Microsoft.Authorization/roleDefinitions@202
   scope: subscription()
 }
 
-@description('Built-in Role: [Storage File Data Privileged Reader](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-file-data-privileged-reader)')
-resource storageFileDataReader 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: 'b8eda974-7b85-4f76-af95-65846b26df6d'
-  scope: subscription()
-}
-
 @description('Built-in Role: [AcrPull](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpull)')
 resource containerRegistryPullRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
@@ -134,7 +128,6 @@ resource workspaceContributorToResourceGroupRoleAssignment 'Microsoft.Authorizat
   scope: resourceGroup()
   name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
   properties: {
-    description: 'Allows AML to self-manage resources in this resource group. Required for AML compute to be deployed.'
     roleDefinitionId: contributorRole.id
     principalType: 'ServicePrincipal'
     principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
@@ -172,7 +165,6 @@ resource keyVaultAdministratorRoleAssignment 'Microsoft.Authorization/roleAssign
   scope: keyVault
   name: guid(keyVault.id, azureMachineLearningWorkspaceManagedIdentity.name, keyVaultAdministratorRole.id)
   properties: {
-    description: 'Allows AML to manage all data in Key Vault.'
     roleDefinitionId: keyVaultAdministratorRole.id
     principalType: 'ServicePrincipal'
     principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
@@ -187,19 +179,6 @@ resource containerRegistryPushRoleAssignment 'Microsoft.Authorization/roleAssign
   name: guid(containerRegistry.id, azureMachineLearningWorkspaceManagedIdentity.name, containerRegistryPushRole.id)
   properties: {
     roleDefinitionId: containerRegistryPushRole.id
-    principalType: 'ServicePrincipal'
-    principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
-  }
-}
-
-// AMLW -> Application Insights (control plane)
-
-@description('Assign AML Workspace\'s ID: Contributor to workload\'s container registry.')
-resource applicationInsightsContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: applicationInsights
-  name: guid(applicationInsights.id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
-  properties: {
-    roleDefinitionId: contributorRole.id
     principalType: 'ServicePrincipal'
     principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
   }
@@ -230,17 +209,6 @@ resource onlineEndpointBlobDataReaderRoleAssignment 'Microsoft.Authorization/rol
   }
 }
 
-@description('Assign AML Workspace\'s Managed Online Endpoint: Storage File Data Reader to workload\'s ml storage account.')
-resource onlineEndpointFileDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: mlStorage
-  name: guid(mlStorage.id, azureMachineLearningOnlineEndpointManagedIdentity.name, storageFileDataReader.id)
-  properties: {
-    roleDefinitionId: storageFileDataReader.id
-    principalType: 'ServicePrincipal'
-    principalId: azureMachineLearningOnlineEndpointManagedIdentity.properties.principalId
-  }
-}
-
 // ---- Azure Machine Learning Workspace compute instance role assignments ----
 // Source: https://learn.microsoft.com/azure/machine-learning/how-to-identity-based-service-authentication#pull-docker-base-image-to-machine-learning-compute-cluster-for-training-as-is
 
@@ -261,17 +229,6 @@ resource computeInstanceBlobDataReaderRoleAssignment 'Microsoft.Authorization/ro
   name: guid(mlStorage.id, azureMachineLearningInstanceComputeManagedIdentity.name, storageBlobDataReaderRole.id)
   properties: {
     roleDefinitionId: storageBlobDataReaderRole.id
-    principalType: 'ServicePrincipal'
-    principalId: azureMachineLearningInstanceComputeManagedIdentity.properties.principalId
-  }
-}
-
-@description('Assign AML Workspace\'s Managed Online Endpoint: Storage File Data Reader to workload\'s ml storage account.')
-resource computeInstanceFileDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: mlStorage
-  name: guid(mlStorage.id, azureMachineLearningInstanceComputeManagedIdentity.name, storageFileDataReader.id)
-  properties: {
-    roleDefinitionId: storageFileDataReader.id
     principalType: 'ServicePrincipal'
     principalId: azureMachineLearningInstanceComputeManagedIdentity.properties.principalId
   }
@@ -340,10 +297,9 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
     storageFileDataContributorRoleAssignment
     keyVaultAdministratorRoleAssignment
     containerRegistryPushRoleAssignment
-    applicationInsightsContributorRoleAssignment
   ]
   
-  @description('Online endpoint for the /score API.')
+  @description('Managed online endpoint for the /score API.')
   resource onlineEndpoint 'onlineEndpoints' = {
     name: 'ept-${baseName}'
     location: location
@@ -363,7 +319,6 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
       // Role requirements for the online endpoint: https://learn.microsoft.com/azure/machine-learning/how-to-access-resources-from-endpoints-managed-identities#give-access-permission-to-the-managed-identity
       onlineEndpointContainerRegistryPullRoleAssignment
       onlineEndpointBlobDataReaderRoleAssignment
-      onlineEndpointFileDataReaderRoleAssignment
     ]
   }
 
@@ -402,7 +357,6 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
       // Role requirements for compute instance: https://learn.microsoft.com/azure/machine-learning/how-to-identity-based-service-authentication#pull-docker-base-image-to-machine-learning-compute-cluster-for-training-as-is
       computeInstanceContainerRegistryPullRoleAssignment
       computeInstanceBlobDataReaderRoleAssignment
-      computeInstanceFileDataReaderRoleAssignment
     ]
   }
 }

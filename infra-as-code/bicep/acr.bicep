@@ -3,6 +3,7 @@
 */
 
 @description('This is the base name for each Azure resource name (6-12 chars)')
+@minLength(6)
 param baseName string
 
 @description('The resource group location')

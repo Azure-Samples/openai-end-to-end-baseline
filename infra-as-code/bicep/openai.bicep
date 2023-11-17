@@ -58,7 +58,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
     name: 'gpt35'
     sku: {
       name: 'Standard'
-      capacity: 60
+      capacity: 120
     }
     properties: {
       model: {
