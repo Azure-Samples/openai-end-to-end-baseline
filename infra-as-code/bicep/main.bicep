@@ -74,7 +74,6 @@ module storageModule 'storage.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    // createPrivateEndpoints: true
   }
 }
 
