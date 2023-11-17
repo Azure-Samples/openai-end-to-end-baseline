@@ -127,38 +127,26 @@ resource azureMachineLearningInstanceComputeManagedIdentity 'Microsoft.ManagedId
 // ---- Azure Machine Learning Workspace role assignments ----
 // Source: https://learn.microsoft.com/azure/machine-learning/how-to-identity-based-service-authentication#user-assigned-managed-identity
 
-// AMLW -> AMLW (control plane)
+// AMLW -> Resource Group (control plane for all resources)
 
-@description('Assign AML Workspace\'s ID: Contributor to itself.')
-resource workspaceContributorToWorkspaceRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: machineLearning
+@description('Assign AML Workspace\'s ID: Contributor to parent resource group.')
+resource workspaceContributorToResourceGroupRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: resourceGroup()
   name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
   properties: {
-    description: 'Allows AML to self-manage.'
+    description: 'Allows AML to self-manage resources in this resource group. Required for AML compute to be deployed.'
     roleDefinitionId: contributorRole.id
     principalType: 'ServicePrincipal'
     principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
   }
 }
 
-// AMLW -> ML Storage (control and data plane)
-
-@description('Assign AML Workspace\'s ID: Contributor to its storage account.')
-resource workspaceContributorToMlStorageRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
-  properties: {
-    description: 'Allows AML to self-manage.'
-    roleDefinitionId: contributorRole.id
-    principalType: 'ServicePrincipal'
-    principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
-  }
-}
+// AMLW -> ML Storage data plane (blobs and files)
 
 @description('Assign AML Workspace\'s ID: Storage Blob Data Contributor to workload\'s storage account.')
 resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, storageBlobDataContributorRole.id)
+  name: guid(mlStorage.id, azureMachineLearningWorkspaceManagedIdentity.name, storageBlobDataContributorRole.id)
   properties: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalType: 'ServicePrincipal'
@@ -169,7 +157,7 @@ resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleA
 @description('Assign AML Workspace\'s ID: Storage File Data Privileged Contributor to workload\'s storage account.')
 resource storageFileDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, storageFileDataContributor.id)
+  name: guid(mlStorage.id, azureMachineLearningWorkspaceManagedIdentity.name, storageFileDataContributor.id)
   properties: {
     roleDefinitionId: storageFileDataContributor.id
     principalType: 'ServicePrincipal'
@@ -177,24 +165,12 @@ resource storageFileDataContributorRoleAssignment 'Microsoft.Authorization/roleA
   }
 }
 
-// AMLW -> Key Vault (control and data plane)
-
-@description('Assign AML Workspace\'s ID: Key Vault Contributor to the Key Vault instance.\n\nAML requires both Microsoft.KeyVault/vaults/read and Microsoft.KeyVault/vaults/write over the associated instance.')
-resource keyVaultContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: keyVault
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
-  properties: {
-    description: 'Required for AML.'
-    roleDefinitionId: contributorRole.id
-    principalType: 'ServicePrincipal'
-    principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
-  }
-}
+// AMLW -> Key Vault data plane (secrets)
 
 @description('Assign AML Workspace\'s ID: Key Vault Administrator to Key Vault instance.')
 resource keyVaultAdministratorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: keyVault
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, keyVaultAdministratorRole.id)
+  name: guid(keyVault.id, azureMachineLearningWorkspaceManagedIdentity.name, keyVaultAdministratorRole.id)
   properties: {
     description: 'Allows AML to manage all data in Key Vault.'
     roleDefinitionId: keyVaultAdministratorRole.id
@@ -203,23 +179,12 @@ resource keyVaultAdministratorRoleAssignment 'Microsoft.Authorization/roleAssign
   }
 }
 
-// AMLW -> Azure Container Registry (control and data plane)
-
-@description('Assign AML Workspace\'s ID: Contributor to workload\'s container registry.')
-resource containerRegistryContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: containerRegistry
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
-  properties: {
-    roleDefinitionId: contributorRole.id
-    principalType: 'ServicePrincipal'
-    principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
-  }
-}
+// AMLW -> Azure Container Registry data plane (push and pull)
 
 @description('Assign AML Workspace\'s ID: AcrPush to workload\'s container registry.')
 resource containerRegistryPushRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, containerRegistryPushRole.id)
+  name: guid(containerRegistry.id, azureMachineLearningWorkspaceManagedIdentity.name, containerRegistryPushRole.id)
   properties: {
     roleDefinitionId: containerRegistryPushRole.id
     principalType: 'ServicePrincipal'
@@ -232,7 +197,7 @@ resource containerRegistryPushRoleAssignment 'Microsoft.Authorization/roleAssign
 @description('Assign AML Workspace\'s ID: Contributor to workload\'s container registry.')
 resource applicationInsightsContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: applicationInsights
-  name: guid(resourceGroup().id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
+  name: guid(applicationInsights.id, azureMachineLearningWorkspaceManagedIdentity.name, contributorRole.id)
   properties: {
     roleDefinitionId: contributorRole.id
     principalType: 'ServicePrincipal'
@@ -246,7 +211,7 @@ resource applicationInsightsContributorRoleAssignment 'Microsoft.Authorization/r
 @description('Assign AML Workspace\'s Managed Online Endpoint: AcrPull to workload\'s container registry.')
 resource onlineEndpointContainerRegistryPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
-  name: guid(resourceGroup().id, azureMachineLearningOnlineEndpointManagedIdentity.name, containerRegistryPullRole.id)
+  name: guid(containerRegistry.id, azureMachineLearningOnlineEndpointManagedIdentity.name, containerRegistryPullRole.id)
   properties: {
     roleDefinitionId: containerRegistryPullRole.id
     principalType: 'ServicePrincipal'
@@ -257,7 +222,7 @@ resource onlineEndpointContainerRegistryPullRoleAssignment 'Microsoft.Authorizat
 @description('Assign AML Workspace\'s Managed Online Endpoint: Storage Blob Data Reader to workload\'s ml storage account.')
 resource onlineEndpointBlobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningOnlineEndpointManagedIdentity.name, storageBlobDataReaderRole.id)
+  name: guid(mlStorage.id, azureMachineLearningOnlineEndpointManagedIdentity.name, storageBlobDataReaderRole.id)
   properties: {
     roleDefinitionId: storageBlobDataReaderRole.id
     principalType: 'ServicePrincipal'
@@ -268,7 +233,7 @@ resource onlineEndpointBlobDataReaderRoleAssignment 'Microsoft.Authorization/rol
 @description('Assign AML Workspace\'s Managed Online Endpoint: Storage File Data Reader to workload\'s ml storage account.')
 resource onlineEndpointFileDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningOnlineEndpointManagedIdentity.name, storageFileDataReader.id)
+  name: guid(mlStorage.id, azureMachineLearningOnlineEndpointManagedIdentity.name, storageFileDataReader.id)
   properties: {
     roleDefinitionId: storageFileDataReader.id
     principalType: 'ServicePrincipal'
@@ -282,7 +247,7 @@ resource onlineEndpointFileDataReaderRoleAssignment 'Microsoft.Authorization/rol
 @description('Assign AML Workspace\'s Managed Online Endpoint: AcrPull to workload\'s container registry.')
 resource computeInstanceContainerRegistryPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: containerRegistry
-  name: guid(resourceGroup().id, azureMachineLearningInstanceComputeManagedIdentity.name, containerRegistryPullRole.id)
+  name: guid(containerRegistry.id, azureMachineLearningInstanceComputeManagedIdentity.name, containerRegistryPullRole.id)
   properties: {
     roleDefinitionId: containerRegistryPullRole.id
     principalType: 'ServicePrincipal'
@@ -293,7 +258,7 @@ resource computeInstanceContainerRegistryPullRoleAssignment 'Microsoft.Authoriza
 @description('Assign AML Workspace\'s Managed Online Endpoint: Storage Blob Data Reader to workload\'s ml storage account.')
 resource computeInstanceBlobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningInstanceComputeManagedIdentity.name, storageBlobDataReaderRole.id)
+  name: guid(mlStorage.id, azureMachineLearningInstanceComputeManagedIdentity.name, storageBlobDataReaderRole.id)
   properties: {
     roleDefinitionId: storageBlobDataReaderRole.id
     principalType: 'ServicePrincipal'
@@ -304,7 +269,7 @@ resource computeInstanceBlobDataReaderRoleAssignment 'Microsoft.Authorization/ro
 @description('Assign AML Workspace\'s Managed Online Endpoint: Storage File Data Reader to workload\'s ml storage account.')
 resource computeInstanceFileDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: mlStorage
-  name: guid(resourceGroup().id, azureMachineLearningInstanceComputeManagedIdentity.name, storageFileDataReader.id)
+  name: guid(mlStorage.id, azureMachineLearningInstanceComputeManagedIdentity.name, storageFileDataReader.id)
   properties: {
     roleDefinitionId: storageFileDataReader.id
     principalType: 'ServicePrincipal'
@@ -370,12 +335,10 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
   }
   dependsOn: [
     // Role assignments: https://learn.microsoft.com/azure/machine-learning/how-to-identity-based-service-authentication#user-assigned-managed-identity
-    workspaceContributorToMlStorageRoleAssignment
+    workspaceContributorToResourceGroupRoleAssignment
     storageBlobDataContributorRoleAssignment
     storageFileDataContributorRoleAssignment
-    keyVaultContributorRoleAssignment
     keyVaultAdministratorRoleAssignment
-    containerRegistryContributorRoleAssignment
     containerRegistryPushRoleAssignment
     applicationInsightsContributorRoleAssignment
   ]

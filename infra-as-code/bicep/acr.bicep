@@ -50,6 +50,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-01-01-preview'
       defaultAction: 'Deny'
     }
     publicNetworkAccess: 'Disabled'
+    zoneRedundancy: 'Enabled'
   }
 }
 
