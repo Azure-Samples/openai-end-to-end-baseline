@@ -27,17 +27,18 @@ param jumpBoxAdminPassword string
 
 // ---- Availability Zones ----
 var availabilityZones = [ '1', '2', '3' ]
-var logWorkspaceName = 'log-${baseName}'
 
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: logWorkspaceName
+  name: 'log-${baseName}'
   location: location
   properties: {
     sku: {
       name: 'PerGB2018'
     }
     retentionInDays: 30
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 
@@ -111,6 +112,7 @@ module appInsightsModule 'applicationinsignts.bicep' = {
   params: {
     location: location
     baseName: baseName
+    logWorkspaceName: logWorkspace.name
   }
 }
 
