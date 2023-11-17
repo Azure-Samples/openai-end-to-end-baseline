@@ -200,7 +200,7 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
    - Press 'Review + Create'
    - Press 'Create'
 
-### Publish the web app
+### Publish the Chat front-end web app
 
 The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
 
