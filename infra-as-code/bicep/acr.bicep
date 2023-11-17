@@ -3,6 +3,7 @@
 */
 
 @description('This is the base name for each Azure resource name (6-12 chars)')
+@minLength(6)
 param baseName string
 
 @description('The resource group location')
@@ -50,6 +51,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-01-01-preview'
       defaultAction: 'Deny'
     }
     publicNetworkAccess: 'Disabled'
+    zoneRedundancy: 'Enabled'
   }
 }
 

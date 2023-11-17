@@ -3,6 +3,7 @@
 */
 
 @description('This is the base name for each Azure resource name (6-12 chars)')
+@minLength(6)
 param baseName string
 
 @description('The resource group location')
@@ -461,9 +462,7 @@ resource appServicePfDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDns
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2019-05-01' existing = {
   name: 'cr${baseName}'
 }
-resource openai 'Microsoft.CognitiveServices/accounts@2022-03-01' existing = { 
-  name:  'oai-${baseName}'
-}
+
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(containerRegistry.id, appServiceManagedIdentity.id)
   scope: containerRegistry
