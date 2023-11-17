@@ -86,7 +86,7 @@ resource containerRegistryPullRole 'Microsoft.Authorization/roleDefinitions@2022
   scope: subscription()
 }
 
-@description('Built-in Role: [AcrPull](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpush)')
+@description('Built-in Role: [AcrPush](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpush)')
 resource containerRegistryPushRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '8311e382-0749-4cb8-b61a-304f252e45ec'
   scope: subscription()
