@@ -3,6 +3,7 @@
 */
 
 @description('This is the base name for each Azure resource name (6-12 chars)')
+@minLength(6)
 param baseName string
 
 @description('The resource group location')
@@ -17,6 +18,7 @@ param createPrivateEndpoints bool = false
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
+param logWorkspaceName string
 
 //variables
 var acrName = 'cr${baseName}'
@@ -33,6 +35,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   }  
 }
 
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
+}
+
 resource acrResource 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
   name: acrName
   location: location
@@ -45,8 +51,30 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-01-01-preview'
       defaultAction: 'Deny'
     }
     publicNetworkAccess: 'Disabled'
+    zoneRedundancy: 'Enabled'
   }
 }
+
+//ACR diagnostic settings
+resource acrResourceDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${acrResource.name}-diagnosticSettings'
+  scope: acrResource
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
+  }
+}
+
 
 resource acrPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints) {
   name: acrPrivateEndpointName
@@ -106,3 +134,4 @@ resource acrDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroup
 
 @description('Output the login server property for later use')
 output loginServer string = acrResource.properties.loginServer
+

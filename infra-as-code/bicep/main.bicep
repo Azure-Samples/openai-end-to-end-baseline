@@ -16,22 +16,29 @@ param customDomainName string = 'contoso.com'
 @secure()
 param appGatewayListenerCertificate string
 
-@description('The name of the web deploy file. The file should reside in a deploy container in the storage account. Defaults to SimpleWebApp.zip')
+@description('The name of the web deploy file. The file should reside in a deploy container in the storage account. Defaults to chatui.zip')
 param publishFileName string = 'chatui.zip'
+
+@description('Specifies the password of the administrator account on the Windows jump box.\n\nComplexity requirements: 3 out of 4 conditions below need to be fulfilled:\n- Has lower characters\n- Has upper characters\n- Has a digit\n- Has a special character\n\nDisallowed values: "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word", "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"')
+@secure()
+@minLength(8)
+@maxLength(123)
+param jumpBoxAdminPassword string
 
 // ---- Availability Zones ----
 var availabilityZones = [ '1', '2', '3' ]
-var logWorkspaceName = 'log-${baseName}'
 
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: logWorkspaceName
+  name: 'log-${baseName}'
   location: location
   properties: {
     sku: {
       name: 'PerGB2018'
     }
     retentionInDays: 30
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 
@@ -45,6 +52,19 @@ module networkModule 'network.bicep' = {
   }
 }
 
+@description('Deploys Azure Bastion and the jump box, which is used for private access to the Azure ML and Azure OpenAI portals.')
+module jumpBoxModule 'jumpbox.bicep' = {
+  name: 'jumpBoxDeploy'
+  params: {
+    location: location
+    baseName: baseName
+    virtualNetworkName: networkModule.outputs.vnetNName
+    logWorkspaceName: logWorkspace.name
+    jumpBoxAdminName: 'vmadmin'
+    jumpBoxAdminPassword: jumpBoxAdminPassword
+  }
+}
+
 // Deploy storage account with private endpoint and private DNS zone
 module storageModule 'storage.bicep' = {
   name: 'storageDeploy'
@@ -53,7 +73,7 @@ module storageModule 'storage.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    // createPrivateEndpoints: true
+    logWorkspaceName: logWorkspace.name
   }
 }
 
@@ -68,24 +88,8 @@ module keyVaultModule 'keyvault.bicep' = {
     createPrivateEndpoints: true
     appGatewayListenerCertificate: appGatewayListenerCertificate
     apiKey: 'key'
-  }
-}
-
-// Deploy a web app
-module webappModule 'webapp.bicep' = {
-  name: 'webappDeploy'
-  params: {
-    location: location
-    baseName: baseName
-    developmentEnvironment: developmentEnvironment
-    publishFileName: publishFileName
-    keyVaultName: keyVaultModule.outputs.keyVaultName
-    storageName: storageModule.outputs.appDeployStorageName
-    vnetName: networkModule.outputs.vnetNName
-    appServicesSubnetName: networkModule.outputs.appServicesSubnetName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-   }
+  }
 }
 
 // Deploy container registry with private endpoint and private DNS zone
@@ -97,6 +101,7 @@ module acrModule 'acr.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     createPrivateEndpoints: true
+    logWorkspaceName: logWorkspace.name
   }
 }
 
@@ -106,6 +111,20 @@ module appInsightsModule 'applicationinsignts.bicep' = {
   params: {
     location: location
     baseName: baseName
+    logWorkspaceName: logWorkspace.name
+  }
+}
+
+// Deploy azure openai service with private endpoint and private DNS zone
+module openaiModule 'openai.bicep' = {
+  name: 'openaiDeploy'
+  params: {
+    location: location
+    baseName: baseName
+    vnetName: networkModule.outputs.vnetNName
+    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
+    keyVaultName: keyVaultModule.outputs.keyVaultName
   }
 }
 
@@ -121,17 +140,8 @@ module mlwModule 'machinelearning.bicep' = {
     keyVaultName: keyVaultModule.outputs.keyVaultName
     mlStorageAccountName: storageModule.outputs.mlDeployStorageName
     containerRegistryName: 'cr${baseName}'
-  }
-}
-
-// Deploy azure openai service with private endpoint and private DNS zone
-module openaiModule 'openai.bicep' = {
-  name: 'openaiDeploy'
-  params: {
-    location: location
-    baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
+    openAiResourceName: openaiModule.outputs.openAiResourceName
   }
 }
 
@@ -150,5 +160,26 @@ module gatewayModule 'gateway.bicep' = {
     keyVaultName: keyVaultModule.outputs.keyVaultName
     gatewayCertSecretUri: keyVaultModule.outputs.gatewayCertSecretUri
     logWorkspaceName: logWorkspace.name
-   }
+  }
+}
+
+// Deploy the web apps for the front end demo ui and the containerised promptflow endpoint
+module webappModule 'webapp.bicep' = {
+  name: 'webappDeploy'
+  params: {
+    location: location
+    baseName: baseName
+    developmentEnvironment: developmentEnvironment
+    publishFileName: publishFileName
+    keyVaultName: keyVaultModule.outputs.keyVaultName
+    storageName: storageModule.outputs.appDeployStorageName
+    vnetName: networkModule.outputs.vnetNName
+    appServicesSubnetName: networkModule.outputs.appServicesSubnetName
+    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    logWorkspaceName: logWorkspace.name
+  }
+  dependsOn: [
+    openaiModule
+    acrModule
+  ]
 }

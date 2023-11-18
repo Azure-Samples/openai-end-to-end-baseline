@@ -6,9 +6,12 @@
         "value": ""
       },
       "developmentEnvironment": {
-        "value": true
+        "value": false
       },
       "appGatewayListenerCertificate": {
+        "value": ""
+      },
+      "jumpBoxAdminPassword": {
         "value": ""
       }
     }

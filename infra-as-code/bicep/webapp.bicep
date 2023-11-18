@@ -3,6 +3,7 @@
 */
 
 @description('This is the base name for each Azure resource name (6-12 chars)')
+@minLength(6)
 param baseName string
 
 @description('The resource group location')
@@ -25,12 +26,17 @@ var appServicePlanName = 'asp-${appName}${uniqueString(subscription().subscripti
 var appServiceManagedIdentityName = 'id-${appName}'
 var packageLocation = 'https://${storageName}.blob.${environment().suffixes.storage}/deploy/${publishFileName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
-var appInsightsName= 'appinsights-${appName}'
+var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
+
+
+var appInsightsName = 'appinsights-${appName}'
 
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
 var chatApiEndpoint = 'https://ept-${baseName}.${location}.inference.ml.azure.com/score'
 var chatInputName = 'question'
 var chatOutputName = 'answer'
+
+var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)'
 
 var appServicePlanPremiumSku = 'Premium'
 var appServicePlanStandardSku = 'Standard'
@@ -47,24 +53,21 @@ var appServicePlanSettings = {
 
 var appServicesDnsZoneName = 'privatelink.azurewebsites.net'
 var appServicesDnsGroupName = '${appServicePrivateEndpointName}/default'
+var appServicesPfDnsGroupName = '${appServicePfPrivateEndpointName}/default'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
 
   resource appServicesSubnet 'subnets' existing = {
     name: appServicesSubnetName
-  }  
+  }
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }    
+  }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-02-01' existing =  {
-  name: keyVaultName
-}
-
-resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing =  {
+resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
   name: storageName
 }
 
@@ -120,8 +123,9 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   sku: developmentEnvironment ? appServicePlanSettings[appServicePlanStandardSku] : appServicePlanSettings[appServicePlanPremiumSku]
   properties: {
     zoneRedundant: !developmentEnvironment
+    reserved: true
   }
-  kind: 'app'
+  kind: 'linux'
 }
 
 // Web App
@@ -146,6 +150,9 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' = {
       http20Enabled: true
       publicNetworkAccess: 'Disabled'
       alwaysOn: true
+      linuxFxVersion: 'DOTNETCORE|7.0'
+      netFrameworkVersion: null
+      windowsFxVersion: null
     }
   }
   dependsOn: [
@@ -168,6 +175,43 @@ resource appsettings 'Microsoft.Web/sites/config@2022-09-01' = {
     chatApiEndpoint: chatApiEndpoint
     chatInputName: chatInputName
     chatOutputName: chatOutputName
+  }
+}
+
+//Web App diagnostic settings
+resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${webApp.name}-diagnosticSettings'
+  scope: webApp
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServicePlatformLogs'
+        categoryGroup: null
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
   }
 }
 
@@ -239,8 +283,8 @@ resource appServicePlanAutoScaleSettings 'Microsoft.Insights/autoscalesettings@2
         name: 'Scale out condition'
         capacity: {
           maximum: '5'
-          default: '1'
-          minimum: '1'
+          default: '3'
+          minimum: '3'
         }
         rules: [
           {
@@ -287,3 +331,145 @@ output appServicePlanName string = appServicePlan.name
 
 @description('The name of the web app.')
 output appName string = webApp.name
+
+/*Promptflow app service*/
+// Web App
+resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
+  name: '${appName}-pf'
+  location: location
+  kind: 'linux'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${appServiceManagedIdentity.id}': {}
+    }
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+    virtualNetworkSubnetId: vnet::appServicesSubnet.id
+    httpsOnly: false
+    keyVaultReferenceIdentity: appServiceManagedIdentity.id
+    hostNamesDisabled: false
+    vnetImagePullEnabled: true
+    siteConfig: {
+
+      linuxFxVersion: 'DOCKER|mcr.microsoft.com/appsvc/staticsite:latest'
+      vnetRouteAllEnabled: true
+      http20Enabled: true
+      publicNetworkAccess: 'Disabled'
+      alwaysOn: true
+      acrUseManagedIdentityCreds: true
+      acrUserManagedIdentityID: appServiceManagedIdentity.properties.clientId
+    }
+  }
+  dependsOn: [
+    appServiceSecretsUserRoleAssignmentModule
+    blobDataReaderRoleAssignment
+  ]
+}
+
+// App Settings
+resource appsettingsPf 'Microsoft.Web/sites/config@2022-09-01' = {
+  name: 'appsettings'
+  parent: webAppPf
+  properties: {
+    APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
+    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+    ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
+    WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
+    OPENAICONNECTION_API_BASE: 'https://oai${baseName}.openai.azure.com/'
+    OPENAICONNECTION_API_KEY: openAIApiKey
+    WEBSITES_PORT: '8080'
+  }
+}
+
+
+//Web App diagnostic settings
+resource webAppPfDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${webAppPf.name}-diagnosticSettings'
+  scope: webAppPf
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'AppServiceHTTPLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceConsoleLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServiceAppLogs'
+        categoryGroup: null
+        enabled: true
+      }
+      {
+        category: 'AppServicePlatformLogs'
+        categoryGroup: null
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+  name: appServicePfPrivateEndpointName
+  location: location
+  properties: {
+    subnet: {
+      id: vnet::privateEndpointsSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: appServicePfPrivateEndpointName
+        properties: {
+          privateLinkServiceId: webAppPf.id
+          groupIds: [
+            'sites'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource appServicePfDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
+  name: appServicesPfDnsGroupName
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink.azurewebsites.net'
+        properties: {
+          privateDnsZoneId: appServiceDnsZone.id
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    appServicePrivateEndpointPf
+  ]
+}
+
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2019-05-01' existing = {
+  name: 'cr${baseName}'
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerRegistry.id, appServiceManagedIdentity.id)
+  scope: containerRegistry
+  properties: {
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role
+    principalType: 'ServicePrincipal'
+    principalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+

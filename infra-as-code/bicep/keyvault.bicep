@@ -20,6 +20,8 @@ param createPrivateEndpoints bool = false
 param vnetName string
 param privateEndpointsSubnetName string
 
+param logWorkspaceName string
+
 //variables
 var keyVaultName = 'kv-${baseName}'
 var keyVaultPrivateEndpointName = 'pep-${keyVaultName}'
@@ -33,6 +35,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }  
+}
+
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
@@ -66,6 +72,27 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     }
   }
 
+}
+
+//Key Vault diagnostic settings
+resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${keyVault.name}-diagnosticSettings'
+  // scope: DeployBlob::Blob
+  scope: keyVault
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+        {
+            categoryGroup: 'allLogs'
+            enabled: true
+            retentionPolicy: {
+                enabled: false
+                days: 0
+            }
+        }
+    ]
+    logAnalyticsDestinationType: null
+  }
 }
 
 resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints) {

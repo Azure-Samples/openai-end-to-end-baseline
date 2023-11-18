@@ -7,6 +7,8 @@ param location string = resourceGroup().location
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
+param logWorkspaceName string
+param keyVaultName string
 
 //variables
 var openaiName = 'oai-${baseName}'
@@ -15,24 +17,78 @@ var openaiDnsGroupName = '${openaiPrivateEndpointName}/default'
 var openaiDnsZoneName = 'privatelink.openai.azure.com'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }  
+  }
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2022-03-01' = {
-  name: openaiName  
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+  name: logWorkspaceName
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
+  name: keyVaultName
+  resource kvsGatewayPublicCert 'secrets' = {
+    name: 'openai-key'
+    properties: {
+      value: openAiAccount.listKeys().key1
+    }
+  }
+}
+
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = {
+  name: openaiName
   location: location
   kind: 'OpenAI'
   properties: {
     customSubDomainName: 'oai${baseName}'
     publicNetworkAccess: 'Disabled'
+    networkAcls: {
+      defaultAction: 'Deny'
+    }
   }
   sku: {
     name: 'S0'
+  }
+
+  resource gpt35 'deployments' = {
+    name: 'gpt35'
+    sku: {
+      name: 'Standard'
+      capacity: 120
+    }
+    properties: {
+      model: {
+        format: 'OpenAI'
+        name: 'gpt-35-turbo'
+        version: '0301'
+      }
+      raiPolicyName: 'Microsoft.Default'
+      versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+    }
+  }
+}
+
+//OpenAI diagnostic settings
+resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: '${openAiAccount.name}-diagnosticSettings'
+  scope: openAiAccount
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+    ]
+    logAnalyticsDestinationType: null
   }
 }
 
@@ -91,3 +147,7 @@ resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGr
     openaiPrivateEndpoint
   ]
 }
+
+// ---- Outputs ----
+
+output openAiResourceName string = openAiAccount.name
