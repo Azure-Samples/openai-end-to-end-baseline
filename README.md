@@ -2,8 +2,9 @@
 
 This reference implementation illustrates an approach for authoring and running a chat application in a single region with Azure Machine Learning and OpenAI. It implements a secure environment for authoring a chat flow with Azure Machine Learning prompt flow and two options for deploying the flow:
 
-- An Azure Machine Learning managed online endpoint in a managed virtual network. If your application requires high-availability and you favor Azure Machine Learning compute, it is suggested you extend this architecture to deploy endpoints in multiple regions behind a load balancer.
-- A network isolated, zone-redundant, highly available deployment in Azure App Service.
+- An Azure Machine Learning managed online endpoint in a managed virtual network.
+   - If your application requires high-availability and you favor Azure Machine Learning compute, extending this architecture to deploy endpoints in multiple regions behind a load balancer is suggested.
+- A network-isolated, zone-redundant, highly available deployment in Azure App Service.
 
 The implementation takes advantage of [Prompt flow](https://microsoft.github.io/promptflow/) in [Azure Machine Learning](https://azure.microsoft.com/products/machine-learning) to build and deploy flows that can link the following actions required by an LLM chat application:
 
@@ -24,7 +25,7 @@ The reference implementation focuses on enterprise requirements such as:
 The implementation covers the following scenarios:
 
 1. Authoring a flow - Authoring a flow using prompt flow in an Azure Machine Learning workspace
-1. Deploying a flow to Azure Machine Learning (AML hosted option) - The deployment of an executable flow to an Azure Machine Learning online endpoint. The client UI that is hosted in Azure App Service access the deployed flow.
+1. Deploying a flow to Azure Machine Learning (AML hosted option) - The deployment of an executable flow to an Azure Machine Learning online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
 1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
 
 ### Authoring a flow
@@ -33,7 +34,7 @@ The implementation covers the following scenarios:
 
 The authoring architecture diagram illustrates how flow authors [connect to an Azure Machine Learning Workspace through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine jumpbox. Connectivity to the virtual network is more commonly done in enterprises through ExpressRoute or virtual network peering.
 
-The diagram further illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints that enable connectivity to private required resources such as the workplace Azure Storage and Azure Container Registry. You are also able to create user-defined connections like private endpoints to connect to resources like OpenAI and Cognitive Search.
+The diagram further illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the workplace Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like OpenAI and Cognitive Search.
 
 ### Deploying a flow to Azure Machine Learning managed online endpoint
 
@@ -46,7 +47,7 @@ The Azure Machine Learning deployment architecture diagram illustrates how a fro
 
 ![Diagram of the deploying a flow to Azure App Service.](docs/media/openai-chat-e2e-deployment-appservices.png)
 
-The Azure App Service deployment architecture diagram illustrates how the same prompt flow can be containerized and deployed to Azure App Service alongside of the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure Machine Learning managed online endpoint.
+The Azure App Service deployment architecture diagram illustrates how the same prompt flow can be containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure Machine Learning managed online endpoint.
 
 The flow is still authored in a network-isolated Azure Machine Learning workspace. To deploy in App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints to the App Service.
 
@@ -67,19 +68,19 @@ Use the following to deploy the infrastructure.
 
 The following steps are required to deploy the infrastructure from the command line.
 
-1. In your command-line tool where you have the Azure CLI and Bicep installed, navigate to the root directory of this repository (AppServicesRI)
+1. In your bash shell (or VSCode session) with Azure CLI and Bicep installed, navigate to the root directory of this repository (AppServicesRI)
 
-1. Login and set subscription if it is needed
+1. Login and set subscription
 
 ```bash
 az login
 az account set --subscription xxxxx
 ```
 
-1. Obtain App gateway certificate
-   Azure Application Gateway support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems you use a publicly signed certificate backed by a public root certificate authority (CA). Here, we are going to use a self signed certificate for demonstrational purposes.
+1. Obtain the App gateway certificate
+   Azure Application Gateway support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstrational purposes.
 
-   - Set a variable for the domain that will be used in the rest of this deployment.
+   - Set a variable for the domain used in the rest of this deployment.
 
      ```bash
      export DOMAIN_NAME_APPSERV_BASELINE="contoso.com"
@@ -98,7 +99,7 @@ az account set --subscription xxxxx
 
    - Base64 encode the client-facing certificate.
 
-     :bulb: No matter if you used a certificate from your organization or you generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for proper storage in Key Vault later.
+     :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for proper storage in Key Vault later.
 
      ```bash
      export APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE=$(cat appgw.pfx | base64 | tr -d '\n')
@@ -130,7 +131,7 @@ az account set --subscription xxxxx
    - The location you choose [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support)
    - The BASE_NAME contains only lowercase letters and is between 6 and 12 characters. Most resource names will include this text.
    - You choose a valid resource group name.
-   - You will be prompted for an admin password for the jump box, it must satasify the complexity requirements for Windows.
+   - You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
 ```bash
 LOCATION=eastus
@@ -154,7 +155,7 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
 
 1. Create a prompt flow connection to your gpt35 Azure OpenAI deployment. This will be used by the prompt flow you clone in the next step.
     1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
-    1. Click on the 'Connections' tab and click 'Create' 'Azure OpenAI'
+    1. Click on the 'Connections' tab and click 'Create' 'Azure OpenAI.'
     1. Fill out the properties:
         - Name: 'gpt35'   **Make sure you use this name.**
         - Provider: Azure OpenAI
@@ -202,14 +203,14 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
 
 ### Publish the Chat front-end web app
 
-The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
+The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). This approach has many benefits, including eliminating file lock conflicts when deploying.
 
 > :bulb: Read through the next steps, but follow the guidance in the **Workaround** section.
 
 To use run from zip, you do the following:
 
 1. Create a [project zip package](https://learn.microsoft.com/azure/app-service/deploy-run-package#create-a-project-zip-package) which is a zip file of your project.
-1. Upload that zip file to a location that is accessible to your web site. This implementation uses private endpoints to securely connect to the storage account. The web app has a managed identity that is authorized to access the blob.
+1. Upload that zip file to a location accessible to your website. This implementation uses private endpoints to connect to the storage account securely. The web app has a managed identity authorized to access the blob.
 1. Set the environment variable `WEBSITE_RUN_FROM_PACKAGE` to the URL of the zip file.
 
 In a production environment, you would likely use a CI/CD pipeline to:
@@ -218,19 +219,19 @@ In a production environment, you would likely use a CI/CD pipeline to:
 1. Create the project zip package
 1. Upload the zip file to your storage account
 
-The CI/CD pipeline would likely use a [self-hosted agent](https://learn.microsoft.com/azure/devops/pipelines/agents/agents?view=azure-devops&tabs=browser#install) that is able to connect to the storage account through a private endpoint to upload the zip. We have not implemented that here.
+The CI/CD pipeline would likely use a [self-hosted agent](https://learn.microsoft.com/azure/devops/pipelines/agents/agents?view=azure-devops&tabs=browser#install) that can connect to the storage account through a private endpoint to upload the zip. We have not implemented that here.
 
 **Workaround**
 
-Because we have not implemented a CI/CD pipeline with a self-hosted agent, we need a workaround to upload the file to the storage account. There are two workaround steps you need to do in order to manually upload the zip file using the portal.
+We need a workaround to upload the file to the storage account because we have not implemented a CI/CD pipeline with a self-hosted agent. There are two workaround steps you need to do in order to manually upload the zip file using the portal.
 
 1. The deployed storage account does not allow public access, so you will need to temporarily allow access public access from your IP address.
-1. You need to give your user permissions to upload a blob to the storage account.
+1. You must authorize your user to upload a blob to the storage account.
 
 Run the following to:
 
 - Allow public access from your IP address.
-- Give the logged in user permissions to upload a blob
+- Give the logged-in user permission to upload a blob
 - Upload the zip file `./website/chatui.zip` to the existing `deploy` container
 - Tell the web app to restart
 
@@ -258,11 +259,11 @@ az webapp restart --name $NAME_OF_WEB_APP --resource-group $RESOURCE_GROUP
 
 ### Validate the web app
 
-This section will help you to validate the workload is exposed correctly and responding to HTTP requests.
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests.
 
 #### Steps
 
-1. Get the public IP address of Application Gateway.
+1. Get the public IP address of the Application Gateway.
 
    > :book: The app team conducts a final acceptance test to be sure that traffic is flowing end-to-end as expected, so they place a request against the Azure Application Gateway endpoint.
 
@@ -274,17 +275,17 @@ This section will help you to validate the workload is exposed correctly and res
 
 1. Create an `A` record for DNS.
 
-   > :bulb: You can simulate this via a local hosts file modification. You're welcome to add a real DNS entry for your specific deployment's application domain name, if you have access to do so.
+   > :bulb: You can simulate this via a local hosts file modification.  Alternatively, you can add a real DNS entry for your specific deployment's application domain name if permission to do so.
 
    Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP} www.${DOMAIN_NAME_APPSERV_BASELINE}` (e.g. `50.140.130.120  www.contoso.com`)
 
 1. Browse to the site (e.g. <https://www.contoso.com>).
 
-   > :bulb: It may take up to a couple of minutes for the App Service to properly start. Remember to include the protocol prefix `https://` in the URL you type in the address bar of your browser. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
+   > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
 ## Deploying the flow to Azure App Service option
 
-This is a second option for deploying the flow. With this option, you are deploying the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
+This is a second option for deploying the flow. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
 
 - Prerequisites - Ensure you have the prerequisites
 - Download your flow - Download the flow from the Machine Learning Workspace
@@ -294,7 +295,7 @@ This is a second option for deploying the flow. With this option, you are deploy
 
 ### Prerequisites
 
-The following are requirements for building the image, pushing to ACR, and deploying to Azure App Service:
+The following are the requirements for building the image, pushing to ACR, and deploying to Azure App Service:
 
 - az CLI
 - Python
@@ -319,14 +320,14 @@ pip install bs4
 1. Expand the 'Files' tab in the right pane of the UI
 1. Click on the download icon to download the flow as a zip file
 
-> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the prerequisites installed on the jumpbox or you will need to transfer the zip file to a system that has the prerequisites.
+> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the prerequisites installed on the jumpbox, or you will need to transfer the zip file to a system that has the prerequisites.
 
 ### Build the flow
 
 > :bulb: This example assumes your flow has a connection to Azure OpenAI
 
 1. Unzip the prompt flow zip file you downloaded
-1. In your terminal, change directory to the root of the unzipped flow
+1. In your terminal, change the directory to the root of the unzipped flow
 1. Create a folder called 'connections'
 1. Create a file for each connection you created in the Prompt flow UI
     1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in Prompt flow, create a file called 'gpt35.yaml' under the connections folder.
@@ -350,11 +351,11 @@ pip install bs4
     pf flow build --source ./ --output dist --format docker
     ```
 
-    The following code will create a folder named 'dist' with a docker file, and all the required flow files.
+    The following code will create a folder named 'dist' with a docker file and all the required flow files.
 
 ### Build and push the image
 
-1. Ensure the requirements.txt in the dist/flow folder has the appropriate requirements. At the time of writing, they were, as follows:
+1. Ensure the requirements.txt in the dist/flow folder has the appropriate requirements. At the time of writing, they were as follows:
 
     ```bash
     promptflow[azure]
