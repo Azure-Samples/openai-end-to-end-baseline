@@ -3,7 +3,7 @@
 This reference implementation illustrates an approach for authoring and running a chat application in a single region with Azure Machine Learning and OpenAI. It implements a secure environment for authoring a chat flow with Azure Machine Learning prompt flow and two options for deploying the flow:
 
 - An Azure Machine Learning managed online endpoint in a managed virtual network.
-   - If your application requires high-availability and you favor Azure Machine Learning compute, extending this architecture to deploy endpoints in multiple regions behind a load balancer is suggested.
+   - If your application requires high availability and you favor leveraging a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints between a load balancer to improve resiliency.
 - A network-isolated, zone-redundant, highly available deployment in Azure App Service.
 
 The implementation takes advantage of [Prompt flow](https://microsoft.github.io/promptflow/) in [Azure Machine Learning](https://azure.microsoft.com/products/machine-learning) to build and deploy flows that can link the following actions required by an LLM chat application:
