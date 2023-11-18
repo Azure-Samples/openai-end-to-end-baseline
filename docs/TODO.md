@@ -14,3 +14,4 @@
 - Ensure we have minimum role assignments required for Managed Identity for Azure ML Workspace in machinelearning.bicep. 
 - Determine if we should create separate Managed Identity for Endpoint/Deployment than the one used for the authoring. If so, create and update RI.
 - Add/update appropriate or missing NSGs in network.bicep
+- Make the jumpbox/bastion deployment a parm 
