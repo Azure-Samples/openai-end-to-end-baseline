@@ -18,7 +18,6 @@ The reference implementation focuses on enterprise requirements such as:
 - Network isolation
 - Security
 - Scalability
-- Zonal redundancy
 
 ## Architecture
 
