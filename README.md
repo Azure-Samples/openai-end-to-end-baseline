@@ -310,12 +310,12 @@ The following are requirements for building the image, pushing to Azure Containe
   conda activate pf
   pip install promptflow promptflow-tools
 
-  # You will need to install the following if you build the docker image locally
+  # You will need to install the following if you build the Docker image locally
   pip install keyrings.alt
   pip install bs4
   ```
 
-- If you build the docker image locally, you will also need to install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- If you build the Docker image locally, you will also need to install [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 ### Download your flow
 
@@ -359,7 +359,7 @@ The following are requirements for building the image, pushing to Azure Containe
    pf flow build --source ./ --output dist --format docker
    ```
 
-   The following code will create a folder named 'dist' with a docker file, and all the required flow files.
+   The following code will create a folder named 'dist' with a Docker file, and all the required flow files.
 
 ### Build and push the image
 
