@@ -70,10 +70,10 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Login and set subscription if it is needed
 
-```bash
-az login
-az account set --subscription xxxxx
-```
+    ```bash
+    az login
+    az account set --subscription xxxxx
+    ```
 
 1. Obtain App gateway certificate
    Azure Application Gateway support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems you use a publicly signed certificate backed by a public root certificate authority (CA). Here, we are going to use a self signed certificate for demonstrational purposes.
@@ -106,23 +106,23 @@ az account set --subscription xxxxx
 
 1. Update the infra-as-code/parameters file
 
-```json
-{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "baseName": {
-      "value": ""
-    },
-    "developmentEnvironment": {
-      "value": true
-    },
-    "appGatewayListenerCertificate": {
-      "value": "[base64 cert data from $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE]"
+    ```json
+    {
+      "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "baseName": {
+          "value": ""
+        },
+        "developmentEnvironment": {
+          "value": true
+        },
+        "appGatewayListenerCertificate": {
+          "value": "[base64 cert data from $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE]"
+        }
+      }
     }
-  }
-}
-```
+    ```
 
 1. Run the following command to create a resource group and deploy the infrastructure. Make sure:
 
@@ -131,19 +131,19 @@ az account set --subscription xxxxx
    - You choose a valid resource group name.
    - You will be prompted for an admin password for the jump box, it must satisify the [complexity requirements for Windows](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/faq#what-are-the-password-requirements-when-creating-a-vm-).
 
-```bash
-LOCATION=eastus
-BASE_NAME=<base-resource-name (between 6 and 12 lowercase characters)>
+    ```bash
+    LOCATION=eastus
+    BASE_NAME=<base-resource-name (between 6 and 12 lowercase characters)>
 
-RESOURCE_GROUP=<resource-group-name>
-az group create -l $LOCATION -n $RESOURCE_GROUP
+    RESOURCE_GROUP=<resource-group-name>
+    az group create -l $LOCATION -n $RESOURCE_GROUP
 
-# This takes about 30 minutes to run.
-az deployment group create -f ./infra-as-code/bicep/main.bicep \
-  -g $RESOURCE_GROUP \
-  -p @./infra-as-code/bicep/parameters.json \
-  -p baseName=$BASE_NAME
-```
+    # This takes about 30 minutes to run.
+    az deployment group create -f ./infra-as-code/bicep/main.bicep \
+      -g $RESOURCE_GROUP \
+      -p @./infra-as-code/bicep/parameters.json \
+      -p baseName=$BASE_NAME
+    ```
 
 ### Create, test, and deploy a Prompt flow
 
