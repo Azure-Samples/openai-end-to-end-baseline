@@ -329,8 +329,6 @@ The following are requirements for building the image, pushing to Azure Containe
 
 ### Build the flow
 
-> :bulb:
-
 1. Unzip the prompt flow zip file you downloaded
 1. In your terminal, change directory to the root of the unzipped flow
 1. Create a folder called 'connections'
