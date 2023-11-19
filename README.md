@@ -325,7 +325,7 @@ The following are requirements for building the image, pushing to Azure Containe
 1. Expand the 'Files' tab in the right pane of the UI.
 1. Click on the download icon to download the flow as a zip file
 
-> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the [prerequisites](#Prerequisites%20for%20Deploying%20the%20Flow) installed on the jumpbox or you will need to transfer the zip file to a system that has the prerequisites.
+> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the [prerequisites](#prerequisites-for-deploying-the-flow) installed on the jumpbox or you will need to transfer the zip file to a system that has the prerequisites.
 
 ### Build the flow
 
