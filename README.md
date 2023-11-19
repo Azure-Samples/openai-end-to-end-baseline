@@ -206,7 +206,7 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
 
 The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). There are many benefits of using this approach, including eliminating file lock conflicts when deploying.
 
-> :bulb: Read through the next steps, but follow the guidance in the [Workaround](####Workaround) section.
+> :bulb: Read through the next steps, but follow the guidance in the [Workaround](#Workaround) section.
 
 To use run from zip, you do the following:
 
@@ -319,13 +319,13 @@ The following are requirements for building the image, pushing to Azure Containe
 
 ### Download your flow
 
-> :bulb: This example assumes your flow has a connection to Azure OpenAI. You can create a connection to Azure OpenAI using the [LLM tool](https://learn.microsoft.com/en-us/azure/machine-learning/prompt-flow/tools-reference/llm-tool?view=azureml-api-2) in your flow. This will create a Jinja template which will be downloaded with the files from Machine Learning Studio. A Jinja template is required for building the flow with the `pf` CLI.
+> :bulb: This example assumes your flow has a connection to Azure OpenAI. You can create a connection to Azure OpenAI using the [LLM tool](https://learn.microsoft.com/en-us/azure/machine-learning/prompt-flow/tools-reference/llm-tool?view=azureml-api-2) in your flow. This will create a Jinja template which will be downloaded with the files from Machine Learning Studio, which is required for building the flow with the `pf` CLI.
 
 1. Open the Prompt flow UI in Azure Machine Learning Studio
 1. Expand the 'Files' tab in the right pane of the UI.
 1. Click on the download icon to download the flow as a zip file
 
-> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the [prerequisites](###Prerequisites%20for%20Deploying%20the%20Flow) installed on the jumpbox or you will need to transfer the zip file to a system that has the prerequisites.
+> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the [prerequisites](#Prerequisites%20for%20Deploying%20the%20Flow) installed on the jumpbox or you will need to transfer the zip file to a system that has the prerequisites.
 
 ### Build the flow
 
@@ -337,7 +337,7 @@ The following are requirements for building the image, pushing to Azure Containe
 1. Create a file for each connection you created in the Prompt flow UI
 
    1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in Prompt flow, create a file called 'gpt35.yaml' under the connections folder.
-   1. Following the [Prompt flow connection creation documentation](https://microsoft.github.io/promptflow/how-to-guides/manage-connections.html#create-a-connection), enter the following values in the file. Note that the `name` key must also match the name of the connection (in this case, 'gpt35'):
+   1. Enter the following values in the file. Note that the `name` key must also match the name of the connection (in this case, 'gpt35'):
 
       ```bash
       $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
@@ -350,6 +350,8 @@ The following are requirements for building the image, pushing to Azure Containe
       ```
 
       > :bulb: The App Service is configured with App Settings that surface as environment variables for `OPENAICONNECTION_API_KEY` and `OPENAICONNECTION_API_BASE`. Note that these variables can be found in the 'Keys and Endpoint' section of your Azure OpenAI instance in the Portal.
+
+      - For more information, see the [Prompt flow connection creation documentation](https://microsoft.github.io/promptflow/how-to-guides/manage-connections.html#create-a-connection).
 
 1. Build the flow
 
