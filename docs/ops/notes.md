@@ -1,8 +1,16 @@
 # Ops in Open AI & Prompt Flow architecture
 
-Outcome: Customers understand how to design typical operations flows around this architecture.
+Outcome: Customers understand how to design typical deployment operation flows around this specific architecture.
+
 Topics: Infrastructure Ops and LLMOps flow
+
 What: Text and Diagrams
+
+How?
+- Interview style?
+- Everyone can take a topic and submit some seed text?
+- One person to draft it and the rest of us review?
+- ?
 
 Who (roles) is involved?
 
@@ -17,9 +25,11 @@ Where are actions performed?
 - Prompt engineering
 - Application development
 - Model finetuning
+- A/B deployments
 
 Assets:
 
+- Code repo layout (app colocation with infra and models)
 - Hosting infrastructure
 - LLM
 - agents
