@@ -22,6 +22,7 @@ Who (roles) is involved?
 Where are actions performed?
 
 - Playground
+- Authoring
 - Prompt engineering
 - Application development
 - Model finetuning
