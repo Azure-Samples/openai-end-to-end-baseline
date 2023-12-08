@@ -74,7 +74,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Prompt'
-          
+
         }
         {
           policyName: 'selfharm'
@@ -100,7 +100,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           policyName: 'profanity'
           blocking: true
           enabled: true
-          source: 'Prompt'          
+          source: 'Prompt'
         }
         /* COMPLETETION FILTERS */
         {
@@ -157,7 +157,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
       raiPolicyName: blockingFilter.name
       versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     }
-  }  
+  }
 }
 
 //OpenAI diagnostic settings
