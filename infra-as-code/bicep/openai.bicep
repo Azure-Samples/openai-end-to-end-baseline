@@ -74,7 +74,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Prompt'
-
         }
         {
           policyName: 'selfharm'
