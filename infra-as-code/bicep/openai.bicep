@@ -134,8 +134,8 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
         {
           policyName: 'profanity'
           blocking: true
-          source: 'Completion'
           enabled: true
+          source: 'Completion'
         }
       ]
       mode: 'Blocking'
