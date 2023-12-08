@@ -54,7 +54,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
     name: 'S0'
   }
 
-  @description('Fairly agressive filter that attempts to block prompts and completions that are likely unprofessional. Tune to your specific requirments.')
+  @description('Fairly aggressive filter that attempts to block prompts and completions that are likely unprofessional. Tune to your specific requirements.')
   resource blockingFilter 'raiPolicies' = {
     name: 'blocking-filter'
     properties: {
@@ -102,7 +102,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           enabled: true
           source: 'Prompt'
         }
-        /* COMPLETETION FILTERS */
+        /* COMPLETION FILTERS */
         {
           policyName: 'hate'
           blocking: true
