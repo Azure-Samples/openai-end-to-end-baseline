@@ -54,6 +54,94 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
     name: 'S0'
   }
 
+  @description('Fairly agressive filter that attempts to block prompts and completions that are likely unprofessional. Tune to your specific requirments.')
+  resource blockingFilter 'raiPolicies' = {
+    name: 'blocking-filter'
+    properties: {
+      basePolicyName: 'Microsoft.Default'
+      contentFilters: [
+        /* PROMPT FILTERS */
+        {
+          policyName: 'hate'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Prompt'
+        }
+        {
+          policyName: 'sexual'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Prompt'
+          
+        }
+        {
+          policyName: 'selfharm'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Prompt'
+        }
+        {
+          policyName: 'violence'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Prompt'
+        }
+        {
+          policyName: 'jailbreak'
+          blocking: true
+          enabled: true
+          source: 'Prompt'
+        }
+        {
+          policyName: 'profanity'
+          blocking: true
+          enabled: true
+          source: 'Prompt'          
+        }
+        /* COMPLETETION FILTERS */
+        {
+          policyName: 'hate'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Completion'
+        }
+        {
+          policyName: 'sexual'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Completion'
+        }
+        {
+          policyName: 'selfharm'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Completion'
+        }
+        {
+          policyName: 'violence'
+          blocking: true
+          enabled: true
+          allowedContentLevel: 'Low'
+          source: 'Completion'
+        }
+        {
+          policyName: 'profanity'
+          blocking: true
+          source: 'Completion'
+          enabled: true
+        }
+      ]
+      mode: 'Blocking'
+    }
+  }
+
   resource gpt35 'deployments' = {
     name: 'gpt35'
     sku: {
@@ -64,12 +152,12 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
       model: {
         format: 'OpenAI'
         name: 'gpt-35-turbo'
-        version: '0301'
+        version: '0613'
       }
-      raiPolicyName: 'Microsoft.Default'
+      raiPolicyName: blockingFilter.name
       versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     }
-  }
+  }  
 }
 
 //OpenAI diagnostic settings
