@@ -199,20 +199,6 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
         }
       }
       {
-        name: 'AppGw.Out.Allow.AppServices'
-        properties: {
-          description: 'Allow outbound traffic from the App Gateway subnet to the App services subnet'
-          protocol: '*'
-          sourcePortRange: '*'
-          destinationPortRange: '*'
-          sourceAddressPrefix: appGatewaySubnetPrefix
-          destinationAddressPrefix: appServicesSubnetPrefix
-          access: 'Allow'
-          priority: 100
-          direction: 'Outbound'
-        }
-      }
-      {
         name: 'AppGw.Out.Allow.PrivateEndpoints'
         properties: {
           description: 'Allow outbound traffic from the App Gateway subnet to the Private Endpoints subnet.'
