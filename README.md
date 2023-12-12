@@ -3,7 +3,7 @@
 This reference implementation illustrates an approach for authoring and running a chat application in a single region with Azure Machine Learning and OpenAI. It implements a secure environment for authoring a chat flow with Azure Machine Learning prompt flow and two options for deploying the flow:
 
 - An Azure Machine Learning managed online endpoint in a managed virtual network.
-   - If your application requires high availability and you favor leveraging a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints between a load balancer to improve resiliency.
+  - If your application requires high availability and you favor leveraging a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
 - A network-isolated, zone-redundant, highly available deployment in Azure App Service.
 
 The implementation takes advantage of [Prompt flow](https://microsoft.github.io/promptflow/) in [Azure Machine Learning](https://azure.microsoft.com/products/machine-learning) to build and deploy flows that can link the following actions required by an LLM chat application:
@@ -128,13 +128,13 @@ az account set --subscription xxxxx
 1. Run the following command to create a resource group and deploy the infrastructure. Make sure:
 
    - The location you choose [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support)
-   - The BASE_NAME contains only lowercase letters and is between 6 and 12 characters. Most resource names will include this text.
+   - The BASE_NAME contains only lowercase letters and is between 6 and 8 characters. Most resource names will include this text.
    - You choose a valid resource group name.
    - You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
 ```bash
 LOCATION=eastus
-BASE_NAME=<base-resource-name (between 6 and 12 lowercase characters)>
+BASE_NAME=<base-resource-name (between 6 and 8 lowercase characters)>
 
 RESOURCE_GROUP=<resource-group-name>
 az group create -l $LOCATION -n $RESOURCE_GROUP
@@ -169,12 +169,12 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
     1. Click on the 'Flows' tab and click 'Create'
     1. Click 'Clone' under 'Chat with Wikipedia'
     1. Name it 'chat_wiki' and Press 'Clone'
-    1. Set the 'Connection' and 'deployment_name' for the following steps to 'gpt35':
-        - extract_query_from_question 
+    1. Set the 'Connection' and 'deployment_name' to 'gpt35'and set the max_tokens property of the deployment_name to 256, for the following steps:
+        - extract_query_from_question
         - augmented_chat
     1. Save
 
-1. Add runtime 
+1. Add runtime
 
    - Click Add runtime
    - Add compute instance runtime and give it a name

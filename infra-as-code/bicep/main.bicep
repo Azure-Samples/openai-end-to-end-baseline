@@ -1,9 +1,9 @@
 @description('The location in which all resources should be deployed.')
 param location string = resourceGroup().location
 
-@description('This is the base name for each Azure resource name (6-12 chars)')
+@description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
-@maxLength(12)
+@maxLength(8)
 param baseName string
 
 @description('Optional. When true will deploy a cost-optimised environment for development purposes. Note that when this param is true, the deployment is not suitable or recommended for Production environments. Default = false.')
