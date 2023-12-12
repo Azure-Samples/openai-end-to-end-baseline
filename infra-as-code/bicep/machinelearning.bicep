@@ -98,6 +98,12 @@ resource keyVaultAdministratorRole 'Microsoft.Authorization/roleDefinitions@2022
   scope: subscription()
 }
 
+@description('Built-in Role: [Azure Machine Learning Workspace Connection Secrets Reader](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles)')
+resource machineLearningConnetionSecretsReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'ea01e6af-a1c1-4350-9563-ad00f8c72ec5'
+  scope: subscription()
+}
+
 // ---- New Resources ----
 
 @description('User managed identity that represents the Azure Machine Learning workspace.')
@@ -133,6 +139,21 @@ resource workspaceContributorToResourceGroupRoleAssignment 'Microsoft.Authorizat
     principalId: azureMachineLearningWorkspaceManagedIdentity.properties.principalId
   }
 }
+
+// AMLW ->Give Endpoint identity access to read workspace connection secrets
+
+@description('Assign AML Workspace Azure Machine Learning Workspace Connection Secrets Reader to the endpoint managed identity.')
+resource onlineEndpointSecretsReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: machineLearning
+  name: guid(machineLearning.id, azureMachineLearningOnlineEndpointManagedIdentity.name, machineLearningConnetionSecretsReaderRole.id)
+
+  properties: {
+    roleDefinitionId: machineLearningConnetionSecretsReaderRole.id
+    principalType: 'ServicePrincipal'
+    principalId: azureMachineLearningOnlineEndpointManagedIdentity.properties.principalId
+  }
+}
+
 
 // AMLW -> ML Storage data plane (blobs and files)
 
@@ -319,6 +340,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
       // Role requirements for the online endpoint: https://learn.microsoft.com/azure/machine-learning/how-to-access-resources-from-endpoints-managed-identities#give-access-permission-to-the-managed-identity
       onlineEndpointContainerRegistryPullRoleAssignment
       onlineEndpointBlobDataReaderRoleAssignment
+      onlineEndpointSecretsReaderRoleAssignment 
     ]
   }
 
