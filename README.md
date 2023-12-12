@@ -169,12 +169,12 @@ az deployment group create -f ./infra-as-code/bicep/main.bicep \
     1. Click on the 'Flows' tab and click 'Create'
     1. Click 'Clone' under 'Chat with Wikipedia'
     1. Name it 'chat_wiki' and Press 'Clone'
-    1. Set the 'Connection' and 'deployment_name' for the following steps to 'gpt35':
-        - extract_query_from_question 
+    1. Set the 'Connection' and 'deployment_name' to 'gpt35'and set the max_tokens property of the deployment_name to 256, for the following steps:
+        - extract_query_from_question
         - augmented_chat
     1. Save
 
-1. Add runtime 
+1. Add runtime
 
    - Click Add runtime
    - Add compute instance runtime and give it a name
