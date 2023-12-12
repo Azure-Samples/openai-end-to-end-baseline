@@ -145,7 +145,8 @@ resource workspaceContributorToResourceGroupRoleAssignment 'Microsoft.Authorizat
 @description('Assign AML Workspace Azure Machine Learning Workspace Connection Secrets Reader to the endpoint managed identity.')
 resource onlineEndpointSecretsReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: machineLearning
-  name: guid(resourceGroup().id, azureMachineLearningOnlineEndpointManagedIdentity.name, machineLearningConnetionSecretsReaderRole.id)
+  name: guid(machineLearning.id, azureMachineLearningOnlineEndpointManagedIdentity.name, machineLearningConnetionSecretsReaderRole.id)
+
   properties: {
     roleDefinitionId: machineLearningConnetionSecretsReaderRole.id
     principalType: 'ServicePrincipal'
