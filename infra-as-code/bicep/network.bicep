@@ -24,7 +24,6 @@ var jumpboxSubnetPrefix = '10.0.2.128/28'
 var trainingSubnetPrefix = '10.0.3.0/24'
 var scoringSubnetPrefix = '10.0.4.0/24'
 
-//Temp disable DDoS protection
 var enableDdosProtection = !developmentEnvironment
 
 // ---- Networking resources ----
@@ -36,7 +35,7 @@ resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2022-11-01' =
   properties: {}
 }
 
-//vnet and subnets
+// Virtual network and subnets
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
   name: vnetName
   location: location
@@ -68,7 +67,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         }
       }
       {
-        //App Gateway subnet
+        // App Gateway subnet
         name: 'snet-appGateway'
         properties: {
           addressPrefix: appGatewaySubnetPrefix
@@ -80,7 +79,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         }
       }
       {
-        //Private endpoints subnet
+        // Private endpoints subnet
         name: 'snet-privateEndpoints'
         properties: {
           addressPrefix: privateEndpointsSubnetPrefix
@@ -100,7 +99,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         }
       }
       {
-        // Azure bastion subnet
+        // Azure Bastion subnet
         name: 'AzureBastionSubnet'
         properties: {
           addressPrefix: bastionSubnetPrefix
@@ -110,7 +109,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         }
       }
       {
-        // Jumpbox VMs subnet
+        // Jump box VMs subnet
         name: 'snet-jumpbox'
         properties: {
           addressPrefix: jumpboxSubnetPrefix
@@ -156,7 +155,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
 
   resource agentsSubnet 'subnets' existing = {
     name: 'snet-agents'
-  }  
+  }
 
   resource azureBastionSubnet 'subnets' existing = {
     name: 'AzureBastionSubnet'
@@ -172,10 +171,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
 
   resource scoringSubnet 'subnets' existing = {
     name: 'snet-scoring'
-  }  
+  }
 }
 
-//App Gateway subnet NSG
+// App Gateway subnet NSG
 resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-appGatewaySubnet'
   location: location
@@ -241,7 +240,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
   }
 }
 
-//App service subnet nsg
+// App Service subnet NSG
 resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-appServicesSubnet'
   location: location
@@ -279,7 +278,7 @@ resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
   }
 }
 
-//Private endpoints subnets NSG
+// Private endpoints subnet NSG
 resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-privateEndpointsSubnet'
   location: location
@@ -298,36 +297,35 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
           priority: 100
           direction: 'Outbound'
         }
-      }      
+      }
     ]
   }
 }
 
-//Build agents subnet NSG
+// Build agents subnet NSG
 resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-agentsSubnet'
   location: location
   properties: {}
 }
 
-//Training subnet NSG
+// Training subnet NSG
 resource trainingSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-trainingSubnet'
   location: location
   properties: {}
 }
 
-//Scoring subnet NSG
+// Scoring subnet NSG
 resource scoringSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-scoringSubnet'
   location: location
   properties: {}
 }
 
-
-//Bastion host subnet NSG 
-// (https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
-// https://github.com/Azure/azure-quickstart-templates/blob/master/quickstarts/microsoft.network/azure-bastion-nsg/main.bicep)
+// Bastion host subnet NSG
+// https://learn.microsoft.com/azure/bastion/bastion-nsg
+// https://github.com/Azure/azure-quickstart-templates/blob/master/quickstarts/microsoft.network/azure-bastion-nsg/main.bicep
 resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-bastionSubnet'
   location: location
@@ -340,7 +338,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           protocol: 'Tcp'
           sourcePortRange: '*'
           sourceAddressPrefix: 'Internet'
-          destinationPortRange: '443' 
+          destinationPortRange: '443'
           destinationAddressPrefix: '*'
           access: 'Allow'
           priority: 100
@@ -369,7 +367,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           description: 'Allow outbound RDP and SSH from the Bastion Host subnet to elsewhere in the vnet'
           protocol: 'Tcp'
           sourcePortRange: '*'
-          sourceAddressPrefix: '*' 
+          sourceAddressPrefix: '*'
           destinationPortRanges: [
             '22'
             '3389'
@@ -380,7 +378,6 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           direction: 'Outbound'
         }
       }
-      
       {
         name: 'Bastion.Out.Allow.AzureMonitor'
         properties: {
@@ -394,8 +391,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           priority: 110
           direction: 'Outbound'
         }
-      }      
-      
+      }
       {
         name: 'Bastion.Out.Allow.AzureCloudCommunication'
         properties: {
@@ -413,7 +409,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
   }
 }
 
-// Jumpbox subnet NSG 
+// Jump box subnet NSG 
 resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-jumpboxSubnet'
   location: location
@@ -436,7 +432,7 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           direction: 'Inbound'
         }
       }
-      {        
+      {
         name: 'Jumpbox.Out.Allow.PrivateEndpoints'
         properties: {
           description: 'Allow outbound traffic from the jumpbox subnet to the Private Endpoints subnet.'
@@ -463,7 +459,7 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           priority: 110
           direction: 'Outbound'
         }
-      }      
+      }
       {
         name: 'Jumpbox.Out.Allow.AzureCloudCommunication'
         properties: {
