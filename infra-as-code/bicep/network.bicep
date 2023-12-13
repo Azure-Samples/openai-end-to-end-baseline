@@ -104,6 +104,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         name: 'AzureBastionSubnet'
         properties: {
           addressPrefix: bastionSubnetPrefix
+          networkSecurityGroup: {
+            id: bastionSubnetNsg.id
+          }
         }
       }
       {
@@ -111,6 +114,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         name: 'snet-jumpbox'
         properties: {
           addressPrefix: jumpboxSubnetPrefix
+          networkSecurityGroup: {
+            id: jumpboxSubnetNsg.id
+          }
         }
       }
       {
@@ -118,6 +124,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         name: 'snet-training'
         properties: {
           addressPrefix: trainingSubnetPrefix
+          networkSecurityGroup: {
+            id: trainingSubnetNsg.id
+          }
         }
       }
       {
@@ -125,7 +134,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         name: 'snet-scoring'
         properties: {
           addressPrefix: scoringSubnetPrefix
-
+          networkSecurityGroup: {
+            id: scoringSubnetNsg.id
+          }
         }
       }
     ]
@@ -292,11 +303,182 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
   }
 }
 
-//Build agents subnets NSG
+//Build agents subnet NSG
 resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-agentsSubnet'
   location: location
   properties: {}
+}
+
+//Training subnet NSG
+resource trainingSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-trainingSubnet'
+  location: location
+  properties: {}
+}
+
+//Scoring subnet NSG
+resource scoringSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-scoringSubnet'
+  location: location
+  properties: {}
+}
+
+
+//Bastion host subnet NSG 
+// (https://learn.microsoft.com/en-us/azure/bastion/bastion-nsg
+// https://github.com/Azure/azure-quickstart-templates/blob/master/quickstarts/microsoft.network/azure-bastion-nsg/main.bicep)
+resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-bastionSubnet'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'Bastion.In.Allow.Https'
+        properties: {
+          description: 'Allow inbound Https traffic from the from the Internet to the Bastion Host'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'Internet'
+          destinationPortRange: '443' 
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'Bastion.In.Allow.GatewayManager'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'GatewayManager'
+          destinationPortRanges: [
+            '443'
+            '4443'
+          ]
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 110
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'Bastion.Out.Allow.SshRdp'
+        properties: {
+          description: 'Allow outbound RDP and SSH from the Bastion Host subnet to elsewhere in the vnet'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*' 
+          destinationPortRanges: [
+            '22'
+            '3389'
+          ]
+          destinationAddressPrefix: 'VirtualNetwork'
+          access: 'Allow'
+          priority: 100
+          direction: 'Outbound'
+        }
+      }
+      
+      {
+        name: 'Bastion.Out.Allow.AzureMonitor'
+        properties: {
+          description: 'Allow outbound traffic from the Bastion Host subnet to Azure Monitor'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: bastionSubnetPrefix
+          destinationAddressPrefix: 'AzureMonitor'
+          access: 'Allow'
+          priority: 110
+          direction: 'Outbound'
+        }
+      }      
+      
+      {
+        name: 'Bastion.Out.Allow.AzureCloudCommunication'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '443'
+          destinationAddressPrefix: 'AzureCloud'
+          access: 'Allow'
+          priority: 120
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
+}
+
+// Jumpbox subnet NSG 
+resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-jumpboxSubnet'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'Jumpbox.In.Allow.SshRdp'
+        properties: {
+          description: 'Allow inbound RDP and SSH from the Bastion Host subnet'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: bastionSubnetPrefix
+          destinationPortRanges: [
+            '22'
+            '3389'
+          ]
+          destinationAddressPrefix: jumpboxSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+      {        
+        name: 'Jumpbox.Out.Allow.PrivateEndpoints'
+        properties: {
+          description: 'Allow outbound traffic from the jumpbox subnet to the Private Endpoints subnet.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: jumpboxSubnetPrefix
+          destinationAddressPrefix: privateEndpointsSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'Jumpbox.Out.Allow.AzureMonitor'
+        properties: {
+          description: 'Allow outbound traffic from the jumpbox subnet to Azure Monitor'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: jumpboxSubnetPrefix
+          destinationAddressPrefix: 'AzureMonitor'
+          access: 'Allow'
+          priority: 110
+          direction: 'Outbound'
+        }
+      }      
+      {
+        name: 'Jumpbox.Out.Allow.AzureCloudCommunication'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: jumpboxSubnetPrefix
+          destinationPortRange: '443'
+          destinationAddressPrefix: 'AzureCloud'
+          access: 'Allow'
+          priority: 120
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
 }
 
 @description('The name of the vnet.')
