@@ -338,7 +338,7 @@ resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = 
       {
         name: 'DenyAllOutBound'
         properties: {
-          description: 'Deny outbound traffic from the build agents subnet. Note: when a build agent is deployed, ensure it has necessary allowances to reach your DevOps tooling.'
+          description: 'Deny outbound traffic from the build agents subnet. Note: when you deploy an agent, ensure is able to reach your DevOps tooling.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
