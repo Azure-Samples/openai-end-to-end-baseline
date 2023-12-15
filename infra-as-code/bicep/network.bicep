@@ -338,7 +338,7 @@ resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = 
       {
         name: 'DenyAllOutBound'
         properties: {
-          description: 'Deny outbound traffic from the private endpoints subnet'
+          description: 'Deny outbound traffic from the build agents subnet. Note: when a build agent is deployed, ensure it has necessary allowances to reach your DevOps tooling.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
@@ -362,7 +362,7 @@ resource trainingSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' 
       {
         name: 'DenyAllOutBound'
         properties: {
-          description: 'Deny outbound traffic from the private endpoints subnet'
+          description: 'Deny outbound traffic from the training subnet. Note: when training compute is deployed, ensure it has necessary allowances to perform its tasks.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
@@ -386,7 +386,7 @@ resource scoringSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
       {
         name: 'DenyAllOutBound'
         properties: {
-          description: 'Deny outbound traffic from the private endpoints subnet'
+          description: 'Deny outbound traffic from the scoring subnet. Note: when scoring compute is deployed, ensure it has necessary allowances to perform its tasks.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
