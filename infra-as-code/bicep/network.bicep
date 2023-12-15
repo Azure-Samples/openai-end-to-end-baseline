@@ -204,10 +204,37 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           sourceAddressPrefix: 'Internet'
           destinationAddressPrefix: appGatewaySubnetPrefix
           access: 'Allow'
-          priority: 101
+          priority: 110
           direction: 'Inbound'
         }
       }
+      {
+        name: 'AppGw.In.Allow.LoadBalancer'
+        properties: {
+          description: 'Allow inbound traffic from azure load balancer'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: 'AzureLoadBalancer'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 120
+          direction: 'Inbound'
+        }
+      }      
+      {
+        name: 'DenyAllInBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }      
       {
         name: 'AppGw.Out.Allow.PrivateEndpoints'
         properties: {
@@ -218,7 +245,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           sourceAddressPrefix: appGatewaySubnetPrefix
           destinationAddressPrefix: privateEndpointsSubnetPrefix
           access: 'Allow'
-          priority: 101
+          priority: 100
           direction: 'Outbound'
         }
       }
@@ -232,7 +259,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           sourceAddressPrefix: appGatewaySubnetPrefix
           destinationAddressPrefix: 'AzureMonitor'
           access: 'Allow'
-          priority: 206
+          priority: 110
           direction: 'Outbound'
         }
       }
@@ -256,7 +283,7 @@ resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           sourceAddressPrefix: appServicesSubnetPrefix
           destinationAddressPrefix: privateEndpointsSubnetPrefix
           access: 'Allow'
-          priority: 201
+          priority: 100
           direction: 'Outbound'
         }
       }
@@ -270,7 +297,7 @@ resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           sourceAddressPrefix: appServicesSubnetPrefix
           destinationAddressPrefix: 'AzureMonitor'
           access: 'Allow'
-          priority: 206
+          priority: 110
           direction: 'Outbound'
         }
       }
@@ -285,7 +312,7 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
   properties: {
     securityRules: [
       {
-        name: 'PE.Out.Deny.All'
+        name: 'DenyAllOutBound'
         properties: {
           description: 'Deny outbound traffic from the private endpoints subnet'
           protocol: '*'
@@ -294,7 +321,7 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
           sourceAddressPrefix: privateEndpointsSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Deny'
-          priority: 100
+          priority: 1000
           direction: 'Outbound'
         }
       }
@@ -306,21 +333,72 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
 resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-agentsSubnet'
   location: location
-  properties: {}
+  properties: {
+    securityRules: [
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          description: 'Deny outbound traffic from the private endpoints subnet'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: appGatewaySubnetPrefix
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
 }
 
 // Training subnet NSG
 resource trainingSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-trainingSubnet'
   location: location
-  properties: {}
+  properties: {
+    securityRules: [
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          description: 'Deny outbound traffic from the private endpoints subnet'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: trainingSubnetPrefix
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
 }
 
 // Scoring subnet NSG
 resource scoringSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-scoringSubnet'
   location: location
-  properties: {}
+  properties: {
+    securityRules: [
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          description: 'Deny outbound traffic from the private endpoints subnet'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: scoringSubnetPrefix
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
 }
 
 // Bastion host subnet NSG
@@ -362,6 +440,49 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
         }
       }
       {
+        name: 'Bastion.In.Allow.LoadBalancer'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'AzureLoadBalancer'
+          destinationPortRange: '443'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 120
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'Bastion.In.Allow.BastionHostCommunication'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'VirtualNetwork'
+          destinationPortRanges: [
+            '8080'
+            '5701'
+          ]
+          destinationAddressPrefix: 'VirtualNetwork'
+          access: 'Allow'
+          priority: 130
+          direction: 'Inbound'
+        }
+      }      
+      {
+        name: 'DenyAllInBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      
+      {
         name: 'Bastion.Out.Allow.SshRdp'
         properties: {
           description: 'Allow outbound RDP and SSH from the Bastion Host subnet to elsewhere in the vnet'
@@ -402,6 +523,51 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           destinationAddressPrefix: 'AzureCloud'
           access: 'Allow'
           priority: 120
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'Bastion.Out.Allow.BastionHostCommunication'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: 'VirtualNetwork'
+          destinationPortRanges: [
+            '8080'
+            '5701'
+          ]
+          destinationAddressPrefix: 'VirtualNetwork'
+          access: 'Allow'
+          priority: 130
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'Bastion.Out.Allow.GetSessionInformation'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: 'Internet'
+          destinationPortRanges: [
+            '80'
+            '443'
+          ]
+          access: 'Allow'
+          priority: 140
+          direction: 'Outbound'
+        }
+      }      
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
           direction: 'Outbound'
         }
       }
@@ -447,29 +613,29 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
         }
       }
       {
-        name: 'Jumpbox.Out.Allow.AzureMonitor'
+        name: 'Jumpbox.Out.Allow.Internet'
         properties: {
-          description: 'Allow outbound traffic from the jumpbox subnet to Azure Monitor'
+          description: 'Allow outbound traffic from all VMs to Internet'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
           sourceAddressPrefix: jumpboxSubnetPrefix
-          destinationAddressPrefix: 'AzureMonitor'
+          destinationAddressPrefix: 'Internet'
           access: 'Allow'
-          priority: 110
+          priority: 130
           direction: 'Outbound'
         }
       }
       {
-        name: 'Jumpbox.Out.Allow.AzureCloudCommunication'
+        name: 'DenyAllOutBound'
         properties: {
-          protocol: 'Tcp'
+          protocol: '*'
           sourcePortRange: '*'
+          destinationPortRange: '*'
           sourceAddressPrefix: jumpboxSubnetPrefix
-          destinationPortRange: '443'
-          destinationAddressPrefix: 'AzureCloud'
-          access: 'Allow'
-          priority: 120
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
           direction: 'Outbound'
         }
       }
