@@ -115,7 +115,7 @@ module appInsightsModule 'applicationinsignts.bicep' = {
   }
 }
 
-// Deploy azure openai service with private endpoint and private DNS zone
+// Deploy Azure OpenAI service with private endpoint and private DNS zone
 module openaiModule 'openai.bicep' = {
   name: 'openaiDeploy'
   params: {
@@ -125,6 +125,14 @@ module openaiModule 'openai.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
     keyVaultName: keyVaultModule.outputs.keyVaultName
+  }
+}
+
+// Deploy the gpt 3.5 model within the Azure OpenAI service deployed above.
+module openaiModels 'openai-models.bicep' = {
+  name: 'openaiModelsDeploy'
+  params: {
+    openaiName: openaiModule.outputs.openAiResourceName
   }
 }
 

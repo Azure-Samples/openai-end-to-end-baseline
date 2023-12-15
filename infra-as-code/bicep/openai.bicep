@@ -58,103 +58,99 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
   resource blockingFilter 'raiPolicies' = {
     name: 'blocking-filter'
     properties: {
+      #disable-next-line BCP037
+      type: 'UserManaged'
       basePolicyName: 'Microsoft.Default'
+      mode: 'Default'
       contentFilters: [
         /* PROMPT FILTERS */
         {
-          policyName: 'hate'
+          #disable-next-line BCP037
+          name: 'hate'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Prompt'
         }
         {
-          policyName: 'sexual'
+          #disable-next-line BCP037
+          name: 'sexual'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Prompt'
         }
         {
-          policyName: 'selfharm'
+          #disable-next-line BCP037
+          name: 'selfharm'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Prompt'
         }
         {
-          policyName: 'violence'
+          #disable-next-line BCP037
+          name: 'violence'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Prompt'
         }
         {
-          policyName: 'jailbreak'
+          #disable-next-line BCP037
+          name: 'jailbreak'
           blocking: true
           enabled: true
           source: 'Prompt'
         }
         {
-          policyName: 'profanity'
+          #disable-next-line BCP037
+          name: 'profanity'
           blocking: true
           enabled: true
           source: 'Prompt'
         }
         /* COMPLETION FILTERS */
         {
-          policyName: 'hate'
+          #disable-next-line BCP037
+          name: 'hate'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Completion'
         }
         {
-          policyName: 'sexual'
+          #disable-next-line BCP037
+          name: 'sexual'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Completion'
         }
         {
-          policyName: 'selfharm'
+          #disable-next-line BCP037
+          name: 'selfharm'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Completion'
         }
         {
-          policyName: 'violence'
+          #disable-next-line BCP037
+          name: 'violence'
           blocking: true
           enabled: true
           allowedContentLevel: 'Low'
           source: 'Completion'
         }
         {
-          policyName: 'profanity'
+          #disable-next-line BCP037
+          name: 'profanity'
           blocking: true
           enabled: true
           source: 'Completion'
         }
       ]
-      mode: 'Blocking'
-    }
-  }
-
-  resource gpt35 'deployments' = {
-    name: 'gpt35'
-    sku: {
-      name: 'Standard'
-      capacity: 120
-    }
-    properties: {
-      model: {
-        format: 'OpenAI'
-        name: 'gpt-35-turbo'
-        version: '0613'
-      }
-      raiPolicyName: blockingFilter.name
-      versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
     }
   }
 }
