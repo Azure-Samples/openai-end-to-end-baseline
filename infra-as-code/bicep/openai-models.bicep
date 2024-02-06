@@ -24,7 +24,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
       model: {
         format: 'OpenAI'
         name: 'gpt-35-turbo'
-        version: '0613'
+        version: ''
       }
       raiPolicyName: openAiAccount::blockingFilter.name
       versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
