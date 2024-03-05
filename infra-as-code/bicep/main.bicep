@@ -25,8 +25,21 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
-// ---- Availability Zones ----
-var availabilityZones = [ '1', '2', '3' ]
+// ---- Existing Private DNS Zones Configuration ----
+@description('The ID of the existing DNS zone for the Azure Container Registry. If not provided, a new private DNS zone will be created.')
+param acrExistingDnsZoneId string = ''
+param kvExistingDnsZoneId string = ''
+param openAiExistingDnsZoneId string =''
+param existingPrivateDnsZoneBlob string = ''
+param existingPrivateDnsZoneFile string = ''
+param paramDnsServers array = []
+param existingApiAzureMlDnsZone string = ''
+param existingNotebookDnsZone string= ''
+// ---- Parameters required to set to make it non availability zone compliant ----
+param paramStorageSKU string = 'Standard_ZRS'
+param paramAcrSku string = 'Premium'
+param availabilityZones array = [ '1', '2', '3' ]
+param paramZoneRedundancy string = 'Disabled'
 
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -49,6 +62,7 @@ module networkModule 'network.bicep' = {
     location: location
     baseName: baseName
     developmentEnvironment: developmentEnvironment
+    dnsServers: paramDnsServers
   }
 }
 
@@ -74,6 +88,9 @@ module storageModule 'storage.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+    paramStorageSKU: paramStorageSKU
+    existingPrivateDnsZoneBlob:existingPrivateDnsZoneBlob
+    existingPrivateDnsZoneFiles:existingPrivateDnsZoneFile
   }
 }
 
@@ -89,6 +106,7 @@ module keyVaultModule 'keyvault.bicep' = {
     appGatewayListenerCertificate: appGatewayListenerCertificate
     apiKey: 'key'
     logWorkspaceName: logWorkspace.name
+    existingPrivateDNSZONE: kvExistingDnsZoneId
   }
 }
 
@@ -102,6 +120,9 @@ module acrModule 'acr.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     createPrivateEndpoints: true
     logWorkspaceName: logWorkspace.name
+    existingDnsZoneId: acrExistingDnsZoneId
+    paramAcrSku: paramAcrSku
+    zoneRedundancy: paramZoneRedundancy
   }
 }
 
@@ -125,6 +146,8 @@ module openaiModule 'openai.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
     keyVaultName: keyVaultModule.outputs.keyVaultName
+    createPrivateEndpoints:true
+    existingPrivateDnsZone:openAiExistingDnsZoneId
   }
 }
 
@@ -185,6 +208,7 @@ module webappModule 'webapp.bicep' = {
     appServicesSubnetName: networkModule.outputs.appServicesSubnetName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+  
   }
   dependsOn: [
     openaiModule

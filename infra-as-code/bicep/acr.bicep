@@ -10,10 +10,15 @@ param baseName string
 param location string = resourceGroup().location
 
 @description('Provide a tier of your Azure Container Registry.')
-param acrSku string = 'Premium'
+param paramAcrSku string = 'Premium'
 
 @description('Determines whether or not a private endpoint, DNS Zone, Zone Link and Zone Group is created for this resource.')
 param createPrivateEndpoints bool = false
+
+@description('The ID of an existing Private DNS Zone.')
+param existingDnsZoneId string = ''
+@description('The zone redundancy of the ACR.')
+param zoneRedundancy string = 'Enabled'
 
 // existing resource name params 
 param vnetName string
@@ -43,7 +48,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-01-01-preview'
   name: acrName
   location: location
   sku: {
-    name: acrSku
+    name: paramAcrSku
   }
   properties: {
     adminUserEnabled: false
@@ -51,7 +56,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-01-01-preview'
       defaultAction: 'Deny'
     }
     publicNetworkAccess: 'Disabled'
-    zoneRedundancy: 'Enabled'
+    zoneRedundancy: zoneRedundancy
   }
 }
 
@@ -75,7 +80,6 @@ resource acrResourceDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
   }
 }
 
-
 resource acrPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints) {
   name: acrPrivateEndpointName
   location: location
@@ -97,16 +101,16 @@ resource acrPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if
   }
 }
 
-resource acrDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints) {
+resource acrDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints && existingDnsZoneId == '') {
   name: acrDnsZoneName
   location: 'global'
   properties: {}
 }
 
-resource acrDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints) {
+resource acrDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints && existingDnsZoneId == '') {
   parent: acrDnsZone
-  name: '${acrDnsZoneName}-link'
   location: 'global'
+  name: '${acrDnsZoneName}-link'
   properties: {
     registrationEnabled: false
     virtualNetwork: {
@@ -115,7 +119,8 @@ resource acrDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2
   }
 }
 
-resource acrDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints) {
+
+resource acrDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints && existingDnsZoneId == '') {
   name: acrDnsGroupName
   properties: {
     privateDnsZoneConfigs: [
@@ -132,6 +137,23 @@ resource acrDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroup
   ]
 }
 
+
+resource acrDnsZoneGroupExisting 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints && existingDnsZoneId != '') {
+  name: acrDnsGroupName
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: acrDnsZoneName
+        properties: {
+          privateDnsZoneId: existingDnsZoneId
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    acrPrivateEndpoint
+  ]
+}
+
 @description('Output the login server property for later use')
 output loginServer string = acrResource.properties.loginServer
-

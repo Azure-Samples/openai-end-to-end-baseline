@@ -1,4 +1,4 @@
-@description('This is the base name for each Azure resource name (6-8 chars)')
+param createPrivateEndpoints bool
 param baseName string
 
 @description('The resource group location')
@@ -15,6 +15,8 @@ var openaiName = 'oai-${baseName}'
 var openaiPrivateEndpointName = 'pep-${openaiName}'
 var openaiDnsGroupName = '${openaiPrivateEndpointName}/default'
 var openaiDnsZoneName = 'privatelink.openai.azure.com'
+
+param existingPrivateDnsZone string = ''
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -175,7 +177,7 @@ resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   }
 }
 
-resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints && existingPrivateDnsZone == '') {
   name: openaiPrivateEndpointName
   location: location
   properties: {
@@ -196,13 +198,13 @@ resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' =
   }
 }
 
-resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints && existingPrivateDnsZone == '') {
   name: openaiDnsZoneName
   location: 'global'
   properties: {}
 }
 
-resource openaiDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+resource openaiDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints && existingPrivateDnsZone == '') {
   parent: openaiDnsZone
   name: '${openaiDnsZoneName}-link'
   location: 'global'
@@ -214,7 +216,7 @@ resource openaiDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLink
   }
 }
 
-resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
+resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints && existingPrivateDnsZone == ''){
   name: openaiDnsGroupName
   properties: {
     privateDnsZoneConfigs: [
@@ -231,6 +233,23 @@ resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGr
   ]
 }
 
+
+resource openaiDnsZoneGroupExisting 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01'  = if (createPrivateEndpoints && existingPrivateDnsZone != '')  {
+  name: openaiDnsGroupName
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: openaiDnsZoneName
+        properties: {
+          privateDnsZoneId: existingPrivateDnsZone
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    openaiPrivateEndpoint
+  ]
+}
 // ---- Outputs ----
 
 output openAiResourceName string = openAiAccount.name

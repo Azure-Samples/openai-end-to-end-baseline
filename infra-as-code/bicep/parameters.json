@@ -1,18 +1,53 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "baseName": {
-        "value": ""
-      },
-      "developmentEnvironment": {
-        "value": false
-      },
-      "appGatewayListenerCertificate": {
-        "value": ""
-      },
-      "jumpBoxAdminPassword": {
-        "value": ""
-      }
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "value": ""
+    },
+    "developmentEnvironment": {
+      "value": true
+    },
+    "appGatewayListenerCertificate": {
+      "value": "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"
+    },
+    "jumpBoxAdminPassword": {
+      "value": "Microsfot2024!!!"
+    },
+    "acrExistingDnsZoneId": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io"
+    },
+    "paramStorageSKU": {
+      "value": "Standard_LRS"
+    },
+    "availabilityZones": {
+      "value": [
+        "1"
+      ]
+    },
+    "paramZoneRedundancy": {
+      "value": "Disabled"
+    },
+    "kvExistingDnsZoneId": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net"
+    },
+    "openAiExistingDnsZoneId": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com"
+    },
+    "existingPrivateDnsZoneBlob": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    },
+    "existingPrivateDnsZoneFile": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+    },
+    "paramDnsServers": {
+      "value":["10.20.1.4"]
+    },
+    "existingApiAzureMlDnsZone": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.api.azureml.ms"
+    },
+    "existingNotebookDnsZone": {
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.notebooks.azure.net"
     }
+  }
 }

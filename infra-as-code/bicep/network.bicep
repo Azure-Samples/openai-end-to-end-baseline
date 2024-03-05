@@ -9,20 +9,21 @@ param baseName string
 param location string = resourceGroup().location
 
 param developmentEnvironment bool
-
+@description('The DNS servers to use for the virtual network. If not provided, Azure-provided DNS servers will be used.')
+param dnsServers array =[]
 // variables
 var vnetName = 'vnet-${baseName}'
 var ddosPlanName = 'ddos-${baseName}'
 
-var vnetAddressPrefix = '10.0.0.0/16'
-var appGatewaySubnetPrefix = '10.0.1.0/24'
-var appServicesSubnetPrefix = '10.0.0.0/24'
-var privateEndpointsSubnetPrefix = '10.0.2.0/27'
-var agentsSubnetPrefix = '10.0.2.32/27'
-var bastionSubnetPrefix = '10.0.2.64/26'
-var jumpboxSubnetPrefix = '10.0.2.128/28'
-var trainingSubnetPrefix = '10.0.3.0/24'
-var scoringSubnetPrefix = '10.0.4.0/24'
+var vnetAddressPrefix = '11.0.0.0/16'
+var appGatewaySubnetPrefix = '11.0.1.0/24'
+var appServicesSubnetPrefix = '11.0.0.0/24'
+var privateEndpointsSubnetPrefix = '11.0.2.0/27'
+var agentsSubnetPrefix = '11.0.2.32/27'
+var bastionSubnetPrefix = '11.0.2.64/26'
+var jumpboxSubnetPrefix = '11.0.2.128/28'
+var trainingSubnetPrefix = '11.0.3.0/24'
+var scoringSubnetPrefix = '11.0.4.0/24'
 
 var enableDdosProtection = !developmentEnvironment
 
@@ -139,6 +140,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
         }
       }
     ]
+    dhcpOptions: {
+      dnsServers:empty(dnsServers) ?['168.63.129.16']: dnsServers 
+    }
+    
   }
 
   resource appGatewaySubnet 'subnets' existing = {

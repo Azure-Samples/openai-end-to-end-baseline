@@ -17,7 +17,8 @@ param keyVaultName string
 param mlStorageAccountName string
 param logWorkspaceName string
 param openAiResourceName string
-
+param existingApiAzureMlDnsZone string= ''
+param existingNotebookDnsZone string= ''
 // ---- Variables ----
 var workspaceName = 'mlw-${baseName}'
 
@@ -53,6 +54,8 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
   name: openAiResourceName
 }
+
+
 
 // ---- RBAC built-in role definitions and role assignments ----
 @description('Built-in Role: [Storage Blob Data Reader](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader)')
@@ -462,21 +465,21 @@ resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023
         {
           name: 'privatelink.api.azureml.ms'
           properties: {
-            privateDnsZoneId: amlPrivateDnsZone.id
+            privateDnsZoneId:  empty(existingApiAzureMlDnsZone) ? amlPrivateDnsZone.id: existingApiAzureMlDnsZone
           }
         }
         {
           name: 'privatelink.notebooks.azure.net'
           properties: {
-            privateDnsZoneId: notebookPrivateDnsZone.id
+            privateDnsZoneId: empty(existingNotebookDnsZone) ? notebookPrivateDnsZone.id: existingNotebookDnsZone 
           }
         }
       ]
-    }
+    } 
   }
-}
+} 
 
-resource amlPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource amlPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if(existingApiAzureMlDnsZone=='') {
   name: 'privatelink.api.azureml.ms'
   location: 'global'
 
@@ -493,7 +496,7 @@ resource amlPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 }
 
 // Notebook
-resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if(existingNotebookDnsZone=='') {
   name: 'privatelink.notebooks.azure.net'
   location: 'global'
 

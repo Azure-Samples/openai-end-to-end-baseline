@@ -22,6 +22,8 @@ param privateEndpointsSubnetName string
 
 param logWorkspaceName string
 
+param existingPrivateDNSZONE string = ''
+
 //variables
 var keyVaultName = 'kv-${baseName}'
 var keyVaultPrivateEndpointName = 'pep-${keyVaultName}'
@@ -116,13 +118,13 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01'
   }
 }
 
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints && existingPrivateDNSZONE=='') {
   name: keyVaultDnsZoneName
   location: 'global'
   properties: {}
 }
 
-resource keyVaultDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints && existingPrivateDNSZONE=='') {
   parent: keyVaultDnsZone
   name: '${keyVaultDnsZoneName}-link'
   location: 'global'
@@ -134,7 +136,7 @@ resource keyVaultDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLi
   }
 }
 
-resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints && existingPrivateDNSZONE=='') {
   name: keyVaultDnsGroupName
   properties: {
     privateDnsZoneConfigs: [
@@ -142,6 +144,25 @@ resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZone
         name: keyVaultDnsZoneName
         properties: {
           privateDnsZoneId: keyVaultDnsZone.id
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    keyVaultPrivateEndpoint
+  ]
+}
+
+
+
+resource keyVaultDnsZoneGroupExisting 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints && existingPrivateDNSZONE != '') {
+  name: keyVaultDnsGroupName
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: keyVaultDnsZoneName
+        properties: {
+          privateDnsZoneId: existingPrivateDNSZONE
         }
       }
     ]
