@@ -133,10 +133,10 @@ az account set --subscription xxxxx
    - You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
 ```bash
-$LOCATION=eastus
-$BASE_NAME=<base-resource-name (between 6 and 8 lowercase characters)>
+LOCATION=eastus
+BASE_NAME=<base-resource-name (between 6 and 8 lowercase characters)>
 
-$RESOURCE_GROUP=<resource-group-name>
+RESOURCE_GROUP=<resource-group-name>
 az group create -l $LOCATION -n $RESOURCE_GROUP
 
 # This takes about 30 minutes to run.
