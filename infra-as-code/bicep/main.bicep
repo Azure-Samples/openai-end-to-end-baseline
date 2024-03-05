@@ -173,6 +173,8 @@ module mlwModule 'machinelearning.bicep' = {
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
+    existingApiAzureMlDnsZone:existingApiAzureMlDnsZone
+    existingNotebookDnsZone:existingNotebookDnsZone
   }
 }
 
