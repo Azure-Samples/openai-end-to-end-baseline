@@ -17,6 +17,9 @@
     "acrExistingDnsZoneId": {
       "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io"
     },
+    "existingPrivateZoneAppService":{
+      "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+    },
     "paramStorageSKU": {
       "value": "Standard_LRS"
     },
@@ -41,13 +44,18 @@
       "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
     },
     "paramDnsServers": {
-      "value":["10.20.1.4"]
+      "value": [
+        "10.20.1.4"
+      ]
     },
     "existingApiAzureMlDnsZone": {
       "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.api.azureml.ms"
     },
     "existingNotebookDnsZone": {
       "value": "/subscriptions/8dfc81b4-9732-4b10-88ad-07cf9a644863/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.notebooks.azure.net"
+    },
+    "paramFirewallNVAIpAddress": {
+      "value": "10.20.255.4"
     }
   }
 }

@@ -19,6 +19,7 @@ param privateEndpointsSubnetName string
 param storageName string
 param keyVaultName string
 param logWorkspaceName string
+param existingPrivateZoneAppService string =''
 
 // variables
 var appName = 'app-${baseName}'
@@ -236,13 +237,13 @@ resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-0
   }
 }
 
-resource appServiceDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource appServiceDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01'  = if(existingPrivateZoneAppService==''){
   name: appServicesDnsZoneName
   location: 'global'
   properties: {}
 }
 
-resource appServiceDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+resource appServiceDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if(existingPrivateZoneAppService=='')  {
   parent: appServiceDnsZone
   name: '${appServicesDnsZoneName}-link'
   location: 'global'
@@ -261,7 +262,7 @@ resource appServiceDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZo
       {
         name: 'privatelink.azurewebsites.net'
         properties: {
-          privateDnsZoneId: appServiceDnsZone.id
+          privateDnsZoneId: empty(existingPrivateZoneAppService) ? appServiceDnsZone.id: existingPrivateZoneAppService 
         }
       }
     ]
@@ -449,7 +450,7 @@ resource appServicePfDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDns
       {
         name: 'privatelink.azurewebsites.net'
         properties: {
-          privateDnsZoneId: appServiceDnsZone.id
+          privateDnsZoneId: empty(existingPrivateZoneAppService) ? appServiceDnsZone.id: existingPrivateZoneAppService 
         }
       }
     ]

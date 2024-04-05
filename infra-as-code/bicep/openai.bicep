@@ -177,7 +177,7 @@ resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   }
 }
 
-resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints && existingPrivateDnsZone == '') {
+resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints) {
   name: openaiPrivateEndpointName
   location: location
   properties: {

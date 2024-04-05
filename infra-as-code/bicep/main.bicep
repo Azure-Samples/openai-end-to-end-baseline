@@ -35,6 +35,8 @@ param existingPrivateDnsZoneFile string = ''
 param paramDnsServers array = []
 param existingApiAzureMlDnsZone string = ''
 param existingNotebookDnsZone string= ''
+param paramFirewallNVAIpAddress string
+param existingPrivateZoneAppService string =''
 // ---- Parameters required to set to make it non availability zone compliant ----
 param paramStorageSKU string = 'Standard_ZRS'
 param paramAcrSku string = 'Premium'
@@ -63,6 +65,7 @@ module networkModule 'network.bicep' = {
     baseName: baseName
     developmentEnvironment: developmentEnvironment
     dnsServers: paramDnsServers
+    paramFirewallNVAIpAddress: paramFirewallNVAIpAddress
   }
 }
 
@@ -208,6 +211,7 @@ module webappModule 'webapp.bicep' = {
     storageName: storageModule.outputs.appDeployStorageName
     vnetName: networkModule.outputs.vnetNName
     appServicesSubnetName: networkModule.outputs.appServicesSubnetName
+    existingPrivateZoneAppService: existingPrivateZoneAppService
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
   
