@@ -1,0 +1,61 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "value": ""
+    },
+    "developmentEnvironment": {
+      "value": true
+    },
+    "appGatewayListenerCertificate": {
+      "value": ""
+    },
+    "paramStorageSKU": {
+      "value": "Standard_LRS"
+    },
+    "availabilityZones": {
+      "value": [
+        "1"
+      ]
+    },
+    "paramZoneRedundancy": {
+      "value": "Disabled"
+    },
+    "deployJumpbox": {
+      "value": false
+    },
+    "acrExistingDnsZoneId": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io"
+    },
+    "existingPrivateZoneAppService": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+    },
+    "kvExistingDnsZoneId": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net"
+    },
+    "openAiExistingDnsZoneId": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com"
+    },
+    "existingPrivateDnsZoneBlob": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+    },
+    "existingPrivateDnsZoneFile": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.file.core.windows.net"
+    },
+    "existingApiAzureMlDnsZone": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.api.azureml.ms"
+    },
+    "existingNotebookDnsZone": {
+      "value": "/subscriptions/<your_subscription>/resourceGroups/rg-alz-connectivity/providers/Microsoft.Network/privateDnsZones/privatelink.notebooks.azure.net"
+    },
+    "paramFirewallNVAIpAddress": {
+      "value": "10.20.255.4"
+    },
+    "paramDnsServers": {
+      "value": [
+        "10.20.1.4"
+      ]
+    }
+  }
+}

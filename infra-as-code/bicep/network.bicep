@@ -13,7 +13,7 @@ param developmentEnvironment bool
 param dnsServers array = []
 
 @description('The IP address of the firewall NVA')
-param paramFirewallNVAIpAddress string =''
+param paramFirewallNVAIpAddress string = ''
 // variables
 var vnetName = 'vnet-${baseName}'
 var ddosPlanName = 'ddos-${baseName}'
@@ -33,49 +33,50 @@ var enableDdosProtection = !developmentEnvironment
 //--- Routing ----
 
 // Hub firewall UDR
-resource hubFirewallUdr 'Microsoft.Network/routeTables@2022-11-01' = if(paramFirewallNVAIpAddress != ''){
-  name: 'udr-hubFirewall'
-  location: location
-  properties: {
-    routes: [
-      {
-        name: 'routeToVnet'
-        properties: {
-          addressPrefix: '0.0.0.0/0'
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: paramFirewallNVAIpAddress
+resource hubFirewallUdr 'Microsoft.Network/routeTables@2022-11-01' =
+  if (paramFirewallNVAIpAddress != '') {
+    name: 'udr-hubFirewall'
+    location: location
+    properties: {
+      routes: [
+        {
+          name: 'routeToVnet'
+          properties: {
+            addressPrefix: '0.0.0.0/0'
+            nextHopType: 'VirtualAppliance'
+            nextHopIpAddress: paramFirewallNVAIpAddress
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 
-}
-
-resource AppGWHubUdr 'Microsoft.Network/routeTables@2022-11-01' = if(paramFirewallNVAIpAddress != ''){
-  name: 'udr-appgw-hub-firewall'
-  location: location
-  properties: {
-    routes: [
-      {
-        name: 'routeToVnet'
-        properties: {
-          addressPrefix: vnetAddressPrefix
-          nextHopType: 'VirtualAppliance'
-          nextHopIpAddress: paramFirewallNVAIpAddress
+resource AppGWHubUdr 'Microsoft.Network/routeTables@2022-11-01' =
+  if (paramFirewallNVAIpAddress != '') {
+    name: 'udr-appgw-hub-firewall'
+    location: location
+    properties: {
+      routes: [
+        {
+          name: 'routeToVnet'
+          properties: {
+            addressPrefix: vnetAddressPrefix
+            nextHopType: 'VirtualAppliance'
+            nextHopIpAddress: paramFirewallNVAIpAddress
+          }
         }
-      }
-    ]
+      ]
+    }
   }
-
-}
 // ---- Networking resources ----
 
 // DDoS Protection Plan
-resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2022-11-01' = if (enableDdosProtection) {
-  name: ddosPlanName
-  location: location
-  properties: {}
-}
+resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2022-11-01' =
+  if (enableDdosProtection) {
+    name: ddosPlanName
+    location: location
+    properties: {}
+  }
 
 // Virtual network and subnets
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
@@ -98,7 +99,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: appServiceSubnetNsg.id
           }
-          privateEndpointNetworkPolicies:'Enabled'
+          privateEndpointNetworkPolicies: 'Enabled'
           delegations: [
             {
               name: 'delegation'
@@ -108,9 +109,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
             }
           ]
 
-          routeTable: {
-            id: hubFirewallUdr.id
-          }
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: hubFirewallUdr.id
+              }
+            : null
         }
       }
       {
@@ -123,9 +126,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           }
           privateEndpointNetworkPolicies: 'Enabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
-          routeTable: {
-            id: AppGWHubUdr.id
-          }
+
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: AppGWHubUdr.id
+              }
+            : null
         }
       }
       {
@@ -136,9 +142,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: privateEndpointsSubnetNsg.id
           }
-          routeTable: {
-            id: hubFirewallUdr.id
-          }
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: hubFirewallUdr.id
+              }
+            : null
         }
       }
       {
@@ -149,9 +157,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: agentsSubnetNsg.id
           }
-          routeTable: {
-            id: hubFirewallUdr.id
-          }
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: hubFirewallUdr.id
+              }
+            : null
         }
       }
       {
@@ -172,9 +182,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: jumpboxSubnetNsg.id
           }
-          routeTable: {
-            id: hubFirewallUdr.id
-          }
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: hubFirewallUdr.id
+              }
+            : null
         }
       }
       {
@@ -185,9 +197,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: trainingSubnetNsg.id
           }
-          routeTable: {
-            id: hubFirewallUdr.id
-          }
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: hubFirewallUdr.id
+              }
+            : null
         }
       }
       {
@@ -198,16 +212,17 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: scoringSubnetNsg.id
           }
-          routeTable: {
-            id: hubFirewallUdr.id
-          }
+          routeTable: paramFirewallNVAIpAddress != ''
+            ? {
+                id: hubFirewallUdr.id
+              }
+            : null
         }
       }
     ]
     dhcpOptions: {
-      dnsServers: empty(dnsServers) ? [ '168.63.129.16' ] : dnsServers
+      dnsServers: empty(dnsServers) ? ['168.63.129.16'] : dnsServers
     }
-
   }
 
   resource appGatewaySubnet 'subnets' existing = {

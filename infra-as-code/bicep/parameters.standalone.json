@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "value": ""
+    },
+    "developmentEnvironment": {
+      "value": true
+    },
+    "appGatewayListenerCertificate": {
+      "value": ""
+    },
+    "deployJumpbox": {
+      "value": true
+    },
+    "jumpBoxAdminPassword": {
+      "value": ""
+    },
+    "paramStorageSKU": {
+      "value": "Standard_LRS"
+    },
+    "availabilityZones": {
+      "value": [
+        "1"
+      ]
+    },
+    "paramZoneRedundancy": {
+      "value": "Disabled"
+    }
+  }
+}

@@ -21,9 +21,12 @@ param jumpBoxAdminName string = 'vmadmin'
 
 @description('Specifies the password of the administrator account on the Windows jump box.\n\nComplexity requirements: 3 out of 4 conditions below need to be fulfilled:\n- Has lower characters\n- Has upper characters\n- Has a digit\n- Has a special character\n\nDisallowed values: "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word", "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"')
 @secure()
-@minLength(8)
+@minLength(0)
 @maxLength(123)
-param jumpBoxAdminPassword string
+param jumpBoxAdminPassword string =''
+
+@description('If true, will deploy the jump box and associated Azure Bastion service. If false, these resources will not be deployed.')
+param deployJumpbox bool = false
 
 // ---- Variables ----
 
@@ -53,7 +56,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
 // New resources
 
 @description('Required public IP for the Azure Bastion service, used for jump box access.')
-resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
+resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = if (deployJumpbox) {
   name: 'pip-${bastionHostName}'
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -76,7 +79,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
 }
 
 @description('Deploys Azure Bastion for secure access to the jump box.')
-resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = if (deployJumpbox) {
   name: bastionHostName
   location: location
   sku: {
@@ -108,7 +111,7 @@ resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = {
 }
 
 @description('Diagnostics settings for Azure Bastion')
-resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = if (deployJumpbox) {
   name: 'default'
   scope: bastion
   properties: {
@@ -123,7 +126,7 @@ resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-
 }
 
 @description('Default VM Insights DCR rule, to be applied to the jump box.')
-resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = if (deployJumpbox) {
   name: 'dcr-${jumpBoxName}'
   location: location
   kind: 'Windows'
@@ -176,7 +179,7 @@ resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-
 }
 
 @description('VM will only receive a private IP.')
-resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = if (deployJumpbox) {
   name: 'nic-${jumpBoxName}'
   location: location
   properties: {
@@ -204,7 +207,7 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 @description('The Azure ML and Azure OpenAI portal experiences are only able to be accessed from the virtual network, this jump box gives you access to those UIs.')
-resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = if (deployJumpbox) {
   name: 'vm-${jumpBoxName}'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachines', location, 1)
@@ -337,7 +340,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
 }
 
 @description('Associate jump box with Azure Monitor Agent VM Insights DCR.')
-resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = {
+resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = if (deployJumpbox) {
   name: 'dcra-vminsights'
   scope: jumpBoxVirtualMachine
   properties: {

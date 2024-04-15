@@ -19,6 +19,67 @@ The reference implementation focuses on enterprise requirements such as:
 - Security
 - Scalability
 
+## Deployment Scenarios
+
+This reference implementation provides two main deployment scenarios:
+
+-   **Standalone Deployment**: All resources are deployed in the same resource group. This scenario is suitable for development, testing or small-scale production environments where simplicity and minimal configuration are preferred.
+-   **Enterprise-Scale ALZ Integration Deployment**: Resources are integrated into an existing Azure Landing Zone (ALZ) architecture. This scenario is targeted towards large enterprises that require a structured environment with core networking and security compliance features enforced.
+
+## Scenarios Explained
+
+### Standalone Deployment
+
+When you have a smaller scale development project or you are trying to prove a concept, the standalone deployment is suitable. It offers fast setup and all resources are managed within a single resource group. For example, a team working on a new application with no existing Azure setup would use this scenario.
+
+To deploy this scenario, use the `parameters.standalone.json` file, which includes the minimum required settings without integrating into an existing network infrastructure. It provides a simple configuration but still allows for some customization such as availability zones and redundancy settings.
+
+### Enterprise-Scale ALZ Integration Deployment
+
+For organizations already using the Azure Landing Zone architecture, the ALZ integration deployment is recommended. This allows for the chat application to seamlessly integrate into the pre-existing, well-governed, and secure environment. This would be selected by enterprises that have complex networking requirements, need strict adherence to security and compliance standards, or simply want to maintain a consistent governance model across all Azure services.
+
+Deploy this scenario with the `parameters.alz.json` file, which specifies the integration points for existing Azure services such as Private DNS zones for services like Azure Container Registry, Azure Machine Learning, Azure Blob and File Storage, and Azure OpenAI. It also includes an external DNS server address and the IP address of an existing Network Virtual Appliance (NVA) for routing configuration.
+
+The key differences when integrating into ALZ as opposed to a standalone deployment are as follows:
+
+1.  **DNS Forwarding**: Rather than using local DNS settings, the application's virtual network should be configured to use central DNS servers, such as Azure Firewall DNS Proxy or Azure Private DNS Resolver, for DNS forwarding. This centralizes DNS management and ensures consistency across the landscape.
+    
+2.  **Bastion Host**: Instead of deploying an Azure Bastion host within the application's landing zone, a centralized bastion service already provisioned within the ALZ is used. This means all remote administrative traffic is routed through a common, secure access point, adhering to the principle of least privilege and centralized auditing.
+    
+3.  **Private DNS Zones**: Private endpoints within the application need to be integrated with centralized private DNS zones that are managed at the ALZ level. Such DNS zones might be shared across multiple applications or environments, simplifying the DNS management and providing an organized approach to name resolution.
+    
+4.  **Network Virtual Appliance (NVA)**: Outbound connectivity is handled through a centralized NVA, routing traffic via user-defined routes (UDRs) to enforce consistent network security policies and traffic inspections. This approach channels all outbound traffic through a central point where security measures such as firewalls and intrusion detection systems can be applied.
+    
+5.  **Compliance with Centralized Governance**: An ALZ comes with predefined governance policies regarding resource provisioning, network configurations, and security settings. Integrating with an ALZ demands compliance with these policies, ensuring that all deployments meet the organization's regulatory, compliance, and governance standards.
+    
+
+By integrating with an ALZ, the implementation not only conforms to existing infrastructure but also leverages the robust, managed network, and security services already in place. This maximizes resource utilization, streamlines operations across the enterprise, and ensures that any new applications are compliant with organizational standards right from their deployment.
+
+### When to Use Each Scenario
+
+**Standalone Deployment** is useful when:
+
+-   Rapid prototyping is needed without the complications of larger Azure environments.
+-   The application is targeted for a contained, possibly temporary, lifecycle.
+-   There is no need for integration with other cloud services or environments.
+
+**ALZ Integration Deployment** is advantageous when:
+
+-   Complying with an enterprise's established security, compliance, and governance models.
+-   Operating in a large-scale environment with multiple interconnected Azure services.
+-   Ensuring that deployments align with organizational best practices and policies related to networking, identity, and resource management.
+
+Both scenarios come with their respective parameter files (`parameters.standalone.json` and `parameters.alz.json`) that should be edited to fit the requirements of the deployment scenario chosen. These files contain necessary input values for the deployment template that align with either a standalone setup or an integration with an existing Azure Landing Zone.
+
+Regardless of the deployment scenario, the deployment steps remain consistent:
+
+1.  Set your `baseName`, `developmentEnvironment`, `appGatewayListenerCertificate`, etc. in the parameters file.
+2.  Use the Azure CLI commands outlined in the original README to deploy your resources.
+3.  Adjust your deployment settings based on the output and requirements of your specific environment.
+
+These steps ensure a successful deployment in either a standalone or ALZ-integrated environment. Always review and understand the parameter values and ensure they align with your deployment goals prior to initiating the deployment process.
+
+
 ## Architecture
 
 The implementation covers the following scenarios:
@@ -142,7 +203,7 @@ az group create -l $LOCATION -n $RESOURCE_GROUP
 # This takes about 30 minutes to run.
 az deployment group create -f ./infra-as-code/bicep/main.bicep \
   -g $RESOURCE_GROUP \
-  -p @./infra-as-code/bicep/parameters.json \
+  -p @./infra-as-code/bicep/parameters.standalone.json \
   -p baseName=$BASE_NAME
 ```
 

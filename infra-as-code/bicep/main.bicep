@@ -35,8 +35,9 @@ param existingPrivateDnsZoneFile string = ''
 param paramDnsServers array = []
 param existingApiAzureMlDnsZone string = ''
 param existingNotebookDnsZone string= ''
-param paramFirewallNVAIpAddress string
+param paramFirewallNVAIpAddress string =''
 param existingPrivateZoneAppService string =''
+param deployJumpbox bool =false
 // ---- Parameters required to set to make it non availability zone compliant ----
 param paramStorageSKU string = 'Standard_ZRS'
 param paramAcrSku string = 'Premium'
@@ -79,6 +80,7 @@ module jumpBoxModule 'jumpbox.bicep' = {
     logWorkspaceName: logWorkspace.name
     jumpBoxAdminName: 'vmadmin'
     jumpBoxAdminPassword: jumpBoxAdminPassword
+    deployJumpbox: deployJumpbox
   }
 }
 
