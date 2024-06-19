@@ -8,6 +8,9 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
+@description('Specifies the SKU to be used by the Compute instance. Make sure you have the required ML quota available.')
+param computeInstanceSku string
+
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
@@ -372,7 +375,7 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
         sshSettings: {
           sshPublicAccess: 'Disabled'
         }
-        vmSize: 'STANDARD_DS3_V2'
+        vmSize: computeInstanceSku
       }
     }
     dependsOn: [

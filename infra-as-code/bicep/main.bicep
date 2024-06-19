@@ -25,6 +25,9 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
+@description('Specifies the SKU to be used by the Compute instance. Make sure you have the required ML quota available.')
+param computeInstanceSku string = 'Standard_D4ds_v4'
+
 // ---- Availability Zones ----
 var availabilityZones = [ '1', '2', '3' ]
 
@@ -150,6 +153,7 @@ module mlwModule 'machinelearning.bicep' = {
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
+    computeInstanceSku: computeInstanceSku
   }
 }
 
