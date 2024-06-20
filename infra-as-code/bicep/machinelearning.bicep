@@ -373,7 +373,6 @@ resource machineLearning 'Microsoft.MachineLearningServices/workspaces@2023-10-0
           sshPublicAccess: 'Disabled'
         }
         vmSize: 'STANDARD_DS3_V2' // Specifies the SKU of the compute instances. You'll need to have the required ML quota available. Adjust SKU choice if necessary.
-
       }
     }
     dependsOn: [
