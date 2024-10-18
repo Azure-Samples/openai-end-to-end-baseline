@@ -4,6 +4,7 @@
 
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
+@maxLength(8)
 param baseName string
 
 @description('The resource group location')
@@ -12,7 +13,7 @@ param location string = resourceGroup().location
 param developmentEnvironment bool
 param publishFileName string
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 param appServicesSubnetName string
 param privateEndpointsSubnetName string
@@ -28,7 +29,6 @@ var packageLocation = 'https://${storageName}.blob.${environment().suffixes.stor
 var appServicePrivateEndpointName = 'pep-${appName}'
 var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
 
-
 var appInsightsName = 'appinsights-${appName}'
 
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
@@ -42,7 +42,7 @@ var appServicePlanPremiumSku = 'Premium'
 var appServicePlanStandardSku = 'Standard'
 var appServicePlanSettings = {
   Standard: {
-    name: 'S1'
+    name: 'B2'
     capacity: 1
   }
   Premium: {
@@ -117,7 +117,7 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
 }
 
 //App service plan
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: location
   sku: developmentEnvironment ? appServicePlanSettings[appServicePlanStandardSku] : appServicePlanSettings[appServicePlanPremiumSku]
@@ -129,7 +129,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 }
 
 // Web App
-resource webApp 'Microsoft.Web/sites@2022-09-01' = {
+resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: appName
   location: location
   kind: 'app'
@@ -323,6 +323,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: {
     Application_Type: 'web'
     WorkspaceResourceId: logWorkspace.id
+    RetentionInDays: 90
+    IngestionMode: 'LogAnalytics'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 

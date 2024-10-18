@@ -3,6 +3,8 @@
 */
 
 @description('This is the base name for each Azure resource name (6-8 chars)')
+@minLength(6)
+@maxLength(8)
 param baseName string
 
 @description('The resource group location')
@@ -20,6 +22,7 @@ param createPrivateEndpoints bool = false
 param vnetName string
 param privateEndpointsSubnetName string
 
+@description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
 //variables
@@ -77,7 +80,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
 //Key Vault diagnostic settings
 resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: '${keyVault.name}-diagnosticSettings'
-  // scope: DeployBlob::Blob
   scope: keyVault
   properties: {
     workspaceId: logWorkspace.id

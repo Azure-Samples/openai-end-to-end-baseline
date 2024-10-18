@@ -65,7 +65,7 @@ module jumpBoxModule 'jumpbox.bicep' = {
   }
 }
 
-// Deploy storage account with private endpoint and private DNS zone
+// Deploy Azure Storage account with private endpoint and private DNS zone
 module storageModule 'storage.bicep' = {
   name: 'storageDeploy'
   params: {
@@ -77,7 +77,7 @@ module storageModule 'storage.bicep' = {
   }
 }
 
-// Deploy key vault with private endpoint and private DNS zone
+// Deploy Azure Key Vault with private endpoint and private DNS zone
 module keyVaultModule 'keyvault.bicep' = {
   name: 'keyVaultDeploy'
   params: {
@@ -92,7 +92,7 @@ module keyVaultModule 'keyvault.bicep' = {
   }
 }
 
-// Deploy container registry with private endpoint and private DNS zone
+// Deploy Azure Container Registry with private endpoint and private DNS zone
 module acrModule 'acr.bicep' = {
   name: 'acrDeploy'
   params: {
@@ -125,14 +125,6 @@ module openaiModule 'openai.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
     keyVaultName: keyVaultModule.outputs.keyVaultName
-  }
-}
-
-// Deploy the gpt 3.5 model within the Azure OpenAI service deployed above.
-module openaiModels 'openai-models.bicep' = {
-  name: 'openaiModelsDeploy'
-  params: {
-    openaiName: openaiModule.outputs.openAiResourceName
   }
 }
 
@@ -171,7 +163,7 @@ module gatewayModule 'gateway.bicep' = {
   }
 }
 
-// Deploy the web apps for the front end demo ui and the containerised promptflow endpoint
+// Deploy the web apps for the front end demo UI and the containerised promptflow endpoint
 module webappModule 'webapp.bicep' = {
   name: 'webappDeploy'
   params: {
@@ -187,7 +179,7 @@ module webappModule 'webapp.bicep' = {
     logWorkspaceName: logWorkspace.name
   }
   dependsOn: [
-    openaiModule
+    mlwModule
     acrModule
   ]
 }
