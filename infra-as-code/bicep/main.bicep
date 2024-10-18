@@ -134,7 +134,7 @@ module mlwModule 'machinelearning.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    mlStorageAccountName: storageModule.outputs.mlDeployStorageName
+    aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName

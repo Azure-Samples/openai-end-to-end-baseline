@@ -121,7 +121,7 @@ The following steps are required to deploy the infrastructure from the command l
    - Set a variable for the domain used in the rest of this deployment.
 
      ```bash
-     export DOMAIN_NAME_APPSERV_BASELINE="contoso.com"
+     DOMAIN_NAME_APPSERV_BASELINE="contoso.com"
      ```
 
    - Generate a client-facing, self-signed TLS certificate.
@@ -140,8 +140,8 @@ The following steps are required to deploy the infrastructure from the command l
      :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for proper storage in Key Vault later.
 
      ```bash
-     export APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE=$(cat appgw.pfx | base64 | tr -d '\n')
-     echo APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE: $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE
+     APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV=$(cat appgw.pfx | base64 | tr -d '\n')
+     echo APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV: $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV
      ```
 
 1. Update the infra-as-code/parameters file
@@ -158,7 +158,7 @@ The following steps are required to deploy the infrastructure from the command l
          "value": true
        },
        "appGatewayListenerCertificate": {
-         "value": "[base64 cert data from $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE]"
+         "value": "[base64 cert data from $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV]"
        }
      }
    }
@@ -183,7 +183,7 @@ The following steps are required to deploy the infrastructure from the command l
    You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
    ```bash
-   RESOURCE_GROUP=<resource-group-name>
+   RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
    az group create -l $LOCATION -n $RESOURCE_GROUP
 
    # This takes about 30 minutes to run.
