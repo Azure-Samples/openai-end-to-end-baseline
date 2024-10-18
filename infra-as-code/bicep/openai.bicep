@@ -73,7 +73,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
       contentFilters: [
         /* PROMPT FILTERS */
         {
-          #disable-next-line BCP037
           name: 'hate'
           blocking: true
           enabled: true
@@ -81,7 +80,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'sexual'
           blocking: true
           enabled: true
@@ -89,7 +87,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'selfharm'
           blocking: true
           enabled: true
@@ -97,7 +94,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'violence'
           blocking: true
           enabled: true
@@ -105,14 +101,12 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'jailbreak'
           blocking: true
           enabled: true
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'profanity'
           blocking: true
           enabled: true
@@ -120,7 +114,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
         }
         /* COMPLETION FILTERS */
         {
-          #disable-next-line BCP037
           name: 'hate'
           blocking: true
           enabled: true
@@ -128,7 +121,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'sexual'
           blocking: true
           enabled: true
@@ -136,7 +128,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'selfharm'
           blocking: true
           enabled: true
@@ -144,7 +135,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'violence'
           blocking: true
           enabled: true
@@ -152,7 +142,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'profanity'
           blocking: true
           enabled: true
