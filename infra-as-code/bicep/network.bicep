@@ -36,12 +36,16 @@ resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2022-11-01' =
 }
 
 // Virtual network and subnets
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
   name: vnetName
   location: location
   properties: {
     enableDdosProtection: enableDdosProtection
     ddosProtectionPlan: enableDdosProtection ? { id: ddosProtectionPlan.id } : null
+    encryption: {
+      enabled: false
+      enforcement: 'AllowUnencrypted'
+    }
     addressSpace: {
       addressPrefixes: [
         vnetAddressPrefix
@@ -74,7 +78,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: appGatewaySubnetNsg.id
           }
-          privateEndpointNetworkPolicies: 'Enabled'
+          privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
@@ -86,6 +90,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: privateEndpointsSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'NetworkSecurityGroupEnabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false    // This subnet should never be the source of egress traffic.
         }
       }
       {
@@ -96,6 +103,8 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: agentsSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
       {
@@ -106,6 +115,8 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: bastionSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
       {
@@ -116,6 +127,8 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: jumpboxSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
       {
@@ -126,6 +139,8 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: trainingSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
       {
@@ -136,6 +151,8 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' = {
           networkSecurityGroup: {
             id: scoringSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
     ]
