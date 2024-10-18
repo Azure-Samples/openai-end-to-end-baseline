@@ -67,6 +67,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
     softDeleteRetentionInDays: 7
     createMode: 'default'               // Creating or updating the key vault (not recovering)
   }
+
   resource kvsGatewayPublicCert 'secrets' = {
     name: 'gateway-public-cert'
     properties: {
@@ -74,7 +75,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       contentType: 'application/x-pkcs12'
     }
   }
-
 }
 
 //Key Vault diagnostic settings
@@ -164,5 +164,5 @@ resource apiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
 @description('The name of the key vault.')
 output keyVaultName string = keyVault.name
 
-@description('Uri to the secret holding the cert.')
-output gatewayCertSecretUri string = keyVault::kvsGatewayPublicCert.properties.secretUri
+@description('Name of the secret holding the cert.')
+output gatewayCertSecretKey string = keyVault::kvsGatewayPublicCert.name

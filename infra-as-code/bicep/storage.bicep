@@ -39,7 +39,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
 }
 
 // ---- Storage resources ----
-resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: appDeployStorageName
   location: location
   sku: {
@@ -49,7 +49,7 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   properties: {
     accessTier: 'Hot'
     allowBlobPublicAccess: false
-    allowSharedKeyAccess: true
+    allowSharedKeyAccess: false
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
@@ -66,6 +66,10 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       }
     }
     minimumTlsVersion: 'TLS1_2'
+    isHnsEnabled: false
+    isSftpEnabled: false
+    isLocalUserEnabled: false
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'

@@ -25,9 +25,6 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
-// ---- Availability Zones ----
-var availabilityZones = [ '1', '2', '3' ]
-
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'log-${baseName}'
@@ -100,7 +97,6 @@ module acrModule 'acr.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    createPrivateEndpoints: true
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -152,13 +148,12 @@ module gatewayModule 'gateway.bicep' = {
     location: location
     baseName: baseName
     developmentEnvironment: developmentEnvironment
-    availabilityZones: availabilityZones
     customDomainName: customDomainName
     appName: webappModule.outputs.appName
     vnetName: networkModule.outputs.vnetNName
     appGatewaySubnetName: networkModule.outputs.appGatewaySubnetName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    gatewayCertSecretUri: keyVaultModule.outputs.gatewayCertSecretUri
+    gatewayCertSecretKey: keyVaultModule.outputs.gatewayCertSecretKey
     logWorkspaceName: logWorkspace.name
   }
 }

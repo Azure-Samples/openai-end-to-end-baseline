@@ -53,7 +53,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
 // New resources
 
 @description('Required public IP for the Azure Bastion service, used for jump box access.')
-resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
+resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
   name: 'pip-${bastionHostName}'
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -76,7 +76,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
 }
 
 @description('Deploys Azure Bastion for secure access to the jump box.')
-resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2024-01-01' = {
   name: bastionHostName
   location: location
   sku: {
@@ -89,6 +89,7 @@ resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = {
     enableKerberos: false
     enableShareableLink: false
     enableTunneling: false
+    enableSessionRecording: false
     scaleUnits: 2
     ipConfigurations: [
       {

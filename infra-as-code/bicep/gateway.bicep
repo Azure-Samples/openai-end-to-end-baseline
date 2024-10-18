@@ -3,6 +3,8 @@
 */
 
 @description('This is the base name for each Azure resource name (6-8 chars)')
+@minLength(6)
+@maxLength(8)
 param baseName string
 
 @description('The resource group location')
@@ -14,14 +16,23 @@ param developmentEnvironment bool
 @description('Domain name to use for App Gateway')
 param customDomainName string
 
-param availabilityZones array
-param gatewayCertSecretUri string
-
-// existing resource name params 
+@description('The name of the existing virtual network that this Application Gateway instance will be deployed into.')
 param vnetName string
+
+@description('The name of the existing subnet for Application Gateway. Must in in the provided virtual network and sized appropriately.')
 param appGatewaySubnetName string
+
+@description('The name of the existing webapp that will be the backend origin for the primary application gateway route.')
 param appName string
+
+@description('The name of the existing Key Vault that contains the SSL certificate for the Application Gateway.')
 param keyVaultName string
+
+@description('The name of the existing Key Vault secret that contains the SSL certificate for the Application Gateway.')
+#disable-next-line secure-secrets-in-params
+param gatewayCertSecretKey string
+
+@description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
 //variables
@@ -46,6 +57,14 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' existing = {
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logWorkspaceName
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: keyVaultName
+
+  resource kvsGatewayPublicCert 'secrets' existing = {
+    name: gatewayCertSecretKey
+  }
 }
 
 // Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload's identity.
@@ -76,7 +95,7 @@ module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignme
 resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
   name: appGatewayPublicIpName
   location: location
-  zones: !developmentEnvironment ? availabilityZones : null
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
   sku: {
     name: 'Standard'
   }
@@ -118,10 +137,10 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
 }
 
 //App Gateway
-resource appGateWay 'Microsoft.Network/applicationGateways@2022-11-01' = {
+resource appGateWay 'Microsoft.Network/applicationGateways@2024-01-01' = {
   name: appGateWayName
   location: location
-  zones: !developmentEnvironment ? availabilityZones : null
+  zones: pickZones('Microsoft.Network', 'applicationGateways', location, 3)
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
@@ -200,7 +219,7 @@ resource appGateWay 'Microsoft.Network/applicationGateways@2022-11-01' = {
       {
         name: '${appGateWayName}-ssl-certificate'
         properties: {
-          keyVaultSecretId: gatewayCertSecretUri
+          keyVaultSecretId: keyVault::kvsGatewayPublicCert.properties.secretUri
         }
       }
     ]

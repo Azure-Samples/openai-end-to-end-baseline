@@ -44,7 +44,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   }
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = {
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: openaiName
   location: location
   kind: 'OpenAI'
@@ -54,7 +54,9 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
     networkAcls: {
       defaultAction: 'Deny'
     }
-    // TODO: disableLocalAuth: true
+    disableLocalAuth: true
+    restrictOutboundNetworkAccess: true
+    allowedFqdnList: []
   }
   sku: {
     name: 'S0'
@@ -75,7 +77,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'hate'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
@@ -83,7 +85,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'sexual'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
@@ -91,7 +93,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'selfharm'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
@@ -99,7 +101,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'violence'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
@@ -122,7 +124,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'hate'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
@@ -130,7 +132,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'sexual'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
@@ -138,7 +140,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'selfharm'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
@@ -146,7 +148,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           name: 'violence'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
@@ -220,20 +222,19 @@ resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' =
   }
 }
 
-resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: openaiDnsZoneName
   location: 'global'
   properties: {}
-}
 
-resource openaiDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: openaiDnsZone
-  name: '${openaiDnsZoneName}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource openaiDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${openaiDnsZoneName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
 }
