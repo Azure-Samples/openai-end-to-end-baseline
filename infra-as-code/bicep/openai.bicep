@@ -1,4 +1,6 @@
 @description('This is the base name for each Azure resource name (6-8 chars)')
+@minLength(6)
+@maxLength(8)
 param baseName string
 
 @description('The resource group location')
@@ -7,7 +9,10 @@ param location string = resourceGroup().location
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
+
+@description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
+
 param keyVaultName string
 
 //variables
@@ -49,6 +54,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
     networkAcls: {
       defaultAction: 'Deny'
     }
+    // TODO: disableLocalAuth: true
   }
   sku: {
     name: 'S0'
@@ -151,6 +157,24 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
           source: 'Completion'
         }
       ]
+    }
+  }
+
+  @description('Add a gpt-3.5 turbo deployment.')
+  resource gpt35 'deployments' = {
+    name: 'gpt35'
+    sku: {
+      name: 'Standard'
+      capacity: 25
+    }
+    properties: {
+      model: {
+        format: 'OpenAI'
+        name: 'gpt-35-turbo'
+        version: '0613' // If your selected region doesn't support this version, please change it.
+      }
+      raiPolicyName: openAiAccount::blockingFilter.name
+      versionUpgradeOption: 'NoAutoUpgrade'  // Always pin your dependencies, be intentional about updates.
     }
   }
 }
