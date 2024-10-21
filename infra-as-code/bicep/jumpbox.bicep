@@ -273,10 +273,11 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
         createOption: 'FromImage'
         caching: 'ReadOnly'
         deleteOption: 'Delete'
-        diffDiskSettings: {
-          option: 'Local'
-          placement: 'CacheDisk'
-        }
+        // TODO: Can we switch to ephemeral OS?
+        //diffDiskSettings: {
+        //  option: 'Local'
+        //  placement: 'CacheDisk'
+        //}
         managedDisk: {
           storageAccountType: 'Premium_LRS'
         }
@@ -284,7 +285,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
           enabled: false
         }
         osType: 'Windows'
-        diskSizeGB: 64
+        diskSizeGB: 127
       }
       imageReference: {
         offer: 'windows-11'
