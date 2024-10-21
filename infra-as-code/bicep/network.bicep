@@ -384,7 +384,7 @@ resource trainingSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' 
           sourcePortRange: '*'
           destinationPortRange: '*'
           sourceAddressPrefix: trainingSubnetPrefix
-          destinationAddressPrefix: 'Internet'  // TODO: Can this be any more restrictive?
+          destinationAddressPrefix: '*'
           access: 'Deny'
           priority: 1000
           direction: 'Outbound'
@@ -677,6 +677,3 @@ output bastionSubnetName string = vnet::azureBastionSubnet.name
 
 @description('The name of the private endpoints subnet.')
 output jumpboxSubnetName string = vnet::jumpBoxSubnet.name
-
-@description('The name of the subnet suitable for training or for serverless compute.')
-output trainingSubnetName string = vnet::trainingSubnet.name

@@ -12,10 +12,9 @@ param location string = resourceGroup().location
 
 // existing resource name params 
 param vnetName string
-param privateEndpointsSubnetName string
 
-@description('The name of the existing subnet within the identified vnet that will contain the serverless compute.')
-param snetTrainingSubnetName string
+@description('The name of the existing subnet within the identified vnet that will contains all private endpoints for this workload.')
+param privateEndpointsSubnetName string
 
 param applicationInsightsName string
 param containerRegistryName string
@@ -36,10 +35,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }
-
-  resource aiStudioServerlessComputeSubnet 'subnets' existing = {
-    name: snetTrainingSubnetName
   }
 }
 
@@ -303,7 +298,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     allowPublicAccessWhenBehindVnet: false
     ipAllowlist: []
     serverlessComputeSettings: {
-      serverlessComputeCustomSubnet: vnet::aiStudioServerlessComputeSubnet.id
+      serverlessComputeCustomSubnet: null  // Use a managed virtual network instead of a BYO subnet
       serverlessComputeNoPublicIP: true
     }
 

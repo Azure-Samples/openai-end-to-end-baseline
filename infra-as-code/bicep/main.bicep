@@ -132,7 +132,6 @@ module mlwModule 'machinelearning.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    snetTrainingSubnetName: networkModule.outputs.trainingSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
