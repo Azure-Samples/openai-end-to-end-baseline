@@ -38,22 +38,6 @@ var chatOutputName = 'answer'
 
 // var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)' TODO: Why was this set?
 
-var appServicePlanPremiumSku = 'Premium'
-var appServicePlanStandardSku = 'Standard'
-var appServicePlanSettings = {
-  Standard: {
-    name: 'B2'
-    capacity: 1
-  }
-  Premium: {
-    name: 'P1v3'
-    capacity: 3
-  }
-}
-
-var appServicesDnsZoneName = 'privatelink.azurewebsites.net'
-var appServicesDnsGroupName = '${appServicePrivateEndpointName}/default'
-var appServicesPfDnsGroupName = '${appServicePfPrivateEndpointName}/default'
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -73,6 +57,10 @@ resource storage 'Microsoft.Storage/storageAccounts@2022-09-01' existing = {
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logWorkspaceName
+}
+
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
+  name: 'cr${baseName}'
 }
 
 // Built-in Azure RBAC role that is applied to a Key Vault to grant secrets content read permissions. 
@@ -120,12 +108,16 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: location
-  sku: developmentEnvironment ? appServicePlanSettings[appServicePlanStandardSku] : appServicePlanSettings[appServicePlanPremiumSku]
+  kind: 'linux'
+  sku: {
+    name: 'P1v3'
+    tier: 'PremiumV3'
+    capacity: 3
+  }
   properties: {
-    zoneRedundant: !developmentEnvironment
+    zoneRedundant: false // TODO: My subscription doesn't have enough quota to set this to 'true', but before we ship this must go back to true.
     reserved: true
   }
-  kind: 'linux'
 }
 
 // Web App
@@ -233,41 +225,37 @@ resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-0
       }
     ]
   }
-}
 
-resource appServiceDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: appServicesDnsZoneName
-  location: 'global'
-  properties: {}
-}
-
-resource appServiceDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: appServiceDnsZone
-  name: '${appServicesDnsZoneName}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource appServiceDnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: 'privatelink.azurewebsites.net'
+          properties: {
+            privateDnsZoneId: appServiceDnsZone.id
+          }
+        }
+      ]
     }
   }
 }
 
-resource appServiceDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
-  name: appServicesDnsGroupName
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'privatelink.azurewebsites.net'
-        properties: {
-          privateDnsZoneId: appServiceDnsZone.id
-        }
+resource appServiceDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.azurewebsites.net'
+  location: 'global'
+  properties: {}
+
+  resource appServiceDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${appServiceDnsZone.name}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
       }
-    ]
+    }
   }
-  dependsOn: [
-    appServicePrivateEndpoint
-  ]
 }
 
 // App service plan auto scale settings
@@ -328,12 +316,6 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
     publicNetworkAccessForQuery: 'Enabled'
   }
 }
-
-@description('The name of the app service plan.')
-output appServicePlanName string = appServicePlan.name
-
-@description('The name of the web app.')
-output appName string = webApp.name
 
 /*Promptflow app service*/
 // Web App
@@ -421,7 +403,7 @@ resource webAppPfDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
   }
 }
 
-resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2024-01-01' = {
   name: appServicePfPrivateEndpointName
   location: location
   properties: {
@@ -440,36 +422,34 @@ resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2022-11
       }
     ]
   }
-}
 
-resource appServicePfDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
-  name: appServicesPfDnsGroupName
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: 'privatelink.azurewebsites.net'
-        properties: {
-          privateDnsZoneId: appServiceDnsZone.id
+  resource appServicePfDnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: 'privatelink.azurewebsites.net'
+          properties: {
+            privateDnsZoneId: appServiceDnsZone.id
+          }
         }
-      }
-    ]
+      ]
+    }
   }
-  dependsOn: [
-    appServicePrivateEndpointPf
-  ]
-}
-
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2019-05-01' existing = {
-  name: 'cr${baseName}'
 }
 
 resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(containerRegistry.id, appServiceManagedIdentity.id)
+  name: guid(containerRegistry.id, appServiceManagedIdentity.id) // TODO: Incldue role definition ID in the name
   scope: containerRegistry
   properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role, TODO: Extract to existing resource.
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
 }
 
+@description('The name of the app service plan.')
+output appServicePlanName string = appServicePlan.name
+
+@description('The name of the web app.')
+output appName string = webApp.name

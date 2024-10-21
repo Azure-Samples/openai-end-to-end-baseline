@@ -188,15 +188,14 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
-TODO: Update instructions for Azure AI Studio's flow.
-
 ### 2. Deploy a prompt flow from Azure AI Studio
 
-To test this architecture, you'll be deploying a pre-built prompt flow. The prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data.
+To test this architecture, you'll be deploying a pre-built prompt flow. The prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network primeter is established, and you must be interacting with Azure AI Studio and its resources from the network.
 
 1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
-   :computer: Unless otherwise noted, the the **following steps are all performed from the jump box** or from your VPN-connected workstation.
+   | :computer: | Unless otherwise noted, the the **following steps are all performed from the jump box** or from your VPN-connected workstation. |
+   | :--------: | :------------------------- |
 
 1. Open Azure AI Studio's projects by going to <https://ai.azure.com/allProjects>.
 
