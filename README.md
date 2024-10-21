@@ -1,5 +1,7 @@
 # Azure OpenAI end-to-end baseline reference implementation
 
+TODO: Update description
+
 This reference implementation illustrates an approach for authoring and running a chat application in a single region with Prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
 
 - An Azure Machine Learning managed online endpoint in a managed virtual network.
@@ -29,6 +31,8 @@ The implementation covers the following scenarios:
 
 ### Authoring a flow
 
+TODO: Update diagram and description
+
 ![Diagram of the authoring architecture using Azure Machine Learning.](docs/media/azure-machine-learning-authoring.png)
 
 The authoring architecture diagram illustrates how flow authors [connect to an Azure Machine Learning Workspace through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine jumpbox. Connectivity to the virtual network is more commonly done in enterprises through ExpressRoute or virtual network peering.
@@ -37,11 +41,15 @@ The diagram further illustrates how the Machine Learning Workspace is configured
 
 ### Deploying a flow to Azure Machine Learning managed online endpoint
 
+TODO: Update diagram and description
+
 ![Diagram of the deploying a flow to Azure Machine Learning managed online endpoint.](docs/media/openai-chat-e2e-deployment-amlcompute.png)
 
 The Azure Machine Learning deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources such as Azure OpenAI and Cognitive Search through managed private endpoints.
 
 ### Deploying a flow to Azure App Service (alternative)
+
+TODO: Update diagram and description
 
 ![Diagram of the deploying a flow to Azure App Service.](docs/media/openai-chat-e2e-deployment-appservices.png)
 
@@ -56,8 +64,8 @@ Azure patterns & practices team is transitioning this and related content from A
 | Asset | Workspace |
 | :---- | :-------- |
 | [Basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic) | :ballot_box_with_check: AI Studio project |
-| [Basic architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat) | :white_square_button: AML workspace |
-| Baseline implementation *(this repo)* | :white_square_button: AML workspace |
+| [Basic architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat) | :ballot_box_with_check: AI Studio project |
+| Baseline implementation *(this repo)* | :ballot_box_with_check: AI Studio project |
 | [Baseline architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) | :white_square_button: AML workspace |
 | [Azure landing zone implementation](https://github.com/Azure-Samples/azure-openai-chat-baseline-landing-zone) | :white_square_button: AML workspace |
 | [Azure landing zone architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/azure-openai-baseline-landing-zone) | :white_square_button: AML workspace |
@@ -81,11 +89,13 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - `Microsoft.ManagedIdentity`
     - `Microsoft.OperationalInsights`
     - `Microsoft.Storage`
+    - TODO: This is the list from "Basic" -- What's missing for Baseline?
 
   - The subscription selected must have the following quota available in the location you'll select to deploy this implementation.
 
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
     - Storage Accounts: 2
+    - TODO: This is the list from "Basic" -- What's missing for Baseline?
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -104,7 +114,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    ```bash
    git clone https://github.com/Azure-Samples/openai-end-to-end-baseline
-   cd openai-end-to-end-basic
+   cd openai-end-to-end-baseline
    ```
 
 1. Log in and set your target subscription.
@@ -172,6 +182,8 @@ The following steps are required to deploy the infrastructure from the command l
      -p appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV} \
      -p baseName=$BASE_NAME
    ```
+
+TODO: Update instructions for Azure AI Studio's flow.
 
 ### 2. Deploy a Prompt flow from Azure Machine Learning workspace
 
