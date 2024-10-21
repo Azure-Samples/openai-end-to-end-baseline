@@ -62,6 +62,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existin
   name: openAiResourceName
 }
 
+/*
 // ---- RBAC built-in role definitions and role assignments ----
 @description('Built-in Role: [Storage Blob Data Reader](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader)')
 resource storageBlobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
@@ -105,7 +106,7 @@ resource keyVaultAdministratorRole 'Microsoft.Authorization/roleDefinitions@2022
   name: '00482a5a-887f-4fb3-b363-3b7fe8e74483'
   scope: subscription()
 }
-/*
+
 @description('Built-in Role: [Azure Machine Learning Workspace Connection Secrets Reader](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles)')
 resource machineLearningConnetionSecretsReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'ea01e6af-a1c1-4350-9563-ad00f8c72ec5'
@@ -297,11 +298,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     publicNetworkAccess: 'Disabled'
     allowPublicAccessWhenBehindVnet: false
     ipAllowlist: []
-    serverlessComputeSettings: {
-      serverlessComputeCustomSubnet: null  // Use a managed virtual network instead of a BYO subnet
-      serverlessComputeNoPublicIP: true
-    }
-
+    serverlessComputeSettings: null // This reference implementation uses a managed virtual network instead of a BYO subnet
     enableServiceSideCMKEncryption: false
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
@@ -368,6 +365,7 @@ resource aiHubDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
     logs: [
       {
         categoryGroup: 'allLogs' // Production readiness change: In production, this is probably excessive. Please tune to just the log streams that add value to your workload's operations.
+                                 // TODO: Evaluate what would be meainigful defaults for the Baseline
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -454,6 +452,7 @@ resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
     logs: [
       {
         categoryGroup: 'allLogs'  // Production readiness change: In production, this is probably excessive. Please tune to just the log streams that add value to your workload's operations.
+                                  // TODO: Evaluate what would be meainigful defaults for the Baseline
         enabled: true
         retentionPolicy: {
           enabled: false
