@@ -13,6 +13,10 @@ param location string = resourceGroup().location
 // existing resource name params 
 param vnetName string
 param privateEndpointsSubnetName string
+
+@description('The name of the existing subnet within the identified vnet that will contain the serverless compute.')
+param snetTrainingSubnetName string
+
 param applicationInsightsName string
 param containerRegistryName string
 param keyVaultName string
@@ -35,7 +39,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   }
 
   resource aiStudioServerlessComputeSubnet 'subnets' existing = {
-    name: 'serverlesscompute'
+    name: snetTrainingSubnetName
   }
 }
 
