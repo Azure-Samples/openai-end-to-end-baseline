@@ -144,32 +144,12 @@ The following steps are required to deploy the infrastructure from the command l
      echo APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV: $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV
      ```
 
-1. Update the infra-as-code/parameters file
-
-   ```json
-   {
-     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-     "contentVersion": "1.0.0.0",
-     "parameters": {
-       "baseName": {
-         "value": ""
-       },
-       "developmentEnvironment": {
-         "value": true
-       },
-       "appGatewayListenerCertificate": {
-         "value": "[base64 cert data from $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV]"
-       }
-     }
-   }
-   ```
-
 1. Set the deployment location to one with available quota in your subscription.
 
    The location you choose must [support availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) as well.
 
    ```bash
-   LOCATION=eastus
+   LOCATION=eastus2
    ```
 
 1. Set the base name value that will be used as part of the Azure resource names for the resources deployed in this solution.
@@ -189,7 +169,7 @@ The following steps are required to deploy the infrastructure from the command l
    # This takes about 30 minutes to run.
    az deployment group create -f ./infra-as-code/bicep/main.bicep \
      -g $RESOURCE_GROUP \
-     -p @./infra-as-code/bicep/parameters.json \
+     -p appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV} \
      -p baseName=$BASE_NAME
    ```
 
