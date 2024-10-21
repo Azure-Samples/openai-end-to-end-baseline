@@ -269,12 +269,14 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
     }
     storageProfile: {
       dataDisks: []
-      diskControllerType: 'SCSI'
       osDisk: {
         createOption: 'FromImage'
-        caching: 'ReadWrite'
+        caching: 'ReadOnly'
         deleteOption: 'Delete'
-        diffDiskSettings: null
+        diffDiskSettings: {
+          option: 'Local'
+          placement: 'CacheDisk'
+        }
         managedDisk: {
           storageAccountType: 'Premium_LRS'
         }
@@ -282,12 +284,12 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
           enabled: false
         }
         osType: 'Windows'
-        diskSizeGB: 127
+        diskSizeGB: 64
       }
       imageReference: {
         offer: 'windows-11'
         publisher: 'MicrosoftWindowsDesktop'
-        sku: 'win11-23h2-pro'
+        sku: 'win11-24h2-pro'
         version: 'latest'
       }
     }
