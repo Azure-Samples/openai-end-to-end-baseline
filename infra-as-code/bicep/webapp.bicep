@@ -36,7 +36,7 @@ var chatApiEndpoint = 'https://ept-${baseName}.${location}.inference.ml.azure.co
 var chatInputName = 'question'
 var chatOutputName = 'answer'
 
-var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)'
+// var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)' TODO: Why was this set?
 
 var appServicePlanPremiumSku = 'Premium'
 var appServicePlanStandardSku = 'Standard'
@@ -382,7 +382,7 @@ resource appsettingsPf 'Microsoft.Web/sites/config@2022-09-01' = {
     ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
     WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
     OPENAICONNECTION_API_BASE: 'https://oai${baseName}.openai.azure.com/'
-    OPENAICONNECTION_API_KEY: openAIApiKey
+    // OPENAICONNECTION_API_KEY: openAIApiKey  TODO: Why was this set?
     WEBSITES_PORT: '8080'
   }
 }

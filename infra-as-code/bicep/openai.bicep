@@ -34,6 +34,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
+/* TODO: Why was this set?
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   name: keyVaultName
   resource kvsGatewayPublicCert 'secrets' = {
@@ -42,7 +43,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
       value: openAiAccount.listKeys().key1
     }
   }
-}
+}*/
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: openaiName
