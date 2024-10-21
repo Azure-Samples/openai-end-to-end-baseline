@@ -194,7 +194,7 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
 
 1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
-   | :computer: | Unless otherwise noted, the the **following steps are all performed from the jump box** or from your VPN-connected workstation. |
+   | :computer: | Unless otherwise noted, all of the **following steps are all performed from the jump box** or from your VPN-connected workstation. |
    | :--------: | :------------------------- |
 
 1. Open Azure AI Studio's projects by going to <https://ai.azure.com/allProjects>.
