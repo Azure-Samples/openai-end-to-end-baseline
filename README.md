@@ -82,19 +82,22 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
     - `Microsoft.AlertsManagement`
     - `Microsoft.CognitiveServices`
+    - `Microsoft.Compute`
     - `Microsoft.ContainerRegistry`
     - `Microsoft.KeyVault`
     - `Microsoft.Insights`
     - `Microsoft.MachineLearningServices`
     - `Microsoft.ManagedIdentity`
+    - `Microsoft.Network`
     - `Microsoft.OperationalInsights`
     - `Microsoft.Storage`
-    - TODO: This is the list from "Basic" -- What's missing for Baseline?
+    - `Microsoft.Web`
 
   - The subscription selected must have the following quota available in the location you'll select to deploy this implementation.
 
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
-    - Storage Accounts: 2
+    - Storage Accounts: Two instances
+    - App Service Plans: P1v3 (AZ), three instances
     - TODO: This is the list from "Basic" -- What's missing for Baseline?
 
 - Your deployment user must have the following permissions at the subscription scope.
