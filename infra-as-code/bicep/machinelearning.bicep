@@ -282,33 +282,33 @@ resource computeInstanceBlobDataReaderRoleAssignment 'Microsoft.Authorization/ro
   }
 }*/
 
-@description('Assign your user the ability to manage files in storage. This is needed to use the Prompt flow editor in Azure AI Studio.')
+@description('Assign your user the ability to manage files in storage. This is needed to use the prompt flow editor in Azure AI Studio.')
 resource storageFileDataContributorForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: aiStudioStorageAccount
   name: guid(aiStudioStorageAccount.id, yourPrincipalId, storageFileDataContributorRole.id)
   properties: {
     roleDefinitionId: storageFileDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the Prompt flow developer portal in production, so this role
+    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the prompt flow developer portal in production, so this role
                                   // assignment would only be needed in pre-production environments.
   }
 }
 
-@description('Assign your user the ability to manage Prompt flow state files from blob storage. This is needed to execute the Prompt flow from within in Azure AI Studio.')
+@description('Assign your user the ability to manage prompt flow state files from blob storage. This is needed to execute the prompt flow from within in Azure AI Studio.')
 resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: aiStudioStorageAccount
   name: guid(aiStudioStorageAccount.id, yourPrincipalId, storageBlobDataContributorRole.id)
   properties: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the Prompt flow developer portal in production, so this role
+    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the prompt flow developer portal in production, so this role
                                   // assignment would only be needed in pre-production environments. In pre-production, use conditions on this assignment
                                   // to restrict access to just the blob containers used by the project.
 
   }
 }
 
-@description('Assign your user the ability to invoke models in Azure OpenAI. This is needed to execute the Prompt flow from within in Azure AI Studio.')
+@description('Assign your user the ability to invoke models in Azure OpenAI. This is needed to execute the prompt flow from within in Azure AI Studio.')
 resource cognitiveServicesOpenAiUserForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: openAiAccount
   name: guid(openAiAccount.id, yourPrincipalId, cognitiveServicesOpenAiUserRole.id)
@@ -433,7 +433,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
   }
   properties: {
     friendlyName: 'Chat with Wikipedia project'
-    description: 'Project to contain the "Chat with Wikipedia" example Prompt flow that is used as part of the Microsoft Learn Azure OpenAI baseline chat implementation. https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat'
+    description: 'Project to contain the "Chat with Wikipedia" example prompt flow that is used as part of the Microsoft Learn Azure OpenAI baseline chat implementation. https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat'
     v1LegacyMode: false
     publicNetworkAccess: 'Disabled'
     allowPublicAccessWhenBehindVnet: false
@@ -450,12 +450,12 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
                              // TODO: Evaluate moving back to UserAssigned for more granular control.
     }
     properties: {
-      description: 'This is the /score endpoint for the "Chat with Wikipedia" example Prompt flow deployment. Called by the UI hosted in Web Apps.'
+      description: 'This is the /score endpoint for the "Chat with Wikipedia" example prompt flow deployment. Called by the UI hosted in Web Apps.'
       authMode: 'Key' // Ideally this should be based on Microsoft Entra ID access. This sample however uses a key stored in Key Vault.
       publicNetworkAccess: 'Disabled'
     }
 
-    // TODO: Noticed that traffic goes back to 0% if this is template redeployed after the Prompt flow
+    // TODO: Noticed that traffic goes back to 0% if this is template redeployed after the prompt flow
     // deplopyment is complete. How can we stop that?
   }
 }
@@ -463,7 +463,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
 // Many role assignments are automatically managed by Azure for system managed identities, but the following two were needed to be added
 // manually specifically for the endpoint.
 
-@description('Assign the online endpoint the ability to interact with the secrets of the parent project. This is needed to execute the Prompt flow from the managed endpoint.')
+@description('Assign the online endpoint the ability to interact with the secrets of the parent project. This is needed to execute the prompt flow from the managed endpoint.')
 resource projectSecretsReaderForOnlineEndpointRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: chatProject
   name: guid(chatProject.id, chatProject::endpoint.id, amlWorkspaceSecretsReaderRole.id)
@@ -474,7 +474,7 @@ resource projectSecretsReaderForOnlineEndpointRoleAssignment 'Microsoft.Authoriz
   }
 }
 
-@description('Assign the online endpoint the ability to invoke models in Azure OpenAI. This is needed to execute the Prompt flow from the managed endpoint.')
+@description('Assign the online endpoint the ability to invoke models in Azure OpenAI. This is needed to execute the prompt flow from the managed endpoint.')
 resource projectOpenAIUserForOnlineEndpointRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: openAiAccount
   name: guid(openAiAccount.id, chatProject::endpoint.id, cognitiveServicesOpenAiUserRole.id)

@@ -2,7 +2,7 @@
 
 TODO: Update description
 
-This reference implementation illustrates an approach for authoring and running a chat application in a single region with Prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
+This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
 
 - An Azure Machine Learning managed online endpoint in a managed virtual network.
   - If your application requires high availability and you favor using a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
@@ -25,7 +25,7 @@ This implementation builds off of the [basic implementation](https://github.com/
 
 The implementation covers the following scenarios:
 
-1. Authoring a flow - Authoring a flow using Prompt flow in an Azure Machine Learning workspace
+1. Authoring a flow - Authoring a flow using prompt flow in an Azure Machine Learning workspace
 1. Deploying a flow to Azure Machine Learning (AML hosted option) - The deployment of an executable flow to an Azure Machine Learning online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
 1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
 
@@ -190,9 +190,9 @@ The following steps are required to deploy the infrastructure from the command l
 
 TODO: Update instructions for Azure AI Studio's flow.
 
-### 2. Deploy a Prompt flow from Azure AI Studio
+### 2. Deploy a prompt flow from Azure AI Studio
 
-To test this architecture, you'll be deploying a pre-built Prompt flow. The Prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data.
+To test this architecture, you'll be deploying a pre-built prompt flow. The prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data.
 
 1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
@@ -209,6 +209,50 @@ To test this architecture, you'll be deploying a pre-built Prompt flow. The Prom
 1. Under Explore gallery, find "Chat with Wikipedia" and click **Clone**.
 
 1. Set the Folder name to `chat_wiki` and click **Clone**.
+
+   This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
+
+1. Connect the the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
+
+   - For **Connection**, select 'aoai' from the dropdown menu. This is your deployed Azure OpenAI instance.
+   - For **deployment_name**, select 'gpt35' from the dropdown menu. This is the model you've deployed in that Azure OpenAI instance.
+   - For **response_format**, select '{"type":"text"}' from the dropdown menu
+
+1. Also connect the the `augmented_chat` prompt flow step to your Azure OpenAI model deployment.
+
+   - For **Connection**, select the same 'aoai' from the dropdown menu.
+   - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
+   - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
+
+1. Work around a telemetry issue that results in an error at the point of inferencing.
+
+   At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`. To correct that, perform the following steps.
+
+   1. Open the **Files** view.
+   1. Select 'requirements.txt'.
+   1. The file should be empty, add one line containing just `promptflow-tracing>=1.16.1`.
+   1. Click **Save only** and close the file.
+
+1. Click **Save** on the flow.
+
+### 3. Test the prompt flow from Azure AI Studio
+
+Here you'll test your flow by invoking it directly from the Azure AI Studio. The flow still requires you to bring compute to execute it from. The compute you'll use when in the portal is the default *Serverless* offering, which is only used for portal-based prompt flow experiences. The interactions against Azure OpenAI are performed by your identity; the bicep template has already granted your user data plane access. The Serverless compute is run from the managed virtual network and is beholden to the egress network rules defined.
+
+1. Click **Start compute session**.
+
+1. :clock8: Wait for that button to change to *Compute session running*. This may take about five minutes.
+
+   If you get an warning related to pip and dependency resolver, this is because of the temporary workaround you followed in the prior steps, this is safe to ignore.
+
+   *Do not advance until the serverless compute is running.*
+
+1. Click the enabled **Chat** button on the UI.
+
+1. Enter a question that would require grounding data through recent Wikipedia content, such as a notable current event.
+
+1. A grounded response to your question should appear on the UI.
+
 
 TODO Stopped here.
 
@@ -241,7 +285,7 @@ TODO Stopped here.
    - Choose the compute instance created by the Bicep  
    - Accept the other defaults and click 'Create'
 
-### 3. Test the Prompt flow from Azure Machine Learning workspace
+### 3. Test the prompt flow from Azure Machine Learning workspace
 
 1. :clock8: Wait for the runtime to be created. This may take about five minutes.
 
@@ -255,7 +299,7 @@ TODO Stopped here.
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Deploy the Prompt flow to an Azure Machine Learning managed online endpoint
+### 4. Deploy the prompt flow to an Azure Machine Learning managed online endpoint
 
 Here you'll take your tested flow and deploy it to a managed online endpoint.
 
@@ -386,7 +430,7 @@ pip install bs4
 
 #### Download your flow
 
-1. Open the Prompt flow UI in Azure Machine Learning Studio
+1. Open the prompt flow UI in Azure Machine Learning Studio
 1. Expand the 'Files' tab in the right pane of the UI
 1. Click on the download icon to download the flow as a zip file
 
@@ -399,8 +443,8 @@ pip install bs4
 1. Unzip the prompt flow zip file you downloaded
 1. In your terminal, change the directory to the root of the unzipped flow
 1. Create a folder called 'connections'
-1. Create a file for each connection you created in the Prompt flow UI
-    1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in Prompt flow, create a file called 'gpt35.yaml' under the connections folder.
+1. Create a file for each connection you created in the prompt flow UI
+    1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in prompt flow, create a file called 'gpt35.yaml' under the connections folder.
     1. Enter the following values in the file:
 
         ```bash
