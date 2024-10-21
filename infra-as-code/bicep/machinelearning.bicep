@@ -294,6 +294,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
   }
   identity: {
     type: 'SystemAssigned'  // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
+                            // TODO: Evaluate moving back to UserAssigned for more granular control.
   }
   properties: {
     friendlyName: 'Azure OpenAI Chat Hub'
@@ -393,6 +394,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
   }
   identity: {
     type: 'SystemAssigned'  // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
+                            // TODO: Evaluate moving back to UserAssigned for more granular control.
   }
   properties: {
     friendlyName: 'Chat with Wikipedia project'
@@ -410,6 +412,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     kind: 'Managed'
     identity: {
       type: 'SystemAssigned' // This resource's identity is automatically assigned AcrPull access to ACR, Storage Blob Data Contributor, and AML Metrics Writer on the project. It is also assigned two additional permissions below.
+                             // TODO: Evaluate moving back to UserAssigned for more granular control.
     }
     properties: {
       description: 'This is the /score endpoint for the "Chat with Wikipedia" example Prompt flow deployment. Called by the UI hosted in Web Apps.'
