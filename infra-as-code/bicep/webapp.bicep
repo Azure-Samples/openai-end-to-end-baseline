@@ -46,7 +46,7 @@ var appServicePlanSettings = {
     capacity: 1
   }
   Premium: {
-    name: 'P2v2'
+    name: 'P1v3'
     capacity: 3
   }
 }
@@ -159,24 +159,23 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
     appServiceSecretsUserRoleAssignmentModule
     blobDataReaderRoleAssignment
   ]
-}
 
-// App Settings
-resource appsettings 'Microsoft.Web/sites/config@2022-09-01' = {
-  name: 'appsettings'
-  parent: webApp
-  properties: {
-    WEBSITE_RUN_FROM_PACKAGE: packageLocation
-    WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
-    APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
-    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
-    ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
-    chatApiKey: chatApiKey
-    chatApiEndpoint: chatApiEndpoint
-    chatInputName: chatInputName
-    chatOutputName: chatOutputName
+  resource appsettings 'config' = {
+    name: 'appsettings'
+    properties: {
+      WEBSITE_RUN_FROM_PACKAGE: packageLocation
+      WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
+      APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
+      chatApiKey: chatApiKey
+      chatApiEndpoint: chatApiEndpoint
+      chatInputName: chatInputName
+      chatOutputName: chatOutputName
+    }
   }
 }
+
 
 //Web App diagnostic settings
 resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
@@ -370,23 +369,20 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
     appServiceSecretsUserRoleAssignmentModule
     blobDataReaderRoleAssignment
   ]
-}
 
-// App Settings
-resource appsettingsPf 'Microsoft.Web/sites/config@2022-09-01' = {
-  name: 'appsettings'
-  parent: webAppPf
-  properties: {
-    APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
-    APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
-    ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
-    WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
-    OPENAICONNECTION_API_BASE: 'https://oai${baseName}.openai.azure.com/'
-    // OPENAICONNECTION_API_KEY: openAIApiKey  TODO: Why was this set?
-    WEBSITES_PORT: '8080'
+  resource appsettingsPf 'config' = {
+    name: 'appsettings'
+    properties: {
+      APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
+      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
+      WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
+      OPENAICONNECTION_API_BASE: 'https://oai${baseName}.openai.azure.com/'
+      // OPENAICONNECTION_API_KEY: openAIApiKey  TODO: Why was this set?
+      WEBSITES_PORT: '8080'
+    }
   }
 }
-
 
 //Web App diagnostic settings
 resource webAppPfDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
