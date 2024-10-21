@@ -154,9 +154,11 @@ The following steps are required to deploy the infrastructure from the command l
      echo APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV: $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV
      ```
 
-1. Set the deployment location to one with available quota in your subscription.
+1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   The location you choose must [support availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) as well.
+   TODO: Verify for Baseline (this is copy from Basic)
+
+   This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
    ```bash
    LOCATION=eastus2
@@ -176,20 +178,39 @@ The following steps are required to deploy the infrastructure from the command l
    RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
    az group create -l $LOCATION -n $RESOURCE_GROUP
 
+   PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv)
+
    # This takes about 30 minutes to run.
    az deployment group create -f ./infra-as-code/bicep/main.bicep \
      -g $RESOURCE_GROUP \
      -p appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV} \
-     -p baseName=$BASE_NAME
+     -p baseName=${BASE_NAME} \
+     -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
 TODO: Update instructions for Azure AI Studio's flow.
 
-### 2. Deploy a Prompt flow from Azure Machine Learning workspace
+### 2. Deploy a Prompt flow from Azure AI Studio
+
+To test this architecture, you'll be deploying a pre-built Prompt flow. The Prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data.
 
 1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
-1. Open the [Machine Learning Workspace](https://ml.azure.com/) and choose your workspace. Ensure you have [enabled Prompt flow in your Azure Machine Learning workspace](https://learn.microsoft.com/azure/machine-learning/prompt-flow/get-started-prompt-flow?view=azureml-api-2#prerequisites-enable-prompt-flow-in-your-azure-machine-learning-workspace).
+   :computer: Unless otherwise noted, the the **following steps are all performed from the jump box** or from your VPN-connected workstation.
+
+1. Open Azure AI Studio's projects by going to <https://ai.azure.com/allProjects>.
+
+1. Click on the 'Chat with Wikipedia project' project name. This is the project where you'll deploy your flow.
+
+1. Click on **Prompt flow** in the left navigation.
+
+1. On the **Flows** tab, click **+ Create**.
+
+1. Under Explore gallery, find "Chat with Wikipedia" and click **Clone**.
+
+1. Set the Folder name to `chat_wiki` and click **Clone**.
+
+TODO Stopped here.
 
 1. Create a prompt flow connection to your gpt35 Azure OpenAI deployment. This will be used by the prompt flow you clone in the next step.
     1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio

@@ -25,6 +25,11 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
+@description('Assign your user some roles to support fluid access when working in AI Studio')
+@maxLength(36)
+@minLength(36)
+param yourPrincipalId string
+
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'log-${baseName}'
@@ -138,6 +143,7 @@ module mlwModule 'machinelearning.bicep' = {
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
+    yourPrincipalId: yourPrincipalId
   }
 }
 

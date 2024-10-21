@@ -26,6 +26,9 @@ param logWorkspaceName string
 
 param openAiResourceName string
 
+@maxLength(36)
+param yourPrincipalId string
+
 // ---- Variables ----
 var workspaceName = 'mlw-${baseName}'
 
@@ -69,6 +72,7 @@ resource storageBlobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022
   name: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   scope: subscription()
 }
+*/
 
 
 @description('Built-in Role: [Storage Blob Data Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor)')
@@ -78,11 +82,12 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions
 }
 
 @description('Built-in Role: [Storage File Data Privileged Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-file-data-privileged-contributor)')
-resource storageFileDataContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource storageFileDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '69566ab7-960f-475b-8e7c-b3118f30c6bd'
   scope: subscription()
 }
 
+/*
 @description('Built-in Role: [AcrPull](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpull)')
 resource containerRegistryPullRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
@@ -276,6 +281,43 @@ resource computeInstanceBlobDataReaderRoleAssignment 'Microsoft.Authorization/ro
     principalId: azureMachineLearningInstanceComputeManagedIdentity.properties.principalId
   }
 }*/
+
+@description('Assign your user the ability to manage files in storage. This is needed to use the Prompt flow editor in Azure AI Studio.')
+resource storageFileDataContributorForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiStudioStorageAccount
+  name: guid(aiStudioStorageAccount.id, yourPrincipalId, storageFileDataContributorRole.id)
+  properties: {
+    roleDefinitionId: storageFileDataContributorRole.id
+    principalType: 'User'
+    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the Prompt flow developer portal in production, so this role
+                                  // assignment would only be needed in pre-production environments.
+  }
+}
+
+@description('Assign your user the ability to manage Prompt flow state files from blob storage. This is needed to execute the Prompt flow from within in Azure AI Studio.')
+resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiStudioStorageAccount
+  name: guid(aiStudioStorageAccount.id, yourPrincipalId, storageBlobDataContributorRole.id)
+  properties: {
+    roleDefinitionId: storageBlobDataContributorRole.id
+    principalType: 'User'
+    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the Prompt flow developer portal in production, so this role
+                                  // assignment would only be needed in pre-production environments. In pre-production, use conditions on this assignment
+                                  // to restrict access to just the blob containers used by the project.
+
+  }
+}
+
+@description('Assign your user the ability to invoke models in Azure OpenAI. This is needed to execute the Prompt flow from within in Azure AI Studio.')
+resource cognitiveServicesOpenAiUserForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: openAiAccount
+  name: guid(openAiAccount.id, yourPrincipalId, cognitiveServicesOpenAiUserRole.id)
+  properties: {
+    roleDefinitionId: cognitiveServicesOpenAiUserRole.id
+    principalType: 'User'
+    principalId: yourPrincipalId
+  }
+}
 
 // ---- Azure AI Studio resources ----
 
