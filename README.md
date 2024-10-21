@@ -224,6 +224,9 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
    - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
    - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
 
+<!-- 
+TODO : BRING BACK IN IF NEEDED
+
 1. Work around a telemetry issue that results in an error at the point of inferencing.
 
    At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`. To correct that, perform the following steps.
@@ -232,6 +235,7 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
    1. Select 'requirements.txt'.
    1. The file should be empty, add one line containing just `promptflow-tracing>=1.16.1`.
    1. Click **Save only** and close the file.
+-->
 
 1. Click **Save** on the flow.
 
@@ -243,8 +247,9 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. :clock8: Wait for that button to change to *Compute session running*. This may take about five minutes.
 
+<!-- TODO BRING BACK IN IF NEEDED
    If you get an warning related to pip and dependency resolver, this is because of the temporary workaround you followed in the prior steps, this is safe to ignore.
-
+-->
    *Do not advance until the serverless compute is running.*
 
 1. Click the enabled **Chat** button on the UI.
@@ -253,71 +258,49 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. A grounded response to your question should appear on the UI.
 
-
-TODO Stopped here.
-
-1. Create a prompt flow connection to your gpt35 Azure OpenAI deployment. This will be used by the prompt flow you clone in the next step.
-    1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
-    1. Click on the 'Connections' tab and click 'Create' 'Azure OpenAI.'
-    1. Fill out the properties:
-        - Name: 'gpt35'   **Make sure you use this name.**
-        - Provider: Azure OpenAI
-        - Subscription Id: <Choose your subscription>
-        - Azure OpenAI Account Names: <Choose the Azure OpenAI Account created in this deployment>
-        - API Key: <Choose a key from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
-        - API Base: <Choose the endpoint from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
-        - API type: azure
-        - API version: <Leave default>
-1. Clone an existing prompt flow
-    1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
-    1. Click on the 'Flows' tab and click 'Create'
-    1. Click 'Clone' under 'Chat with Wikipedia'
-    1. Name it 'chat_wiki' and Press 'Clone'
-    1. Set the 'Connection' and 'deployment_name' to 'gpt35'and set the max_tokens property of the deployment_name to 256, for the following steps:
-        - extract_query_from_question
-        - augmented_chat
-    1. Save
-
-1. Add runtime
-
-   - Click Add runtime
-   - Add compute instance runtime and give it a name
-   - Choose the compute instance created by the Bicep  
-   - Accept the other defaults and click 'Create'
-
-### 3. Test the prompt flow from Azure Machine Learning workspace
-
-1. :clock8: Wait for the runtime to be created. This may take about five minutes.
-
-   *Do not advance until the serverless compute is running.*
-
-1. Select the runtime in the UI
-
-1. Click the enabled **Chat** button on the UI.
-
-1. Enter a question that would require grounding data through recent Wikipedia content, such as a notable current event.
-
-1. A grounded response to your question should appear on the UI.
-
-### 4. Deploy the prompt flow to an Azure Machine Learning managed online endpoint
+### 4. Deploy the Prompt flow to an Azure Machine Learning managed online endpoint
 
 Here you'll take your tested flow and deploy it to a managed online endpoint.
 
-1. Click on 'Deploy' in the UI
+1. Click the **Deploy** button in the UI.
 
-1. Choose 'Existing' Endpoint and select the one called _ept-<basename>_.
+1. Choose **Existing** endpoint and select the one called *ept-chat-BASE_NAME*.
 
-1. Name the deployment ept-<basename>. **Make sure you name the deployment ept-<basename>. An App Service environment variable is set, assuming that naming convention**
+1. Set the following Basic settings, and click **Next**.
 
-1. Choose a small Virtual Machine size for testing and set the number of instances.
+   - **Deployment name**: ept-chat-deployment
+   - **Virtual machine**: Choose a small virtual machine size from which you have quota. 'Standard_D2as_v4' is plenty for this sample.
+   - **Instance count**: 3. This is the recommended minimum count.
+   - **Inferencing data collection**: Enabled
 
-1. Press 'Review + Create'
+1. Set the following Advanced settings, and click **Next**.
 
-1. Press 'Create'
+   - **Deployment tags**: You can leave blank.
+   - **Environment**: Use environment of current flow definition.
+   - **Application Insights diagnostics**: Enabled
+
+1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the Prompt flow, and click **Next**.
+
+1. Click the **Create** button.
+
+   There is a notice on the final screen that says:
+
+   > Following connection(s) are using Microsoft Entra ID based authentication. You need to manually grant the endpoint identity access to the related resource of these connection(s).
+   > - aoai
+
+   This has already been taken care of by your IaC deployment. The managed online endpoint identity already has this permission to Azure OpenAI, so there is no action for you to take.
+
+1. :clock9: Wait for the deployment to finish creating.
+
+   The deployment can take over ten minutes to create. To check on the process, navigate to the **Deployments** screen using the link in the left navigation. Eventually 'ept-chat-deployment' will be on this list and then eventually the deployment will be listed with a State of 'Succeeded'. Use the **Refresh** button as needed.
+
+   *Do not advance until this deployment is complete.*
+
+TODO: Stopped here
 
 ### 5. Publish the chat front-end web app
 
-The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). This approach has many benefits, including eliminating file lock conflicts when deploying.
+The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). This approach has many benefits, including eliminating file lock conflicts when deploying. The App Service's storage account is also network isolated, so you'
 
 > :bulb: Read through the next steps, but follow the guidance in the **Workaround** section.
 
