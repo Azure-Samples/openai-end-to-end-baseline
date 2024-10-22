@@ -214,6 +214,8 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
 
    This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
 
+TODO (P1): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it works just fine.  What is going on?
+
 1. Connect the the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
 
    - For **Connection**, select 'aoai' from the dropdown menu. This is your deployed Azure OpenAI instance.
@@ -227,7 +229,7 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
    - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
 
 <!-- 
-TODO : BRING BACK IN IF NEEDED
+TODO (P2): BRING BACK IN IF NEEDED
 
 1. Work around a telemetry issue that results in an error at the point of inferencing.
 
@@ -249,7 +251,7 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. :clock8: Wait for that button to change to *Compute session running*. This may take about five minutes.
 
-<!-- TODO BRING BACK IN IF NEEDED
+<!-- TODO (P2): BRING BACK IN IF NEEDED
    If you get an warning related to pip and dependency resolver, this is because of the temporary workaround you followed in the prior steps, this is safe to ignore.
 -->
    *Do not advance until the serverless compute is running.*
@@ -298,7 +300,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
    *Do not advance until this deployment is complete.*
 
-TODO: A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.
+TODO (P2): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.
 
 TODO: Stopped here
 
@@ -385,6 +387,8 @@ This section will help you to validate that the workload is exposed correctly an
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
 ### 7. Deploying the flow to Azure App Service option
+
+TODO (P1): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
 
 This is a second option for deploying the flow. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
 

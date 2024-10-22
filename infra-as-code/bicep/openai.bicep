@@ -34,7 +34,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
-/* TODO: Why was this set?
+/* TODO (P2): Why was this set?
 resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
   name: keyVaultName
   resource kvsGatewayPublicCert 'secrets' = {
