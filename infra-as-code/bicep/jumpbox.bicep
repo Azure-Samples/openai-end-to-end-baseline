@@ -274,7 +274,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
         createOption: 'FromImage'
         caching: 'ReadOnly'
         deleteOption: 'Delete'
-        // TODO (P4): Can we switch to ephemeral OS?
+        // TODO (P5): Can we switch to ephemeral OS?
         //diffDiskSettings: {
         //  option: 'Local'
         //  placement: 'CacheDisk'

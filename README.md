@@ -163,7 +163,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   TODO (P2): Verify for Baseline (this is copy from Basic)
+   TODO (P3): Verify for Baseline (this is copy from Basic)
 
    This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
@@ -259,7 +259,7 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. Click **Start compute session**.
 
-1. :clock8: Wait for that button to change to *Compute session running*. This may take about five minutes.
+1. :clock8: Wait for that button to change to *Compute session running*. This might take about ten minutes.
 
 <!-- TODO (P2): BRING BACK IN IF NEEDED
    If you get an warning related to pip and dependency resolver, this is because of the temporary workaround you followed in the prior steps, this is safe to ignore.
@@ -310,7 +310,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
    *Do not advance until this deployment is complete.*
 
-TODO (P2 - Dost): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.  Maybe `az ml online-endpoint invoke` since AZ CLI is installed on the jump box?
+TODO (P3 - Dost): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.  Maybe `az ml online-endpoint invoke` since AZ CLI is installed on the jump box?
 
 ### 5. Publish the chat front-end web app
 
@@ -326,7 +326,7 @@ For this deployment guide, you'll be using your your jump box (or VPN-connected 
 
 1. Install Azure CLI on your jump box (skip if using your VPN connected workstation)
 
-   TODO (P2): Can we install az cli as part of the bootstrapping of the VM?
+   TODO (P3): Can we install az cli as part of the bootstrapping of the VM?
 
 1. Log in using the AZ CLI.
 
@@ -380,7 +380,7 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-TODO: Stopped here
+TODO (P1 - CK): Stopped here
 
 1. Try it out!
 
@@ -388,7 +388,7 @@ TODO: Stopped here
 
 ### 7. Rehost the prompt flow in Azure App Service
 
-TODO (P1 - Bilal): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
+TODO (P2 - Bilal): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
 
 This is a second option for deploying the flow. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
 

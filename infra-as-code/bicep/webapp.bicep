@@ -138,7 +138,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     capacity: 3
   }
   properties: {
-    zoneRedundant: false // TODO (P4): My subscription doesn't have enough quota to set this to 'true', but before we ship this must go back to true.
+    zoneRedundant: false // TODO (P2): My subscription doesn't have enough quota to set this to 'true', but before we ship this must go back to true.
     reserved: true
   }
 }

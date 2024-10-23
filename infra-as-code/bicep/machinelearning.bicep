@@ -509,7 +509,7 @@ resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
 // Production readiness change: Client applications that run from compute on Azure should use managed identities instead of
 // pre-shared keys. This sample implementation uses a pre-shared key, and should be rewritten to use the managed identity
 // provided by Azure Web Apps.
-// TODO (P2): Figure out if the key is something that's reliably predictable, if so, just use that instead of creating
+// TODO (P3): Figure out if the key is something that's reliably predictable, if so, just use that instead of creating
 //       a copy of it.
 @description('Key Vault Secret: The Managed Online Endpoint key to be referenced from the Chat UI app.')
 resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
