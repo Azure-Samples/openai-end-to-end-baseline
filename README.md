@@ -98,7 +98,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
     - Storage Accounts: Two instances
     - App Service Plans: P1v3 (AZ), three instances
-    - TODO (P2): This is the list from "Basic" -- What's missing for Baseline?
+    - TODO (P3): This is the list from "Basic" -- What's missing for Baseline?
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -138,7 +138,7 @@ The following steps are required to deploy the infrastructure from the command l
    - Set a variable for the domain used in the rest of this deployment.
 
      ```bash
-     DOMAIN_NAME_APPSERV_BASELINE="contoso.com"
+     DOMAIN_NAME_APPSERV="contoso.com"
      ```
 
    - Generate a client-facing, self-signed TLS certificate.
@@ -148,7 +148,7 @@ The following steps are required to deploy the infrastructure from the command l
      Create the certificate that will be presented to web clients by Azure Application Gateway for your domain.
 
      ```bash
-     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out appgw.crt -keyout appgw.key -subj "/CN=${DOMAIN_NAME_APPSERV_BASELINE}/O=Contoso" -addext "subjectAltName = DNS:${DOMAIN_NAME_APPSERV_BASELINE}" -addext "keyUsage = digitalSignature" -addext "extendedKeyUsage = serverAuth"
+     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out appgw.crt -keyout appgw.key -subj "/CN=${DOMAIN_NAME_APPSERV}/O=Contoso" -addext "subjectAltName = DNS:${DOMAIN_NAME_APPSERV}" -addext "keyUsage = digitalSignature" -addext "extendedKeyUsage = serverAuth"
      openssl pkcs12 -export -out appgw.pfx -in appgw.crt -inkey appgw.key -passout pass:
      ```
 
