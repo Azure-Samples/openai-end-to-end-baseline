@@ -224,7 +224,7 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
 
    This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
 
-TODO (P1): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it works just fine.  What is going on?
+TODO (P1): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it usally works just fine (sometimes it takes a few additional tries).  What is going on?
 
 1. Connect the the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
 
