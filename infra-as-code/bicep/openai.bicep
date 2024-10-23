@@ -229,6 +229,7 @@ resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   }
 }
 
+// TODO (P5): Nest in openaiPrivateEndpoint
 resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
   name: openaiDnsGroupName
   properties: {
