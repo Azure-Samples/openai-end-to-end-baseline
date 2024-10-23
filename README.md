@@ -179,7 +179,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Create a resource group and deploy the infrastructure.
 
-   You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
+   You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
    ```bash
    RESOURCE_GROUP=rg-chat-baseline-${LOCATION}

@@ -67,7 +67,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
   resource blockingFilter 'raiPolicies' = {
     name: 'blocking-filter'
     properties: {
-      #disable-next-line BCP037
+#disable-next-line BCP073  // TODO (P5): can we remove type?
       type: 'UserManaged'
       basePolicyName: 'Microsoft.Default'
       mode: 'Default'
