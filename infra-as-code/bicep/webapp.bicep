@@ -39,9 +39,10 @@ var appName = 'app-${baseName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
 var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
 
+// TODO (P5): Use secret resource reference to get URI to build this
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
 
-// var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)' TODO: Why was this set?
+// var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)' TODO (P4): Why was this set?
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -137,7 +138,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
     capacity: 3
   }
   properties: {
-    zoneRedundant: false // TODO: My subscription doesn't have enough quota to set this to 'true', but before we ship this must go back to true.
+    zoneRedundant: false // TODO (P4): My subscription doesn't have enough quota to set this to 'true', but before we ship this must go back to true.
     reserved: true
   }
 }
@@ -382,7 +383,7 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
       ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
       WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
       OPENAICONNECTION_API_BASE: azureOpenAI.properties.endpoint
-      // OPENAICONNECTION_API_KEY: openAIApiKey  TODO: Why was this set?
+      // OPENAICONNECTION_API_KEY: openAIApiKey  TODO (P4): Why was this set?
       WEBSITES_PORT: '8080'
     }
   }
