@@ -201,12 +201,18 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
 
 1. Connect to the virtual network via Azure Bastion and the jump box or through a force-tunneled VPN or virtual network peering that you manually configure.
 
-   The username for the jump box deployed in this solution is `vmadmin`.
+   The username for the jump box deployed in this solution is vmadmin`.
 
-   | :computer: | Unless otherwise noted, all of the **following steps are all performed from the jump box** or from your VPN-connected workstation. |
+   | :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. |
    | :--------: | :------------------------- |
 
-1. Open Azure AI Studio's projects by going to <https://ai.azure.com/allProjects>.
+1. Open the Azure portal and navigate to the Azure AI project named **aiproj-chat** in your resource group.
+
+   You'll need to sign in if this is the first time your connecting through the jump box.
+
+1. Open Azure AI Studio by clicking the **Launch Studio** button.
+
+   In the future, you can find your AI Studio projects by going to <https://ai.azure.com/allProjects>.
 
 1. Click on the 'Chat with Wikipedia project' project name. This is the project where you'll deploy your flow.
 
