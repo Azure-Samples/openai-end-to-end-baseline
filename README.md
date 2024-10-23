@@ -308,76 +308,60 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
 TODO (P2): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.
 
-TODO: Stopped here
-
 ### 5. Publish the chat front-end web app
 
-The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). This approach has many benefits, including eliminating file lock conflicts when deploying.
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into Prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
-> :bulb: Read through the next steps, but follow the guidance in the **Workaround** section.
+In a production environment, you use a CI/CD pipeline to:
 
-To use run from zip, you do the following:
+- Build your application
+- Create the project zip package
+- Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
 
-1. Create a [project zip package](https://learn.microsoft.com/azure/app-service/deploy-run-package#create-a-project-zip-package) which is a zip file of your project.
-1. Upload that zip file to a location accessible to your website. This implementation uses private endpoints to connect to the storage account securely. The web app has a managed identity authorized to access the blob.
-1. Set the environment variable `WEBSITE_RUN_FROM_PACKAGE` to the URL of the zip file.
+For this deployment guide, you'll be using your your jump box (or VPN-connected workstation) to simulate part of that process.
 
-In a production environment, you would likely use a CI/CD pipeline to:
+1. Install Azure CLI on your jump box (skip if using your VPN connected workstation)
 
-1. Build your application
-1. Create the project zip package
-1. Upload the zip file to your storage account
+   TODO (P2): Can we install az cli as part of the bootstrapping of the VM?
 
-The CI/CD pipeline would likely use a [self-hosted agent](https://learn.microsoft.com/azure/devops/pipelines/agents/agents?view=azure-devops&tabs=browser#install) that can connect to the storage account through a private endpoint to upload the zip. We have not implemented that here.
+1. Log in using the AZ CLI.
 
-**Workaround**
+   If prompted, choose "No, sign in to this app only."
 
-We need a workaround to upload the file to the storage account because we have not implemented a CI/CD pipeline with a self-hosted agent. There are two workaround steps you need to do in order to manually upload the zip file using the portal.
+1. Download the web UI from a PowerShell terminal.
 
-1. The deployed storage account does not allow public access, so you will need to temporarily allow access public access from your IP address.
-1. You must authorize your user to upload a blob to the storage account.
+   ```powershell
+   Invoke-WebRequest -Uri https://raw.githubusercontent.com/Azure-Samples/openai-end-to-end-baseline/refs/heads/main/website/chatui.zip -OutFile chatui.zip
+   ```
 
-Run the following to:
+   If you are using a VPN-connected workstation, download the same zip to your workstation.
 
-- Allow public access from your IP address.
-- Give the logged-in user permission to upload a blob
-- Upload the zip file `./website/chatui.zip` to the existing `deploy` container
-- Tell the web app to restart
+1. Upload the web application to Azure Storage, where the web app will load the code from.
 
-```bash
-CLIENT_IP_ADDRESS=<your-public-ip-address>
+   ```powershell
+   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
+   $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
 
-STORAGE_ACCOUNT_PREFIX=st
-WEB_APP_PREFIX=app-
-NAME_OF_STORAGE_ACCOUNT="$STORAGE_ACCOUNT_PREFIX$BASE_NAME"
-NAME_OF_WEB_APP="$WEB_APP_PREFIX$BASE_NAME"
-LOGGED_IN_USER_ID=$(az ad signed-in-user show --query id -o tsv)
-RESOURCE_GROUP_ID=$(az group show --resource-group $RESOURCE_GROUP --query id -o tsv)
-STORAGE_BLOB_DATA_CONTRIBUTOR=ba92f5b4-2d11-453d-a403-e96b0029c9fe
+   az storage blob upload -f chatui.zip --account-name "st${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
+   ```
 
-az storage account network-rule add -g $RESOURCE_GROUP --account-name "$NAME_OF_STORAGE_ACCOUNT" --ip-address $CLIENT_IP_ADDRESS
-az role assignment create --assignee-principal-type User --assignee-object-id $LOGGED_IN_USER_ID --role $STORAGE_BLOB_DATA_CONTRIBUTOR --scope $RESOURCE_GROUP_ID
+1. Restart the web app to launch the site.
 
-az storage blob upload -f ./website/chatui.zip \
-  --account-name $NAME_OF_STORAGE_ACCOUNT \
-  --auth-mode login \
-  -c deploy -n chatui.zip
+   ```powershell
+   az webapp restart --name "app-${BASE_NAME}" --resource-group "rg-chat-baseline-${LOCATION}"
+   ```
 
-az webapp restart --name $NAME_OF_WEB_APP --resource-group $RESOURCE_GROUP
-```
+### 6. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
 
-### 6. Validate the web app
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
 
-This section will help you to validate that the workload is exposed correctly and responding to HTTP requests.
-
-#### Steps
+| :computer: | Unless otherwise noted, all of the **following steps are all performed from your original workstation**, not from the jump box. |
+| :--------: | :------------------------- |
 
 1. Get the public IP address of the Application Gateway.
 
-   > :book: The app team conducts a final acceptance test to be sure that traffic is flowing end-to-end as expected, so they place a request against the Azure Application Gateway endpoint.
-
    ```bash
-   # query the Azure Application Gateway Public Ip
+   # query the Azure Application Gateway Public IP
    APPGW_PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name "pip-$BASE_NAME" --query [ipAddress] --output tsv)
    echo APPGW_PUBLIC_IP: $APPGW_PUBLIC_IP
    ```
@@ -386,13 +370,19 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: You can simulate this via a local hosts file modification.  Alternatively, you can add a real DNS entry for your specific deployment's application domain name if permission to do so.
 
-   Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP} www.${DOMAIN_NAME_APPSERV_BASELINE}` (e.g. `50.140.130.120  www.contoso.com`)
+   Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP} www.${DOMAIN_NAME_APPSERV}` (e.g. `50.140.130.120  www.contoso.com`)
 
 1. Browse to the site (e.g. <https://www.contoso.com>).
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-### 7. Deploying the flow to Azure App Service option
+TODO: Stopped here
+
+1. Try it out!
+
+   Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
+
+### 7. Rehost the prompt flow in Azure App Service
 
 TODO (P1): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
 

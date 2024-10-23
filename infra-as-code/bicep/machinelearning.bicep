@@ -27,6 +27,7 @@ param logWorkspaceName string
 param openAiResourceName string
 
 @maxLength(36)
+@minLength(36)
 param yourPrincipalId string
 
 // ---- Variables ----
