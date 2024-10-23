@@ -205,7 +205,7 @@ resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' =
           groupIds: [
             'account'
           ]
-          privateLinkServiceId: openAiAccount.id
+          privateLinkServiceId: openAiAccount.id  // TODO (P3): Occasionally, the deployment dies here because the Azure OpenAI service isn't actually done deploying, but the resource provider says it is. Not sure how to address.
         }
       }
     ]
