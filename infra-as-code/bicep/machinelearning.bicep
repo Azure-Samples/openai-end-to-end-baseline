@@ -448,7 +448,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     kind: 'Managed'
     identity: {
       type: 'SystemAssigned' // This resource's identity is automatically assigned AcrPull access to ACR, Storage Blob Data Contributor, and AML Metrics Writer on the project. It is also assigned two additional permissions below.
-                             // TODO (P2): Evaluate moving back to UserAssigned for more granular control.
+                             // TODO (P2 Joey): Evaluate moving back to UserAssigned for more granular control.
     }
     properties: {
       description: 'This is the /score endpoint for the "Chat with Wikipedia" example prompt flow deployment. Called by the UI hosted in Web Apps.'
@@ -456,7 +456,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
       publicNetworkAccess: 'Disabled'
     }
 
-    // TODO (P2): Noticed that traffic goes back to 0% if this is template redeployed after the prompt flow
+    // TODO (P2 Chad): Noticed that traffic goes back to 0% if this is template redeployed after the prompt flow
     // deplopyment is complete. How can we stop that?
   }
 }

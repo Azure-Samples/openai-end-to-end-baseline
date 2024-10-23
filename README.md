@@ -1,6 +1,6 @@
 # Azure OpenAI end-to-end baseline reference implementation
 
-TODO (P1): Update description
+TODO (P1 Jon): Update description
 
 This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
 
@@ -31,7 +31,7 @@ The implementation covers the following scenarios:
 
 ### Authoring a flow
 
-TODO (P1): Update diagram and description
+TODO (P1 Jon): Update diagram and description
 
 ![Diagram of the authoring architecture using Azure Machine Learning.](docs/media/azure-machine-learning-authoring.png)
 
@@ -41,7 +41,7 @@ The diagram further illustrates how the Machine Learning Workspace is configured
 
 ### Deploying a flow to Azure Machine Learning managed online endpoint
 
-TODO (P1): Update diagram and description
+TODO (P1 Jon): Update diagram and description
 
 ![Diagram of the deploying a flow to Azure Machine Learning managed online endpoint.](docs/media/openai-chat-e2e-deployment-amlcompute.png)
 
@@ -49,7 +49,7 @@ The Azure Machine Learning deployment architecture diagram illustrates how a fro
 
 ### Deploying a flow to Azure App Service (alternative)
 
-TODO (P1): Update diagram and description
+TODO (P1 Jon): Update diagram and description
 
 ![Diagram of the deploying a flow to Azure App Service.](docs/media/openai-chat-e2e-deployment-appservices.png)
 
@@ -224,7 +224,7 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
 
    This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
 
-TODO (P1): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it usally works just fine (sometimes it takes a few additional tries).  What is going on?
+TODO (P1 Jon): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it usally works just fine (sometimes it takes a few additional tries).  What is going on?
 
 1. Connect the the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
 
@@ -239,7 +239,7 @@ TODO (P1): The UI produces an error when you do this for the first time. But if 
    - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
 
 <!-- 
-TODO (P2): BRING BACK IN IF NEEDED
+TODO (P2 Bilal): BRING BACK IN IF NEEDED
 
 1. Work around a telemetry issue that results in an error at the point of inferencing.
 
@@ -261,7 +261,7 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. :clock8: Wait for that button to change to *Compute session running*. This might take about ten minutes.
 
-<!-- TODO (P2): BRING BACK IN IF NEEDED
+<!-- TODO (P2 Bilal): BRING BACK IN IF NEEDED
    If you get an warning related to pip and dependency resolver, this is because of the temporary workaround you followed in the prior steps, this is safe to ignore.
 -->
    *Do not advance until the serverless compute is running.*
@@ -380,7 +380,7 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-TODO (P1 - CK): Stopped here
+TODO (P1 - Chad): Stopped here
 
 1. Try it out!
 
