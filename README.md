@@ -311,27 +311,53 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
    *Do not advance until this deployment is complete.*
 
-TODO (P3 - Dost): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.  Maybe `az ml online-endpoint invoke` since AZ CLI is installed on the jump box?
+### 5. Test the Azure Machine Learning online endpoint from the network
 
-### 5. Publish the chat front-end web app
+As a quick checkpoint of progress, you should test to make sure your Azure Machine learning managed online endpoint is able to be called from the network. This tests the network and authorization configuration of that endpoint.
+
+1. Install Azure CLI on your jump box. *(Skip if using your VPN connected workstation)*
+
+   TODO (P3): Can we install az cli as part of the bootstrapping of the VM?
+
+1. From a terminal session, ensure the `ml` extension is installed.
+
+   ```powershell
+   az extension add --name ml
+   ```
+
+1. Log in through the Azure CLI. *(Skip if using your VPN connected workstation)*
+
+   If prompted, choose "No, sign in to this app only."
+
+1. Set some context. *(Skip if using your VPN connected workstation)*
+
+   ```powershell
+   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
+   $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
+   ```
+
+1. Execute an HTTP request to the online endpoint.
+
+   Feel free to adjust for your own question.
+
+   ```powershell
+   New-Item "request.json" -ItemType File -Value '{"question":"What happened in Milwaukee in 2024?"}'
+   az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g rg-chat-baseline-${LOCATION} -r request.json
+   ```
+
+1. A grounded response to your question should appear in the output.  This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
+
+### 6. Publish the chat front-end web app
 
 Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into Prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
 In a production environment, you use a CI/CD pipeline to:
 
-- Build your application
+- Build your web application
 - Create the project zip package
 - Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
 
 For this deployment guide, you'll be using your your jump box (or VPN-connected workstation) to simulate part of that process.
-
-1. Install Azure CLI on your jump box (skip if using your VPN connected workstation)
-
-   TODO (P3): Can we install az cli as part of the bootstrapping of the VM?
-
-1. Log in using the AZ CLI.
-
-   If prompted, choose "No, sign in to this app only."
 
 1. Download the web UI from a PowerShell terminal.
 
@@ -344,9 +370,6 @@ For this deployment guide, you'll be using your your jump box (or VPN-connected 
 1. Upload the web application to Azure Storage, where the web app will load the code from.
 
    ```powershell
-   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
-   $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
-
    az storage blob upload -f chatui.zip --account-name "st${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
@@ -356,7 +379,9 @@ For this deployment guide, you'll be using your your jump box (or VPN-connected 
    az webapp restart --name "app-${BASE_NAME}" --resource-group "rg-chat-baseline-${LOCATION}"
    ```
 
-### 6. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
+TODO (P1 - Chad): Stopped here
+
+### 7. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
 
@@ -381,13 +406,11 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-TODO (P1 - Chad): Stopped here
-
 1. Try it out!
 
    Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
 
-### 7. Rehost the prompt flow in Azure App Service
+### 8. Rehost the prompt flow in Azure App Service
 
 TODO (P2 - Bilal): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
 
