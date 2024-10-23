@@ -130,9 +130,9 @@ module openaiModule 'openai.bicep' = {
   }
 }
 
-// Deploy machine learning workspace with private endpoint and private DNS zone
-module mlwModule 'machinelearning.bicep' = {
-  name: 'mlwDeploy'
+// Deploy Azure AI Studio with private networking
+module aiStudioModule 'machinelearning.bicep' = {
+  name: 'aiStudioDeploy'
   params: {
     location: location
     baseName: baseName
@@ -171,8 +171,10 @@ module webappModule 'webapp.bicep' = {
   params: {
     location: location
     baseName: baseName
-    developmentEnvironment: developmentEnvironment
+    managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
+    acrName: acrModule.outputs.acrName
     publishFileName: publishFileName
+    openAIName: openaiModule.outputs.openAiResourceName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     storageName: storageModule.outputs.appDeployStorageName
     vnetName: networkModule.outputs.vnetNName
@@ -180,8 +182,4 @@ module webappModule 'webapp.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
   }
-  dependsOn: [
-    mlwModule
-    acrModule
-  ]
 }

@@ -780,3 +780,5 @@ resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' =
     }
   }
 }
+
+output managedOnlineEndpointResourceId string = chatProject::endpoint.id

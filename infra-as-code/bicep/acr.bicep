@@ -129,3 +129,5 @@ resource acrDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
     }
   }
 }
+
+output acrName string = acrResource.name
