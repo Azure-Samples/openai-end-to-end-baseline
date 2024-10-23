@@ -404,8 +404,6 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-TODO (P1 - Chad): Stopped here
-
 1. Try it out!
 
    Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
@@ -414,69 +412,57 @@ TODO (P1 - Chad): Stopped here
 
 TODO (P2 - Bilal): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
 
-This is a second option for deploying the flow. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
+This is a second option for deploying the prompt flow code. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint.
 
-- Prerequisites - Ensure you have the prerequisites
-- Download your flow - Download the flow from the Machine Learning Workspace
-- Build the flow - Use the ```pf``` CLI to build your flow
-- Build and push the image - Containerize the flow and push to your Azure Container Registry
-- Publish the image to Azure App Service
+You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. To that end, you'll need to install some developer tools on the jump box.
 
-#### Prerequisites for this option
+| :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. |
+| :--------: | :------------------------- |
 
-The following are the requirements for building the image, pushing to ACR, and deploying to Azure App Service:
+1. Install [conda](https://docs.anaconda.com/miniconda/).
 
-- az CLI
-- Python
-- Anaconda
-- Promptflow pf CLI
+1. Open a 'Anaconda PowerShell Prompt' instance.
 
-Below are commands to create and activate a conda environment and install the promptflow tools. See [Set up your dev environment](https://microsoft.github.io/promptflow/how-to-guides/quick-start.html#set-up-your-dev-environment) for more information.
+1. Intall the promptflow tools (pf CLI).
 
-```bash
-conda create --name pf python=3.11.4
-conda activate pf
-pip install promptflow promptflow-tools
+   ```powershell
+   conda create --name pf python=3.12.7
+   conda activate pf
 
-# You will need to install the following if you build the docker image locally
-pip install keyrings.alt
-pip install bs4
-```
+   conda install pip
+   pip install promptflow promptflow-tools bs4
+   ```
 
-#### Download your flow
+1. Open the Prompt flow UI again in your Azure AI Studio project.
 
-1. Open the prompt flow UI in Azure Machine Learning Studio
-1. Expand the 'Files' tab in the right pane of the UI
-1. Click on the download icon to download the flow as a zip file
+1. Expand the 'Files' tab in the upper-right pane of the UI.
 
-> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the prerequisites installed on the jumpbox, or you will need to transfer the zip file to a system that has the prerequisites.
+1. Click on the download icon to download the flow as a zip file.
 
-#### Build the flow
+1. Unzip the prompt flow zip file you downloaded.
 
-> :bulb: This example assumes your flow has a connection to Azure OpenAI
+1. In your Anaconda PowerShell terminal, change the directory to the root of the unzipped flow.
 
-1. Unzip the prompt flow zip file you downloaded
-1. In your terminal, change the directory to the root of the unzipped flow
-1. Create a folder called 'connections'
-1. Create a file for each connection you created in the prompt flow UI
-    1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in prompt flow, create a file called 'gpt35.yaml' under the connections folder.
-    1. Enter the following values in the file:
+1. Create a directory called **connections** and change directory into it.
 
-        ```bash
-        $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
-        name: gpt35
-        type: azure_open_ai
-        api_key: "${env:OPENAICONNECTION_API_KEY}"
-        api_base: "${env:OPENAICONNECTION_API_BASE}"
-        api_type: "azure"
-        api_version: "2023-07-01-preview"
-        ```
+   ```powershell
+   mkdir connections
+   cd connections
+   ```
 
-        > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_KEY``` and ```OPENAICONNECTION_API_BASE```.
+1. Create a file for the Azure OpenAI connection named **gpt35.yaml**.
+
+   ```powershell
+   New-Item aoai.yaml -ItemType File -Value ""
+   pf connection create --file aoai.yaml --name aoai --set type=azure_open_ai api_base='${env:OPENAICONNECTION_API_BASE}' api_type=azure auth_mode=meid_token
+   ```
+
+   > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_BASE```.
 
 1. Build the flow
 
     ```bash
+    cd ..
     pf flow build --source ./ --output dist --format docker
     ```
 
