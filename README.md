@@ -238,20 +238,24 @@ TODO (P1 Jon): The UI produces an error when you do this for the first time. But
    - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
    - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
 
-<!-- 
-TODO (P2 Bilal): BRING BACK IN IF NEEDED
-
 1. Work around a telemetry issue that results in an error at the point of inferencing.
 
-   At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`. To correct that, perform the following steps.
+   At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`.
 
-   1. Open the **Files** view.
-   1. Select 'requirements.txt'.
-   1. The file should be empty, add one line containing just `promptflow-tracing>=1.16.1`.
-   1. Click **Save only** and close the file.
--->
+   This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of mid-October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
 
-1. Click **Save** on the flow.
+   1. Click the **Raw file mode** toggle at the top of the flow, and say **Yes** if it asks you to save.
+   1. At the very bottom of the `flow.diag.yml` file, add the following:
+
+      ```yml
+      environment_variables:
+        PF_DISABLE_TRACING: true
+      ```
+
+   1. Click **Save** on the file.
+   1. Untoggle the **Raw file mode** to get back to the flow designer.
+
+1. Click **Save** on the whole flow.
 
 ### 3. Test the prompt flow from Azure AI Studio
 
@@ -261,9 +265,6 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. :clock8: Wait for that button to change to *Compute session running*. This might take about ten minutes.
 
-<!-- TODO (P2 Bilal): BRING BACK IN IF NEEDED
-   If you get an warning related to pip and dependency resolver, this is because of the temporary workaround you followed in the prior steps, this is safe to ignore.
--->
    *Do not advance until the serverless compute is running.*
 
 1. Click the enabled **Chat** button on the UI.
