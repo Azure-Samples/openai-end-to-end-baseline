@@ -107,6 +107,10 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - The [Azure CLI installed](https://learn.microsoft.com/cli/azure/install-azure-cli)
 
+  If you're executing this from WSL, be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` should show `/usr/bin/az`.
+
+- The [OpenSSL CLI](https://docs.openssl.org/3.3/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
+
 - The [az Bicep tools installed](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
 
 ### 1. :rocket: Deploy the infrastructure
@@ -195,7 +199,9 @@ The following steps are required to deploy the infrastructure from the command l
 
 To test this architecture, you'll be deploying a pre-built prompt flow. The prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network primeter is established, and you must be interacting with Azure AI Studio and its resources from the network.
 
-1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
+1. Connect to the virtual network via Azure Bastion and the jump box or through a force-tunneled VPN or virtual network peering that you manually configure.
+
+   The username for the jump box deployed in this solution is `vmadmin`.
 
    | :computer: | Unless otherwise noted, all of the **following steps are all performed from the jump box** or from your VPN-connected workstation. |
    | :--------: | :------------------------- |
