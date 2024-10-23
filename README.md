@@ -310,7 +310,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
    *Do not advance until this deployment is complete.*
 
-TODO (P2): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.
+TODO (P2 - Dost): A `curl`-style test from the jumpbox would be pretty nice here. Maybe CLI/SDK call?  Would involve installing things though on the jump box.  The Basic allows you to test from the portal, but Azure AI Studio doesn't support that (for some odd reason) when private networking is established.  Maybe `az ml online-endpoint invoke` since AZ CLI is installed on the jump box?
 
 ### 5. Publish the chat front-end web app
 
@@ -388,7 +388,7 @@ TODO: Stopped here
 
 ### 7. Rehost the prompt flow in Azure App Service
 
-TODO (P1): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
+TODO (P1 - Bilal): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
 
 This is a second option for deploying the flow. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
 
