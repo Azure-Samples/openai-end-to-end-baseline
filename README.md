@@ -315,7 +315,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
 As a quick checkpoint of progress, you should test to make sure your Azure Machine learning managed online endpoint is able to be called from the network. This tests the network and authorization configuration of that endpoint.
 
-1. Install Azure CLI on your jump box. *(Skip if using your VPN connected workstation)*
+1. Install Azure CLI on your jump box. *(Skip if using your VPN connected workstation.)*
 
    TODO (P3): Can we install az cli as part of the bootstrapping of the VM?
 
@@ -325,11 +325,11 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
    az extension add --name ml
    ```
 
-1. Log in through the Azure CLI. *(Skip if using your VPN connected workstation)*
+1. Log in through the Azure CLI. *(Skip if using your VPN connected workstation.)*
 
    If prompted, choose "No, sign in to this app only."
 
-1. Set some context. *(Skip if using your VPN connected workstation)*
+1. Set some context. *(Skip if using your VPN connected workstation.)*
 
    ```powershell
    $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
@@ -373,7 +373,7 @@ For this deployment guide, you'll be using your your jump box (or VPN-connected 
    az storage blob upload -f chatui.zip --account-name "st${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
-1. Restart the web app to launch the site.
+1. Restart the web app to launch the site. *(This can be done from your workstation or the jump box.)*
 
    ```powershell
    az webapp restart --name "app-${BASE_NAME}" --resource-group "rg-chat-baseline-${LOCATION}"
