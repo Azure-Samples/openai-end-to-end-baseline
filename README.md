@@ -98,6 +98,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
     - Storage Accounts: Two instances
     - App Service Plans: P1v3 (AZ), three instances
+    - Azure DDoS protection: TODO (P3)
     - TODO (P3): This is the list from "Basic" -- What's missing for Baseline?
 
 - Your deployment user must have the following permissions at the subscription scope.
