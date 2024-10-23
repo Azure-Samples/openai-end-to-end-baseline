@@ -345,7 +345,7 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
    az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g rg-chat-baseline-${LOCATION} -r request.json
    ```
 
-1. A grounded response to your question should appear in the output.  This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
+1. A grounded response to your question should appear in the output. This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
 
 ### 6. Publish the chat front-end web app
 
@@ -379,13 +379,11 @@ For this deployment guide, you'll be using your your jump box (or VPN-connected 
    az webapp restart --name "app-${BASE_NAME}" --resource-group "rg-chat-baseline-${LOCATION}"
    ```
 
-TODO (P1 - Chad): Stopped here
-
 ### 7. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
 
-| :computer: | Unless otherwise noted, all of the **following steps are all performed from your original workstation**, not from the jump box. |
+| :computer: | Unless otherwise noted, all of the following steps are all performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
 
 1. Get the public IP address of the Application Gateway.
@@ -405,6 +403,8 @@ This section will help you to validate that the workload is exposed correctly an
 1. Browse to the site (e.g. <https://www.contoso.com>).
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
+
+TODO (P1 - Chad): Stopped here
 
 1. Try it out!
 

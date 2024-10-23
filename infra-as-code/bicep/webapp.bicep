@@ -178,7 +178,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   resource appsettings 'config' = {
     name: 'appsettings'
     properties: {
-      WEBSITE_RUN_FROM_PACKAGE: '${storage.properties.primaryEndpoints.blob}/deploy/${publishFileName}'
+      WEBSITE_RUN_FROM_PACKAGE: '${storage.properties.primaryEndpoints.blob}deploy/${publishFileName}'
       WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
