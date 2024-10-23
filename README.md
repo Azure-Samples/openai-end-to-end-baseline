@@ -488,6 +488,8 @@ TODO (P1 Jon): Stopped here. THere are two likely TODOs in the acr.bicep file to
    az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
    ```
 
+// TODO Probably can Bail from jumpbox here
+
 1. Set the container image on the pf App Service.
 
     ```azurecli
@@ -507,6 +509,8 @@ TODO (P1 Jon): Stopped here. THere are two likely TODOs in the acr.bicep file to
     az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
     az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
+
+// TODO Make the payoff for all this nonesense great!
 
 1. Validate the client application that is now pointing at the flow deployed in a container still works
 
