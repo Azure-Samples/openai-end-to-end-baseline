@@ -55,6 +55,10 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
     publicNetworkAccess: 'Disabled'
     zoneRedundancy: 'Enabled'
   }
+
+  // TODO (P2 - Jon): Add a build agent node connected to the virtual network, the image building subnet.
+  // Then pushes will happen from within the network when following the instructions in the README.
+  // TODO (P2 - Jon): I believe the user is going to need AcrPush in order to put the new image into ACR.
 }
 
 @description('Diagnostic settings for the Azure Container Registry instance.')

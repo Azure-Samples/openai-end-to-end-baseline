@@ -443,67 +443,51 @@ You will need access to the prompt flow files for this experience, since we'll b
 
 1. In your Anaconda PowerShell terminal, change the directory to the root of the unzipped flow.
 
-1. Create a directory called **connections** and change directory into it.
+1. Create a file for the Azure OpenAI connection named **aoai.yaml**.
 
    ```powershell
-   mkdir connections
-   cd connections
-   ```
+   $connectionDetails = @'
+   $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
+   name: "aoai"
+   type: "azure_open_ai"
+   api_base: "${env:OPENAICONNECTION_API_BASE}"
+   api_type: "azure"
+   api_version: "2024-02-01"
+   auth_mode: "meid_token"
+   '@
 
-1. Create a file for the Azure OpenAI connection named **gpt35.yaml**.
-
-   ```powershell
-   New-Item aoai.yaml -ItemType File -Value ""
-   pf connection create --file aoai.yaml --name aoai --set type=azure_open_ai api_base='${env:OPENAICONNECTION_API_BASE}' api_type=azure auth_mode=meid_token
+   New-Item aoai.yaml -ItemType File -Value "$connectionDetails"
    ```
 
    > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_BASE```.
 
-1. Build the flow
+1. Bundle the prompt flow to support creating a container image.
 
     ```bash
     cd ..
     pf flow build --source ./ --output dist --format docker
     ```
 
-    The following code will create a folder named 'dist' with a docker file and all the required flow files.
+    The following code will create a folder named 'dist' with a Dockerfile and all the required flow files.
 
-#### Build and push the image
+TODO (P1 Jon): Stopped here. THere are two likely TODOs in the acr.bicep file to help make the following work.
 
-1. Ensure the requirements.txt in the dist/flow folder has the appropriate requirements. At the time of writing, they were as follows:
+1. Build and push the container image.
 
-    ```bash
-    promptflow[azure]
-    promptflow-tools==0.1.0.b5
-    python-dotenv
-    bs4
-    ```
+   ```powershell
+   cd dist
 
-1. Ensure the connections folder with the connection was created in the dist folder. If not, copy the connections folder, along with the connection file to the dist folder.
+   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
+   $NAME_OF_ACR="cr${BASE_NAME}"
+   $ACR_CONTAINER_NAME="aoai"
+   $IMAGE_NAME="wikichatflow"
+   $IMAGE_TAG="1.1"
+   $FULL_IMAGE_NAME="${ACR_CONTAINER_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-1. Make sure you have network access to your Azure Container Registry and have an RBAC role such as ACRPush that will allow you to push an image. If you are running on a local workstation, you can set ```Public network access``` to ```All networks``` or ```Selected networks``` and add your machine ip to the allowed ip list.
+   az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
+   ```
 
-1. Build and push the container image
-
-    Run the following commands from the dist folder in your terminal:
-
-    ```azurecli
-    az login
-
-    NAME_OF_ACR="cr$BASE_NAME"
-    ACR_CONTAINER_NAME="aoai"
-    IMAGE_NAME="wikichatflow"
-    IMAGE_TAG="1.1"
-    FULL_IMAGE_NAME="$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
-
-    az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
-    ```
-
-#### Host the chat flow container image in Azure App Service
-
-Perform the following steps to deploy the container image to Azure App Service:
-
-1. Set the container image on the pf App Service
+1. Set the container image on the pf App Service.
 
     ```azurecli
     PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
