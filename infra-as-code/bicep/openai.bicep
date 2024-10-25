@@ -13,7 +13,7 @@ param privateEndpointsSubnetName string
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
-param keyVaultName string
+//param keyVaultName string
 
 //variables
 var openaiName = 'oai-${baseName}'

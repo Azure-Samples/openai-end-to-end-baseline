@@ -69,7 +69,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   //  }
 
 
-  }
+  //}
 }
 
 @description('Diagnostic settings for the Azure Container Registry instance.')

@@ -151,7 +151,7 @@ resource appDeployStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@202
   }
 }
 
-resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: mlStorageName
   location: location
   sku: {
@@ -182,6 +182,7 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
+    publicNetworkAccess: 'Disabled'
     supportsHttpsTrafficOnly: true
   }
   resource Blob 'blobServices' existing = {
