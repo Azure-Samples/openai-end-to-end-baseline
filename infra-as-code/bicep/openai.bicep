@@ -13,8 +13,6 @@ param privateEndpointsSubnetName string
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
-// TODO Remove - param keyVaultName string
-
 //variables
 var openaiName = 'oai-${baseName}'
 var openaiPrivateEndpointName = 'pep-${openaiName}'
@@ -33,17 +31,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
   name: logWorkspaceName
 }
-
-/* TODO (P3): Why was this set?
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
-  name: keyVaultName
-  resource kvsGatewayPublicCert 'secrets' = {
-    name: 'openai-key'
-    properties: {
-      value: openAiAccount.listKeys().key1
-    }
-  }
-}*/
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: openaiName

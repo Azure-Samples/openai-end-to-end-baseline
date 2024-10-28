@@ -13,8 +13,11 @@ param location string = resourceGroup().location
 @description('The name of the virtual network that this ACR instance will have a private endpoint in.')
 param vnetName string
 
-@description('The name of the subnet for the private endpoint. Must in in the provided virtual network.')
+@description('The name of the subnet for the private endpoint. Must be in the provided virtual network.')
 param privateEndpointsSubnetName string
+
+@description('The name of the subnet for build agents. Must be in the provided virtual network.')
+param buildAgentSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
@@ -30,7 +33,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }  
+  }
+
+  resource buildAgentSubnet 'subnets' existing = {
+    name: buildAgentSubnetName
+  }
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
@@ -56,18 +63,16 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
     zoneRedundancy: 'Enabled'
   }
 
-  // TODO (P2 - Jon): Add a build agent node connected to the virtual network, the image building subnet.
-  // Then pushes will happen from within the network when following the instructions in the README.
-  // TODO (P2 - Jon): I believe the user is going to need AcrPush in order to put the new image into ACR.
-
-  //resource x 'agentPools@2019-06-01-preview' = {
-  //  name: 'sdf'
-  //  properties: {
-  //    os: 'Linux'
-  //    count: 1
-  //    virtualNetworkSubnetResourceId: // TODO
-  //  }
-  //}
+  @description('Compute in the virtual network that can be used to build container images. This could also be done with tasks or images could be built on build agents.')
+  resource imageBuildPool 'agentPools@2019-06-01-preview' = {
+    name: 'imgbuild'
+    location: location
+    properties: {
+      os: 'Linux'
+      count: 1
+      virtualNetworkSubnetResourceId: vnet::buildAgentSubnet.id
+    }
+  }
 }
 
 @description('Diagnostic settings for the Azure Container Registry instance.')

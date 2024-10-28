@@ -267,18 +267,12 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
         vTpmEnabled: true
       }
     }
-    // TODO (P4): Address Azure Advisor recommendations, specifically EncryuptionAtHost and Guest Configuration Agent.
     storageProfile: {
       dataDisks: []
       osDisk: {
         createOption: 'FromImage'
         caching: 'ReadOnly'
         deleteOption: 'Delete'
-        // TODO (P5): Can we switch to ephemeral OS?
-        //diffDiskSettings: {
-        //  option: 'Local'
-        //  placement: 'CacheDisk'
-        //}
         managedDisk: {
           storageAccountType: 'Premium_LRS'
         }

@@ -362,6 +362,10 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
           }
         }
       }
+      status: {
+        sparkReady: false
+        status: 'Active'
+      }
     }
     allowRoleAssignmentOnRG: false // Require role assignments at the resource level.
     v1LegacyMode: false

@@ -94,8 +94,9 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
     - Storage Accounts: Two instances
     - App Service Plans: P1v3 (AZ), three instances
-    - Azure DDoS protection: TODO (P3)
-    - TODO (P3): This is the list from "Basic" -- What's missing for Baseline?
+    - Azure DDoS protection plan: One
+    - Standard, static Public IP Addresses: Two
+    - Standard DASv4 Family Cluster Dedicated vCPUs for machine learning: 8
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -160,7 +161,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   TODO (P3): Verify for Baseline (this is copy from Basic)
+   TODO (P2): Verify for Baseline (this is copy from Basic)
 
    This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
@@ -321,7 +322,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint usi
 
 1. :clock9: Wait for the deployment to finish creating.
 
-   The deployment can take over ten minutes to create. To check on the process, navigate to the **Deployments** screen using the link in the left navigation. Eventually 'ept-chat-deployment' will be on this list and then eventually the deployment will be listed with a State of 'Succeeded'. Use the **Refresh** button as needed.
+   The deployment can take over 15 minutes to create. To check on the process, navigate to the **Deployments** screen using the link in the left navigation. Eventually 'ept-chat-deployment' will be on this list and then eventually the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
 
    *Do not advance until this deployment is complete.*
 
@@ -329,31 +330,39 @@ Here you'll take your tested flow and deploy it to a managed online endpoint usi
 
 As a quick checkpoint of progress, you should test to make sure your Azure Machine learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
 
-1. Install Azure CLI on your jump box from a PowerShell terminal session. *(Skip if using your VPN connected workstation.)*
+1. Install some tooling on the jump box.
+
+   TODO (P3): Can we install az cli and miniconda as part of the bootstrapping of the VM?
+
+   Since your jump box is acting as a developer workstation and build agent, let's get some tooling installed. Some of this tooling is used here in this step, others are used later in the instructions.
 
    ```powershell
-   winget install -e --id Microsoft.AzureCLI
+   winget install -e --id=Microsoft.AzureCLI
+   winget install -e --id=Anaconda.Miniconda3
    ```
 
    Restart your powershell terminal to get `az` included in your path.
-
-   TODO (P3): Can we install az cli as part of the bootstrapping of the VM?
-
-1. From a terminal session, ensure the `ml` Azure CLI extension is installed.
 
    ```powershell
    az extension add --name ml
    ```
 
-1. Log in through the Azure CLI. *(Skip if using your VPN connected workstation.)*
+1. Close your PowerShell terminal.
+
+1. Open an **Anaconda PowerShell Prompt** instance from the Start Menu.
+
+   You'll need a PowerShell prompt with a Python enviornment available eventually in these instructions. It's best to open it now to only need to set environment variables once.
+
+1. Log in through the Azure CLI so the terminal has access to your subscription.
 
    If prompted, choose **No, sign in to this app only**.
 
-1. Set some context. *(Skip if using your VPN connected workstation.)*
+1. Carry over some context from your workstation.
 
    ```powershell
    $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
    $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
+   $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
    ```
 
 1. Execute an HTTP request to the online endpoint.
@@ -377,7 +386,7 @@ In a production environment, you use a CI/CD pipeline to:
 - Create the project zip package
 - Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
 
-For this deployment guide, you'll be using your your jump box (or VPN-connected workstation) to simulate part of that process.
+For this deployment guide, you'll continue using your your jump box (or VPN-connected workstation) to simulate part of that process.
 
 1. Download the web UI from a PowerShell terminal.
 
@@ -410,7 +419,7 @@ This section will help you to validate that the workload is exposed correctly an
 
    ```bash
    # query the Azure Application Gateway Public IP
-   APPGW_PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name "pip-$BASE_NAME" --query [ipAddress] --output tsv)
+   APPGW_PUBLIC_IP=$(az network public-ip show -g $RESOURCE_GROUP -n "pip-$BASE_NAME" --query [ipAddress] --output tsv)
    echo APPGW_PUBLIC_IP: $APPGW_PUBLIC_IP
    ```
 
@@ -437,44 +446,55 @@ You will need access to the prompt flow files for this experience, since we'll b
 | :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. |
 | :--------: | :------------------------- |
 
-1. Install [conda](https://docs.anaconda.com/miniconda/).
-
-1. Open an 'Anaconda PowerShell Prompt' instance.
-
-1. Intall the promptflow tools (pf CLI).
+1. From your *existing* **Anaconda PowerShell Prompt** instance, start a conda session and install the promptflow tools (pf CLI).
 
    ```powershell
-   conda create --name pf python=3.12.7
+   conda create --name pf python=3.12
    conda activate pf
 
    conda install pip
-   pip install promptflow promptflow-tools bs4
+   pip install promptflow[azure] promptflow-tools bs4
    ```
 
 1. Open the Prompt flow UI again in your Azure AI Studio project.
 
-1. Expand the 'Files' tab in the upper-right pane of the UI.
+1. Expand the **Files** tab in the upper-right pane of the UI.
 
 1. Click on the download icon to download the flow as a zip file.
 
 1. Unzip the prompt flow zip file you downloaded.
 
-1. In your Anaconda PowerShell terminal, change the directory to the root of the unzipped flow.
+   ```powershell
+   cd Downloads
+   Expand-Archive chat_wiki.zip
+   cd chat_wiki
+   ```
 
-1. Create a file for the Azure OpenAI connection named **aoai.yaml**.
+1. Add packages to requirements.txt, which ensures they are installed in your container.
 
    ```powershell
-   $connectionDetails = @'
+   Add-Content requirements.txt -Value @'
+   promptflow[azure]
+   promptflow-tools
+   python-dotenv
+   bs4
+   '@
+   ```
+
+1. Create a file for the Azure OpenAI connection named **aoai.yaml** and register it.
+
+   ```powershell
+   New-Item aoai.yaml -ItemType File -Value @'
    $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
-   name: "aoai"
-   type: "azure_open_ai"
+   name: aoai
+   type: azure_open_ai
    api_base: "${env:OPENAICONNECTION_API_BASE}"
    api_type: "azure"
    api_version: "2024-02-01"
    auth_mode: "meid_token"
    '@
 
-   New-Item aoai.yaml -ItemType File -Value "$connectionDetails"
+   pf connection create -f aoai.yaml
    ```
 
    > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_BASE```.
@@ -482,54 +502,53 @@ You will need access to the prompt flow files for this experience, since we'll b
 1. Bundle the prompt flow to support creating a container image.
 
     ```bash
-    cd ..
     pf flow build --source ./ --output dist --format docker
     ```
 
-    The following code will create a folder named 'dist' with a Dockerfile and all the required flow files.
-
-TODO (P1 Jon): Stopped here. THere are two likely TODOs in the acr.bicep file to help make the following work.
+    The following code will create a directory named 'dist' with a Dockerfile and all the required flow code files.
 
 1. Build and push the container image.
 
    ```powershell
    cd dist
 
-   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
    $NAME_OF_ACR="cr${BASE_NAME}"
    $ACR_CONTAINER_NAME="aoai"
    $IMAGE_NAME="wikichatflow"
-   $IMAGE_TAG="1.1"
+   $IMAGE_TAG="1.0"
    $FULL_IMAGE_NAME="${ACR_CONTAINER_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-
-   az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
+   
+   az acr build --agent-pool imgbuild -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
    ```
-
-// TODO Probably can Bail from jumpbox here
 
 1. Set the container image on the pf App Service.
 
-    ```azurecli
-    PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
-    ACR_IMAGE_NAME="$NAME_OF_ACR.azurecr.io/$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
+    ```powershell
+    $PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
+    $ACR_IMAGE_NAME="${NAME_OF_ACR}.azurecr.io/${FULL_IMAGE_NAME}"
 
-    az webapp config container set --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --docker-custom-image-name $ACR_IMAGE_NAME --docker-registry-server-url https://$NAME_OF_ACR.azurecr.io
+    az webapp config container set --name $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP -i $ACR_IMAGE_NAME -r "https://${NAME_OF_ACR}.azurecr.io"
     az webapp deployment container config --enable-cd true --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
 1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed promptflow endpoint hosted in App Service instead of the managed online endpoint.
 
-    ```azurecli
-    UI_APP_SERVICE_NAME="app-$BASE_NAME"
-    ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
+    ```powershell
+    $UI_APP_SERVICE_NAME="app-$BASE_NAME"
+    $ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
     
     az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
     az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
-// TODO Make the payoff for all this nonesense great!
+## :checkered_flag: Try it out. Test the final deployment.
 
-1. Validate the client application that is now pointing at the flow deployed in a container still works
+| :computer: | Unless otherwise noted, all of the following steps are all performed from your original workstation, not from the jump box. |
+| :--------: | :------------------------- |
+
+Browse to the site (e.g. <https://www.contoso.com>) once again. Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
+
+In this final configuration, your chat UI is asking the prompt flow code hosted in another Web App in your Azure App Service instance. Your Azure Machine Learning online endpoint is not used, and Wikipedia and Azure OpenAI is being called right from your prompt flow Web App.
 
 ## :broom: Clean up resources
 

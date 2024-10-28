@@ -38,11 +38,7 @@ param logWorkspaceName string
 var appName = 'app-${baseName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
 var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
-
-// TODO (P5): Use secret resource reference to get URI to build this
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
-
-// var openAIApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/openai-key)' TODO (P4): Why was this set?
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -95,6 +91,12 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
 @description('Built-in Role: [AcrPull](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#acrpull)')
 resource containerRegistryPullRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+  scope: subscription()
+}
+
+@description('Built-in Role: [Cognitive Services OpenAI User](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#cognitive-services-openai-user)')
+resource cognitiveServicesOpenAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
   scope: subscription()
 }
 
@@ -347,7 +349,7 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
   location: location
   kind: 'linux'
   identity: {
-    type: 'UserAssigned'
+    type: 'SystemAssigned, UserAssigned'
     userAssignedIdentities: {
       '${appServiceManagedIdentity.id}': {}
     }
@@ -383,7 +385,6 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
       ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
       WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
       OPENAICONNECTION_API_BASE: azureOpenAI.properties.endpoint
-      // OPENAICONNECTION_API_KEY: openAIApiKey  TODO (P4): Why was this set?
       WEBSITES_PORT: '8080'
     }
   }
@@ -461,6 +462,7 @@ resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2024-01
   }
 }
 
+@description('Allow the prompt flow web app to pull container images from ACR.')
 resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(containerRegistry.id, appServiceManagedIdentity.id, containerRegistryPullRole.id)
   scope: containerRegistry
@@ -468,6 +470,17 @@ resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     roleDefinitionId: containerRegistryPullRole.id
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+
+@description('Allow the prompt flow web app to call into Azure OpenAI.')
+resource azureOpenAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(azureOpenAI.id, webAppPf.id, cognitiveServicesOpenAiUserRole.id)
+  scope: azureOpenAI
+  properties: {
+    roleDefinitionId: cognitiveServicesOpenAiUserRole.id
+    principalType: 'ServicePrincipal'
+    principalId: webAppPf.identity.principalId
   }
 }
 

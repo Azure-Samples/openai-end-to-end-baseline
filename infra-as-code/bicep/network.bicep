@@ -677,3 +677,6 @@ output bastionSubnetName string = vnet::azureBastionSubnet.name
 
 @description('The name of the private endpoints subnet.')
 output jumpboxSubnetName string = vnet::jumpBoxSubnet.name
+
+@description('The name of the build agent subnet.')
+output agentSubnetName string = vnet::agentsSubnet.name

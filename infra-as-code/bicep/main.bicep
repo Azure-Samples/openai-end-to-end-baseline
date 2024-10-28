@@ -101,6 +101,7 @@ module acrModule 'acr.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    buildAgentSubnetName: networkModule.outputs.agentSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -124,7 +125,6 @@ module openaiModule 'openai.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    // TODO Remove - keyVaultName: keyVaultModule.outputs.keyVaultName
   }
 }
 
