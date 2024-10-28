@@ -345,6 +345,10 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     enableServiceSideCMKEncryption: false
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
+      status: {
+        sparkReady: false
+        status: 'Active'      
+      }
       outboundRules: {
         wikipedia: {
           type: 'FQDN'
@@ -354,6 +358,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
         }
         OpenAI: {
           type: 'PrivateEndpoint'
+          status: 'Active'
           destination: {
             serviceResourceId: openAiAccount.id
             subresourceTarget: 'account'
