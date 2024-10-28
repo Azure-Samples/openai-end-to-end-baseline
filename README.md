@@ -90,10 +90,10 @@ Follow these instructions to deploy this example to your Azure subscription, try
   - The subscription selected must have the following quota available in the location you'll select to deploy this implementation.
 
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
-    - Storage Accounts: Two instances
-    - App Service Plans: P1v3 (AZ), three instances
-    - Azure DDoS protection plan: One
-    - Standard, static Public IP Addresses: Two
+    - Storage Accounts: 2 instances
+    - App Service Plans: P1v3 (AZ), 3 instances
+    - Azure DDoS protection plan: 1
+    - Standard, static Public IP Addresses: 2
     - Standard DASv4 Family Cluster Dedicated vCPUs for machine learning: 8
 
 - Your deployment user must have the following permissions at the subscription scope.
