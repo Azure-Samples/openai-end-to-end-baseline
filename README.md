@@ -552,7 +552,7 @@ In this final configuration, your chat UI is asking the prompt flow code hosted 
 
 Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. Additionally, a few of the resources deployed go into a soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota, so it is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
-| :warning: | This will completely delete any data you may have included in this example and that data and this deployment will be unrecoverable. |
+| :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
 | :--------: | :------------------------- |
 
 ```bash
