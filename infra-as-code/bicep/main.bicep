@@ -88,9 +88,7 @@ module keyVaultModule 'keyvault.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    createPrivateEndpoints: true
     appGatewayListenerCertificate: appGatewayListenerCertificate
-    apiKey: 'key'
     logWorkspaceName: logWorkspace.name
   }
 }

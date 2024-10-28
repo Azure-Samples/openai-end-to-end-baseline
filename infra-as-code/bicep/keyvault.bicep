@@ -13,10 +13,6 @@ param location string = resourceGroup().location
 @description('The certificate data for app gateway TLS termination. The value is base64 encoded')
 @secure()
 param appGatewayListenerCertificate string
-param apiKey string
-
-@description('Determines whether or not a private endpoint, DNS Zone, Zone Link and Zone Group is created for this resource.')
-param createPrivateEndpoints bool = false
 
 // existing resource name params 
 param vnetName string
@@ -99,7 +95,7 @@ resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
   }
 }
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints) {
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   name: keyVaultPrivateEndpointName
   location: location
   properties: {
@@ -120,25 +116,24 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01'
   }
 }
 
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: keyVaultDnsZoneName
   location: 'global'
   properties: {}
-}
 
-resource keyVaultDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints) {
-  parent: keyVaultDnsZone
-  name: '${keyVaultDnsZoneName}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource keyVaultDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${keyVaultDnsZoneName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
 }
 
-resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
   name: keyVaultDnsGroupName
   properties: {
     privateDnsZoneConfigs: [
@@ -153,14 +148,6 @@ resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZone
   dependsOn: [
     keyVaultPrivateEndpoint
   ]
-}
-
-resource apiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: keyVault
-  name: 'apiKey'
-  properties: {
-    value: apiKey
-  }
 }
 
 @description('The name of the key vault.')
