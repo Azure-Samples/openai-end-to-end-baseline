@@ -529,7 +529,7 @@ You will need access to the prompt flow files for this experience, since we'll b
     az webapp deployment container config --enable-cd true --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
-1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed promptflow endpoint hosted in App Service instead of the managed online endpoint.
+1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed prompt flow endpoint hosted in App Service instead of the managed online endpoint.
 
     ```powershell
     $UI_APP_SERVICE_NAME="app-$BASE_NAME"
