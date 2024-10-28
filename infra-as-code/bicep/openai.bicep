@@ -160,13 +160,13 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
 
 //OpenAI diagnostic settings
 resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${openAiAccount.name}-diagnosticSettings'
+  name: 'default'
   scope: openAiAccount
   properties: {
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false

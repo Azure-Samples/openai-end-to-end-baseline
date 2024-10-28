@@ -300,13 +300,13 @@ resource appGateWay 'Microsoft.Network/applicationGateways@2024-01-01' = {
 
 //Application Gateway diagnostic settings
 resource appGateWayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${appGateWay.name}-diagnosticSettings'
+  name: 'default'
   scope: appGateWay
   properties: {
     workspaceId: logWorkspace.id
     logs: [
         {
-            categoryGroup: 'allLogs'
+            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
             enabled: true
             retentionPolicy: {
                 enabled: false

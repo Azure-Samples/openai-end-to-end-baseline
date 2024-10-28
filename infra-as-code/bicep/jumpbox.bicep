@@ -116,7 +116,7 @@ resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
       }
     ]

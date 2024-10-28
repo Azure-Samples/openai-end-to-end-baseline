@@ -77,13 +77,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 //Key Vault diagnostic settings
 resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${keyVault.name}-diagnosticSettings'
+  name: 'default'
   scope: keyVault
   properties: {
     workspaceId: logWorkspace.id
     logs: [
         {
-            categoryGroup: 'allLogs'
+            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
             enabled: true
             retentionPolicy: {
                 enabled: false

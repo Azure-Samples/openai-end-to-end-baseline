@@ -77,13 +77,13 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
 
 @description('Diagnostic settings for the Azure Container Registry instance.')
 resource acrResourceDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${acrResource.name}-diagnosticSettings'
+  name: 'default'
   scope: acrResource
   properties: {
     workspaceId: logWorkspace.id
     logs: [
         {
-            categoryGroup: 'allLogs'
+            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
             enabled: true
             retentionPolicy: {
                 enabled: false

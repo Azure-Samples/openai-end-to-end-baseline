@@ -194,9 +194,9 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
 }
 
 
-//Web App diagnostic settings
+// Web App diagnostic settings
 resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${webApp.name}-diagnosticSettings'
+  name: 'default'
   scope: webApp
   properties: {
     workspaceId: logWorkspace.id
@@ -390,9 +390,9 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
   }
 }
 
-//Web App diagnostic settings
+// Prompt flow Web App diagnostic settings
 resource webAppPfDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${webAppPf.name}-diagnosticSettings'
+  name: 'default'
   scope: webAppPf
   properties: {
     workspaceId: logWorkspace.id
