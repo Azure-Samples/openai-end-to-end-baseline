@@ -47,7 +47,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   properties: {
     adminUserEnabled: false
     dataEndpointEnabled: false
-    networkRuleBypassOptions: 'None'
+    networkRuleBypassOptions: 'AzureServices' // This allows support for ACR tasks to push the build image and bypass network restrictions - https://learn.microsoft.com/en-us/azure/container-registry/allow-access-trusted-services#trusted-services-workflow
     networkRuleSet: {
       defaultAction: 'Deny'
       ipRules: []
@@ -67,8 +67,6 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   //    count: 1
   //    virtualNetworkSubnetResourceId: // TODO
   //  }
-
-
   //}
 }
 

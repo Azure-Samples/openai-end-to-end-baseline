@@ -63,6 +63,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true       // Using RBAC
     enabledForDeployment: true          // VMs can retrieve certificates
     enabledForTemplateDeployment: true  // ARM can retrieve values
+    enabledForDiskEncryption: false
 
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
