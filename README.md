@@ -203,7 +203,7 @@ The following steps are required to deploy the infrastructure from the command l
    az ml workspace outbound-rule list -w aihub-${BASE_NAME} -g $RESOURCE_GROUP --query '[0].status' -o tsv
    ```
 
-   If the result is 'Inactive', then execute the following command.
+   If the result is 'Inactive', then execute the following command. This command will force the deployment of the managed network and establish the private endpoint connections.
 
    ```bash
    az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP 
