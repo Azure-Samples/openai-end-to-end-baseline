@@ -7,7 +7,7 @@ This reference implementation illustrates an approach for authoring and running 
   - If your application requires high availability and you favor using a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
 - A network-isolated, zone-redundant, highly available deployment in Azure App Service.
 
-The implementation will have you build and test a [Prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Studio](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
+The implementation will have you build and test a [prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Studio](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
 
 - Creating prompts
 - Querying data stores for grounding data
@@ -192,35 +192,49 @@ The following steps are required to deploy the infrastructure from the command l
      -p appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV} \
      -p baseName=${BASE_NAME} \
      -p yourPrincipalId=${PRINCIPAL_ID}
+   ```
 
-   # TODO: (P2- Jon ) determine if we want to run this command every time.  May also need to provide instructions on how to add the az ml extension if it's not installed.
-   # az ml workspace provision-network --name aihub-${BASE_NAME} --resource-group $RESOURCE_GROUP 
+1. Apply workaround for Azure AI Studio not yet deploying its managed network.
+
+   TODO: (P1 - Jon) Do we really need to do this?
+
+   Azure AI Studio tends to delay deploying its managed network, which causes problems when trying to access Azure AI Studio's portal experience. To test if you need to work around this delayed deployment, execute the following.
+
+   ```bash
+   az extension add --name ml
+   az ml workspace outbound-rule list -w aihub-${BASE_NAME} -g $RESOURCE_GROUP --query '[0].status' -o tsv
+   ```
+
+   If the result is 'Inactive', then execute the following command.
+
+   ```bash
+   az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP 
    ```
 
 ### 2. Deploy a prompt flow from Azure AI Studio
 
-To test this architecture, you'll be deploying a pre-built prompt flow. The prompt flow is "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network primeter is established, and you must be interacting with Azure AI Studio and its resources from the network.
+To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network primeter is established, and you must be interacting with Azure AI Studio and its resources from the network.
 
 1. Connect to the virtual network via Azure Bastion and the jump box or through a force-tunneled VPN or virtual network peering that you manually configure.
 
-   The username for the jump box deployed in this solution is vmadmin`.
+   The username for the Windows jump box deployed in this solution is `vmadmin`.
 
-   | :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. |
+   | :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
-1. Open the Azure portal and navigate to the Azure AI project named **aiproj-chat** in your resource group.
+1. Open the Azure portal to your subscription and navigate to the Azure AI project named **aiproj-chat** in your resource group.
 
    You'll need to sign in if this is the first time your connecting through the jump box.
 
 1. Open Azure AI Studio by clicking the **Launch Studio** button.
 
-   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all of your AI Studio projects by going to <https://ai.azure.com/allProjects>.
+   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all of your AI Studio hubs and projects by going to <https://ai.azure.com>.
 
 1. Click on **Prompt flow** in the left navigation.
 
 1. On the **Flows** tab, click **+ Create**.
 
-1. Under Explore gallery, find "Chat with Wikipedia" and click **Clone**.
+1. Under **Explore gallery**, find "Chat with Wikipedia" and click **Clone**.
 
 1. Set the Folder name to `chat_wiki` and click **Clone**.
 
@@ -228,13 +242,13 @@ To test this architecture, you'll be deploying a pre-built prompt flow. The prom
 
 TODO (P1 Jon): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it usally works just fine (sometimes it takes a few additional tries).  What is going on?
 
-1. Connect the the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
+1. Connect the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
 
    - For **Connection**, select 'aoai' from the dropdown menu. This is your deployed Azure OpenAI instance.
    - For **deployment_name**, select 'gpt35' from the dropdown menu. This is the model you've deployed in that Azure OpenAI instance.
    - For **response_format**, select '{"type":"text"}' from the dropdown menu
 
-1. Also connect the the `augmented_chat` prompt flow step to your Azure OpenAI model deployment.
+1. Also connect the `augmented_chat` prompt flow step to your Azure OpenAI model deployment.
 
    - For **Connection**, select the same 'aoai' from the dropdown menu.
    - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
@@ -244,10 +258,10 @@ TODO (P1 Jon): The UI produces an error when you do this for the first time. But
 
    At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`.
 
-   This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of mid-October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
+   This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of late October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
 
    1. Click the **Raw file mode** toggle at the top of the flow, and say **Yes** if it asks you to save.
-   1. At the very bottom of the `flow.diag.yml` file, add the following:
+   1. At the very bottom of the `flow.diag.yml` file, add the following two lines:
 
       ```yml
       environment_variables:
@@ -275,9 +289,9 @@ Here you'll test your flow by invoking it directly from the Azure AI Studio. The
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Deploy the Prompt flow to an Azure Machine Learning managed online endpoint
+### 4. Deploy the prompt flow to an Azure Machine Learning managed online endpoint
 
-Here you'll take your tested flow and deploy it to a managed online endpoint.
+Here you'll take your tested flow and deploy it to a managed online endpoint using Azure AI Studio.
 
 1. Click the **Deploy** button in the UI.
 
@@ -296,7 +310,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
    - **Environment**: Use environment of current flow definition.
    - **Application Insights diagnostics**: Enabled
 
-1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the Prompt flow, and click **Next**.
+1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the prompt flow, and click **Next**.
 
 1. Click the **Create** button.
 
@@ -315,13 +329,19 @@ Here you'll take your tested flow and deploy it to a managed online endpoint.
 
 ### 5. Test the Azure Machine Learning online endpoint from the network
 
-As a quick checkpoint of progress, you should test to make sure your Azure Machine learning managed online endpoint is able to be called from the network. This tests the network and authorization configuration of that endpoint.
+As a quick checkpoint of progress, you should test to make sure your Azure Machine learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
 
-1. Install Azure CLI on your jump box. *(Skip if using your VPN connected workstation.)*
+1. Install Azure CLI on your jump box from a PowerShell terminal session. *(Skip if using your VPN connected workstation.)*
+
+   ```powershell
+   winget install -e --id Microsoft.AzureCLI
+   ```
+
+   Restart your powershell terminal to get `az` included in your path.
 
    TODO (P3): Can we install az cli as part of the bootstrapping of the VM?
 
-1. From a terminal session, ensure the `ml` extension is installed.
+1. From a terminal session, ensure the `ml` Azure CLI extension is installed.
 
    ```powershell
    az extension add --name ml
@@ -329,7 +349,7 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
 1. Log in through the Azure CLI. *(Skip if using your VPN connected workstation.)*
 
-   If prompted, choose "No, sign in to this app only."
+   If prompted, choose **No, sign in to this app only**.
 
 1. Set some context. *(Skip if using your VPN connected workstation.)*
 
@@ -351,7 +371,7 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
 ### 6. Publish the chat front-end web app
 
-Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into Prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
 In a production environment, you use a CI/CD pipeline to:
 
