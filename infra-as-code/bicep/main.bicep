@@ -124,7 +124,7 @@ module openaiModule 'openai.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    keyVaultName: keyVaultModule.outputs.keyVaultName
+    // TODO Remove - keyVaultName: keyVaultModule.outputs.keyVaultName
   }
 }
 
