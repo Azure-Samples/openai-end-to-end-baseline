@@ -2,11 +2,12 @@
 
 This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
 
-- An Azure AI Studio managed online endpoint in a managed virtual network.
+- An Azure Machine Learning managed online endpoint in a managed virtual network.
+
   - If your application requires high availability and you favor using a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
 - A network-isolated, zone-redundant, highly available deployment in Azure App Service.
 
-The implementation will have you build and test a [Prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Studio](https://azure.microsoft.com/products/machine-learning) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
+The implementation will have you build and test a [Prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Studio](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
 
 - Creating prompts
 - Querying data stores for grounding data
@@ -24,28 +25,33 @@ This implementation builds off of the [basic implementation](https://github.com/
 The implementation covers the following scenarios:
 
 1. Authoring a flow - Authoring a flow using prompt flow in Azure AI Studio
-1. Deploying a flow to Azure AI Studio (Managed compute option) - The deployment of an executable flow to an Azure AI Studio online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
+1. Deploying a flow to managed compute behind an Azure Machine Learning endpoint - The deployment of the executable flow created in Azure AI Studio to managed online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
+
 1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
 
 ### Authoring a flow
 
 ![Diagram of the authoring architecture using Azure AI Studio. It demonstrates key architecture components and flow when using AI studio as an authoring environment. ](docs/media/openai-end-to-end-baseline-authoring.png)
 
-The authoring architecture diagram illustrates how flow authors [connect to an Azure AI Studio through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a jump virtual machine. Connectivity to the virtual network is more commonly done in enterprises using private connectivity options like ExpressRoute or virtual network peering.
+The authoring architecture diagram illustrates how flow authors [connect to an Azure AI Studio through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine. Connectivity to the virtual network is more commonly done in enterprises using private connectivity options like ExpressRoute or virtual network peering.
 
-The diagram further illustrates how AI Studio is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI Service and Azure AI Search (previously named Cognitive Search).
+The diagram further illustrates how AI Studio is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI service and Azure AI Search.
 
-### Deploying a flow to Azure AI Studio managed online endpoint
 
-![Diagram of the deploying a flow to Azure AI Studio managed online endpoint. It illustrates the Azure services relationships for an AI studio environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Studio. ](docs/media/openai-end-to-end-baseline-aml-compute.png)
+### Deploying a flow to Azure Machine Learning managed online endpoint
 
-The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources such as Azure OpenAI and Cognitive Search through managed private endpoints.
+![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI studio environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Studio.](docs/media/openai-end-to-end-baseline-aml-compute.png)
+
+
+The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow is able to connect to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
+
 
 ### Deploying a flow to Azure App Service (alternative)
 
-![Diagram of the deploying a flow to Azure App Service. This drawing emphasizes how AI Studio links the managed private endpoint subnet to the Azure Services when they are created and managed by the customer. ](docs/media/openai-end-to-end-baseline-app-services.png)
+![Diagram of the deploying a flow to Azure App Service. This drawing emphasizes how AI Studio compute and endpoints are bypassed, and Azure App Service and its virtual network become responsible for connecting to the private endpoints for dependencies.](docs/media/openai-end-to-end-baseline-app-services.png)
 
-The Azure App Service deployment architecture diagram illustrates how the same prompt flow can be containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure AI Studio managed online endpoint.
+
+The Azure App Service deployment architecture diagram illustrates how the same prompt flow is containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure AI Studio managed online endpoint.
 
 The flow is still authored in a network-isolated Azure AI Studio project. To deploy an App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints by the App Service.
 
