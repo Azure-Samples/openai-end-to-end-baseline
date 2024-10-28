@@ -411,18 +411,16 @@ This section will help you to validate that the workload is exposed correctly an
 
 ### 8. Rehost the prompt flow in Azure App Service
 
-TODO (P2 - Bilal): Can Azure AI Studio produce this image for us?  If so, how?  Can the prompt flow go into the Models catalog and get pulled from there?
-
 This is a second option for deploying the prompt flow code. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint.
 
-You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. To that end, you'll need to install some developer tools on the jump box.
+You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. Using the jump box again simulates a build agent in the network. To perform these build and deploy tasks, you'll need to install some developer tools on the jump box.
 
 | :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. |
 | :--------: | :------------------------- |
 
 1. Install [conda](https://docs.anaconda.com/miniconda/).
 
-1. Open a 'Anaconda PowerShell Prompt' instance.
+1. Open an 'Anaconda PowerShell Prompt' instance.
 
 1. Intall the promptflow tools (pf CLI).
 

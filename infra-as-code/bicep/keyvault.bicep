@@ -44,7 +44,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   properties: {
@@ -56,12 +56,14 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       defaultAction: 'Deny'
       bypass: 'AzureServices' // Required for AppGW communication
     }
+    publicNetworkAccess: 'Disabled'
 
     tenantId: subscription().tenantId
 
     enableRbacAuthorization: true       // Using RBAC
     enabledForDeployment: true          // VMs can retrieve certificates
     enabledForTemplateDeployment: true  // ARM can retrieve values
+    enabledForDiskEncryption: false
 
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
