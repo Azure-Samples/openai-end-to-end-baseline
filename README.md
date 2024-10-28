@@ -139,7 +139,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Generate a client-facing, self-signed TLS certificate.
 
-     :warning: Do not use the certificate created by this script for actual deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your App Service solution, use your organization's requirements for procurement and lifetime management of TLS certificates, _even for development purposes_.
+     :warning: Do not use the certificate created by this script for actual deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your App Service solution, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
 
      Create the certificate that will be presented to web clients by Azure Application Gateway for your domain.
 
@@ -539,9 +539,9 @@ You will need access to the prompt flow files for this experience, since we'll b
     az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
     ```
 
-## :checkered_flag: Try it out. Test the final deployment.
+## :checkered_flag: Try it out. Test the final deployment
 
-| :computer: | Unless otherwise noted, all of the following steps are all performed from your original workstation, not from the jump box. |
+| :computer: | Unless otherwise noted, all of the remaining steps are performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
 
 Browse to the site (e.g. <https://www.contoso.com>) once again. Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
@@ -552,7 +552,8 @@ In this final configuration, your chat UI is asking the prompt flow code hosted 
 
 Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. Additionally, a few of the resources deployed go into a soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota, so it is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
-> **Note:** This will completely delete any data you may have included in this example and it will be unrecoverable.
+| :warning: | This will completely delete any data you may have included in this example and that data and this deployment will be unrecoverable. |
+| :--------: | :------------------------- |
 
 ```bash
 az group delete -n $RESOURCE_GROUP -y
