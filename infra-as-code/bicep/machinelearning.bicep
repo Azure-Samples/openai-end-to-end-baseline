@@ -169,6 +169,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
             sparkEnabled: false
             sparkStatus: 'Inactive'
           }
+          status: 'Active'
         }
       }
       status: {
