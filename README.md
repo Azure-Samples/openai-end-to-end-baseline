@@ -157,7 +157,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   TODO (P2): Verify for Baseline (this is copy from Basic)
+   TODO (P2 Jon): Verify for Baseline (this is copy from Basic)
 
    This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
@@ -330,8 +330,6 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
 1. Install some tooling on the jump box.
 
-   TODO (P3): Can we install az cli and miniconda as part of the bootstrapping of the VM?
-
    Since your jump box is acting as a developer workstation and build agent, you'll need some tooling installed. Install the Azure CLI and Miniconda. The instructions that follow can be run from new Terminal session to install both.
 
    ```powershell
@@ -403,7 +401,7 @@ For this deployment guide, you'll continue using your your jump box (or VPN-conn
 1. Restart the web app to launch the site. *(This can be done from your workstation or the jump box.)*
 
    ```powershell
-   az webapp restart --name "app-${BASE_NAME}" --resource-group "rg-chat-baseline-${LOCATION}"
+   az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
    ```
 
 ### 7. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
@@ -447,10 +445,9 @@ You will need access to the prompt flow files for this experience, since we'll b
 1. From your *existing* **Anaconda PowerShell Prompt** instance, start a conda session and install the promptflow tools (pf CLI).
 
    ```powershell
-   conda create --name pf python=3.12
+   conda create -y --name pf python=3.12
    conda activate pf
 
-   conda install pip
    pip install promptflow[azure] promptflow-tools bs4
    ```
 
@@ -461,6 +458,8 @@ You will need access to the prompt flow files for this experience, since we'll b
 1. Click on the download icon to download the flow as a zip file.
 
 1. Unzip the prompt flow zip file you downloaded.
+
+   *Ensure this file name is set to the directory name you used when first cloning this prompt flow.*
 
    ```powershell
    cd Downloads
@@ -499,13 +498,13 @@ You will need access to the prompt flow files for this experience, since we'll b
 
 1. Bundle the prompt flow to support creating a container image.
 
-    ```bash
-    pf flow build --source ./ --output dist --format docker
-    ```
+   ```bash
+   pf flow build --source ./ --output dist --format docker
+   ```
 
-    The following code will create a directory named 'dist' with a Dockerfile and all the required flow code files.
+   The following code will create a directory named 'dist' with a Dockerfile and all the required flow code files.
 
-1. Build and push the container image.
+1. Build the container image and push it to your Azure Container Registry.
 
    ```powershell
    cd dist
@@ -519,25 +518,25 @@ You will need access to the prompt flow files for this experience, since we'll b
    az acr build --agent-pool imgbuild -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
    ```
 
-1. Set the container image on the pf App Service.
+1. Set the container image on the Web App that will be hosting the prompt flow.
 
-    ```powershell
-    $PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
-    $ACR_IMAGE_NAME="${NAME_OF_ACR}.azurecr.io/${FULL_IMAGE_NAME}"
+   ```powershell
+   $PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
+   $ACR_IMAGE_NAME="${NAME_OF_ACR}.azurecr.io/${FULL_IMAGE_NAME}"
 
-    az webapp config container set --name $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP -i $ACR_IMAGE_NAME -r "https://${NAME_OF_ACR}.azurecr.io"
-    az webapp deployment container config --enable-cd true --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
-    ```
+   az webapp config container set -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP -i $ACR_IMAGE_NAME -r "https://${NAME_OF_ACR}.azurecr.io"
+   az webapp deployment container config -e true -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP
+   ```
 
 1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed prompt flow endpoint hosted in App Service instead of the managed online endpoint.
 
-    ```powershell
-    $UI_APP_SERVICE_NAME="app-$BASE_NAME"
-    $ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
-    
-    az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
-    az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
-    ```
+   ```powershell
+   $UI_APP_SERVICE_NAME="app-$BASE_NAME"
+   $ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
+
+   az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
+   az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
+   ```
 
 ## :checkered_flag: Try it out. Test the final deployment
 

@@ -54,7 +54,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
   resource blockingFilter 'raiPolicies' = {
     name: 'blocking-filter'
     properties: {
-#disable-next-line BCP073  // TODO (P5): can we remove type?
+#disable-next-line BCP073
       type: 'UserManaged'
       basePolicyName: 'Microsoft.Default'
       mode: 'Default'
@@ -220,7 +220,6 @@ resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   }
 }
 
-// TODO (P5): Nest in openaiPrivateEndpoint
 resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
   name: openaiDnsGroupName
   properties: {

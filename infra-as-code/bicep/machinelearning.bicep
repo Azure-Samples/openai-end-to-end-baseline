@@ -142,7 +142,6 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
   }
   identity: {
     type: 'SystemAssigned'  // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
-                            // TODO (P3): Evaluate moving back to UserAssigned for more granular control.
   }
   properties: {
     friendlyName: 'Azure OpenAI Chat Hub'
@@ -244,7 +243,6 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
   }
   identity: {
     type: 'SystemAssigned'  // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
-                            // TODO (P3): Evaluate moving back to UserAssigned for more granular control.
   }
   properties: {
     friendlyName: 'Chat with Wikipedia project'
@@ -270,8 +268,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
       publicNetworkAccess: 'Disabled'
     }
 
-    // TODO (P2 Chad): Noticed that traffic goes back to 0% if this is template redeployed after the prompt flow
-    // deplopyment is complete. How can we stop that?
+    // Note: If you reapply this Bicep after an AI Studio managed compute deployment has happened in this endpoint, the taffic routing reverts to 0% to all existing deployments. You'll need to set that back to 100% to your desired deployment.
   }
 }
 
@@ -309,7 +306,7 @@ resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
     logs: [
       {
         categoryGroup: 'allLogs' // Production readiness change: In production, all logs are probably excessive. Please tune to just the log streams that add value to your workload's operations.
-                                 // TODO (P3): Evaluate what would be meainigful defaults for the Baseline
+                                 // TODO (P3 CK): Evaluate what would be meainigful defaults for the Baseline
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -323,8 +320,6 @@ resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
 // Production readiness change: Client applications that run from compute on Azure should use managed identities instead of
 // pre-shared keys. This sample implementation uses a pre-shared key, and should be rewritten to use the managed identity
 // provided by Azure Web Apps.
-// TODO (P3): Figure out if the key is something that's reliably predictable, if so, just use that instead of creating
-//       a copy of it.
 @description('Key Vault Secret: The Managed Online Endpoint key to be referenced from the Chat UI app.')
 resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
