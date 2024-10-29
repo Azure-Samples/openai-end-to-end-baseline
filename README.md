@@ -175,13 +175,14 @@ The following steps are required to deploy the infrastructure from the command l
 
    You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
+   :clock8: *This might take about 25 minutes.*
+
    ```bash
    RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
    az group create -l $LOCATION -n $RESOURCE_GROUP
 
    PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv)
 
-   # This takes about 30 minutes to run.
    az deployment group create -f ./infra-as-code/bicep/main.bicep \
      -g $RESOURCE_GROUP \
      -p appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV} \
@@ -189,28 +190,21 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
-1. Apply workaround for Azure AI Studio not yet deploying its managed network.
+1. Apply workaround for Azure AI Studio not deploying its managed network.
 
-   TODO: (P1 - Jon) Do we really need to do this?
+   Azure AI Studio tends to delay deploying its managed network, which causes problems when trying to access Azure AI Studio's portal experience in the next step. Your final IaC implementation must account for this.
 
-   Azure AI Studio tends to delay deploying its managed network, which causes problems when trying to access Azure AI Studio's portal experience. To test if you need to work around this delayed deployment, execute the following.
-
-   ```bash
-   az extension add --name ml
-   az ml workspace outbound-rule list -w aihub-${BASE_NAME} -g $RESOURCE_GROUP --query '[0].status' -o tsv
-   ```
-
-   If the result is 'Inactive', then execute the following command. This command will force the deployment of the managed network and establish the private endpoint connections.
+   :clock8: *This might take about 15 minutes.*
 
    ```bash
-   az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP 
+   az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP
    ```
 
 ### 2. Deploy a prompt flow from Azure AI Studio
 
 To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network primeter is established, and you must be interacting with Azure AI Studio and its resources from the network.
 
-1. Connect to the virtual network via Azure Bastion and the jump box or through a force-tunneled VPN or virtual network peering that you manually configure.
+1. Connect to the virtual network via [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
    The username for the Windows jump box deployed in this solution is `vmadmin`.
 
@@ -221,7 +215,7 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
    You'll need to sign in if this is the first time your connecting through the jump box.
 
-1. Open Azure AI Studio by clicking the **Launch Studio** button.
+1. Open Azure AI Studio by clicking the **Launch studio** button.
 
    This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all of your AI Studio hubs and projects by going to <https://ai.azure.com>.
 
@@ -234,6 +228,12 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 1. Set the Folder name to `chat_wiki` and click **Clone**.
 
    This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
+
+   :bug: Occasionally, you may recieve error such as the following.
+
+   > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
+
+   If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
 
 TODO (P1 Jon): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it usally works just fine (sometimes it takes a few additional tries).  What is going on?
 
@@ -255,7 +255,7 @@ TODO (P1 Jon): The UI produces an error when you do this for the first time. But
 
    This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of late October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
 
-   1. Click the **Raw file mode** toggle at the top of the flow, and say **Yes** if it asks you to save.
+   1. Click the **Raw file mode** toggle at the top of the flow, and click **Save** if it asks you to save.
    1. At the very bottom of the `flow.diag.yml` file, add the following two lines:
 
       ```yml
@@ -318,7 +318,9 @@ Here you'll take your tested flow and deploy it to a managed online endpoint usi
 
 1. :clock9: Wait for the deployment to finish creating.
 
-   The deployment can take over 15 minutes to create. To check on the process, navigate to the **Deployments** screen using the link in the left navigation. Eventually 'ept-chat-deployment' will be on this list and then eventually the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
+   The deployment can take over 15 minutes to create. To check on the process, navigate to the **Deployments** screen using the link in the left navigation. If you are asked about unsaved changes, just click **Confirm**.
+
+   Eventually 'ept-chat-deployment' will be on this list and then eventually the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
 
    *Do not advance until this deployment is complete.*
 
@@ -330,20 +332,20 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
    TODO (P3): Can we install az cli and miniconda as part of the bootstrapping of the VM?
 
-   Since your jump box is acting as a developer workstation and build agent, let's get some tooling installed. Some of this tooling is used here in this step, others are used later in the instructions.
+   Since your jump box is acting as a developer workstation and build agent, you'll need some tooling installed. Install the Azure CLI and Miniconda. The instructions that follow can be run from new Terminal session to install both.
 
    ```powershell
    winget install -e --id=Microsoft.AzureCLI
    winget install -e --id=Anaconda.Miniconda3
    ```
 
-   Restart your powershell terminal to get `az` included in your path.
+   Restart your terminal to get `az` included in your path and install the ML Azure CLI extension.
 
    ```powershell
    az extension add --name ml
    ```
 
-1. Close your PowerShell terminal.
+1. Close your terminal.
 
 1. Open an **Anaconda PowerShell Prompt** instance from the Start Menu.
 
@@ -367,7 +369,7 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
    ```powershell
    New-Item "request.json" -ItemType File -Value '{"question":"What happened in Milwaukee in 2024?"}'
-   az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g rg-chat-baseline-${LOCATION} -r request.json
+   az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g $RESOURCE_GROUP -r request.json
    ```
 
 1. A grounded response to your question should appear in the output. This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
