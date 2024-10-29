@@ -192,6 +192,8 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Apply workaround for Azure AI Studio not deploying its managed network.
 
+   TODO (P1 Jon): Open issue with PG and track to resolution.
+
    Azure AI Studio tends to delay deploying its managed network, which causes problems when trying to access Azure AI Studio's portal experience in the next step. Your final IaC implementation must account for this.
 
    :clock8: *This might take about 15 minutes.*
@@ -236,7 +238,7 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
    If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
 
-TODO (P1 Jon): The UI produces an error when you do this for the first time. But if you do again (with a different directory name), it usally works just fine (sometimes it takes a few additional tries).  What is going on?
+   TODO (P1 Jon): Open issue with PG and track to resolution.
 
 1. Connect the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
 
