@@ -71,6 +71,7 @@ resource acrResource 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
       os: 'Linux'
       count: 1
       virtualNetworkSubnetResourceId: vnet::buildAgentSubnet.id
+      tier: 'S1'
     }
   }
 }

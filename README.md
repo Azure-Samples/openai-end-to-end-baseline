@@ -107,8 +107,6 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - The [OpenSSL CLI](https://docs.openssl.org/3.3/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
 
-- The [az Bicep tools installed](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
-
 ### 1. :rocket: Deploy the infrastructure
 
 The following steps are required to deploy the infrastructure from the command line.
