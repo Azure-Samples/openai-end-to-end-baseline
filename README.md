@@ -197,6 +197,7 @@ The following steps are required to deploy the infrastructure from the command l
    :clock8: *This might take about 15 minutes.*
 
    ```bash
+   az extension add --name ml
    az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP
    ```
 
