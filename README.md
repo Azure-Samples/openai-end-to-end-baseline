@@ -1,6 +1,6 @@
 # Azure OpenAI end-to-end baseline reference implementation
 
-This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
+This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This repository supports the [Baseline OpenAI end-to-end chat reference architecture](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn and showcases a secure environment for authoring a chat flow and two options for deploying the flow:
 
 - An Azure Machine Learning managed online endpoint in a managed virtual network.
 
