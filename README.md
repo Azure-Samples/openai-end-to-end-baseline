@@ -14,7 +14,7 @@ The implementation will have you build and test a [prompt flow](https://microsof
 - Python code
 - Calling language models (such as GPT models)
 
-This implementation builds off of the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
+This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
 - Network isolation
 - Security
@@ -42,7 +42,7 @@ The diagram further illustrates how AI Studio is configured for [managed virtual
 
 ![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI studio environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Studio.](docs/media/openai-end-to-end-baseline-aml-compute.png)
 
-The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow is able to connect to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
+The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow connects to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
 
 ### Deploying a flow to Azure App Service (alternative)
 
@@ -54,7 +54,7 @@ The flow is still authored in a network-isolated Azure AI Studio project. To dep
 
 ### :recycle: Transitioning to Azure AI Studio
 
-Azure patterns & practices team is transitioning this and related content from Azure Machine Learning workspaces to Azure AI Studio hub + projects. During ths transition period some of the assets might be out of sync with each other technology wise. Architecturally, these two technologies are very similar to each other, even down to the resource provider level. Pardon our dust as we make this transition across the assets. Here is the current status.
+Azure patterns & practices team is transitioning this and related content from Azure Machine Learning workspaces to Azure AI Studio hub + projects. During this transition period some of the assets might be out of sync with each other technology wise. Architecturally, these two technologies are very similar to each other, even down to the resource provider level. Pardon our dust as we make this transition across the assets. Here is the current status:
 
 | Asset | Workspace |
 | :---- | :-------- |
@@ -128,7 +128,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Obtain the App gateway certificate
 
-   Azure Application Gateway support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstrational purposes.
+   Azure Application Gateway includes support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstration purposes.
 
    - Set a variable for the domain used in the rest of this deployment.
 
@@ -206,22 +206,22 @@ The following steps are required to deploy the infrastructure from the command l
 
 ### 2. Deploy a prompt flow from Azure AI Studio
 
-To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network primeter is established, and you must be interacting with Azure AI Studio and its resources from the network.
+To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network perimeter is established, and you must interact with Azure AI Studio and its resources from the network.
 
 1. Connect to the virtual network via [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
    The username for the Windows jump box deployed in this solution is `vmadmin`.
 
-   | :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
+   | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
 1. Open the Azure portal to your subscription and navigate to the Azure AI project named **aiproj-chat** in your resource group.
 
-   You'll need to sign in if this is the first time your connecting through the jump box.
+   You'll need to sign in if this is the first time you are connecting through the jump box.
 
 1. Open Azure AI Studio by clicking the **Launch studio** button.
 
-   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all of your AI Studio hubs and projects by going to <https://ai.azure.com>.
+   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all your AI Studio hubs and projects by going to <https://ai.azure.com>.
 
 1. Click on **Prompt flow** in the left navigation.
 
@@ -233,7 +233,7 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
    This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
 
-   :bug: Occasionally, you may recieve error such as the following.
+   :bug: Occasionally, you may receive the following error:
 
    > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
 
@@ -259,7 +259,7 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
    This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of late October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
 
-   1. Click the **Raw file mode** toggle at the top of the flow, and click **Save** if it asks you to save.
+   1. Click the **Raw file mode** toggle at the top of the flow and click **Save** if it asked to save.
    1. At the very bottom of the `flow.diag.yml` file, add the following two lines:
 
       ```yml
@@ -296,20 +296,20 @@ Here you'll take your tested flow and deploy it to a managed online endpoint usi
 
 1. Choose **Existing** endpoint and select the one called *ept-chat-BASE_NAME*.
 
-1. Set the following Basic settings, and click **Next**.
+1. Set the following Basic settings and click **Next**.
 
    - **Deployment name**: ept-chat-deployment
    - **Virtual machine**: Choose a small virtual machine size from which you have quota. 'Standard_D2as_v4' is plenty for this sample.
    - **Instance count**: 3. This is the recommended minimum count.
    - **Inferencing data collection**: Enabled
 
-1. Set the following Advanced settings, and click **Next**.
+1. Set the following Advanced settings and click **Next**.
 
    - **Deployment tags**: You can leave blank.
    - **Environment**: Use environment of current flow definition.
    - **Application Insights diagnostics**: Enabled
 
-1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the prompt flow, and click **Next**.
+1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the prompt flow and click **Next**.
 
 1. Click the **Create** button.
 
@@ -330,7 +330,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint usi
 
 ### 5. Test the Azure Machine Learning online endpoint from the network
 
-As a quick checkpoint of progress, you should test to make sure your Azure Machine learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
+As a quick checkpoint of progress, you should test to make sure your Azure Machine Learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
 
 1. Install some tooling on the jump box.
 
@@ -351,7 +351,7 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
 1. Open an **Anaconda PowerShell Prompt** instance from the Start Menu.
 
-   You'll need a PowerShell prompt with a Python enviornment available eventually in these instructions. It's best to open it now to only need to set environment variables once.
+   You'll need a PowerShell prompt with a Python environnment available eventually in these instructions. It's best to open it now to only need to set environment variables once.
 
 1. Log in through the Azure CLI so the terminal has access to your subscription.
 
@@ -361,7 +361,13 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
 
    ```powershell
    $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
+   ```
+
+   ```powershell
    $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
+   ```
+
+   ```powershell
    $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
    ```
 
@@ -370,7 +376,7 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
    Feel free to adjust for your own question.
 
    ```powershell
-   New-Item "request.json" -ItemType File -Value '{"question":"What happened in Milwaukee in 2024?"}'
+   New-Item "request.json" -ItemType File -Value '{"question":"Who were the top three medal winning countries in the 2024 Paris Olympics?"}'
    az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g $RESOURCE_GROUP -r request.json
    ```
 
@@ -386,9 +392,9 @@ In a production environment, you use a CI/CD pipeline to:
 - Create the project zip package
 - Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
 
-For this deployment guide, you'll continue using your your jump box (or VPN-connected workstation) to simulate part of that process.
+For this deployment guide, you'll continue using your jump box (or VPN-connected workstation) to simulate part of that process.
 
-1. Download the web UI from a PowerShell terminal.
+1. Using the same Powershell terminal session from previous steps, download the web UI.
 
    ```powershell
    Invoke-WebRequest -Uri https://raw.githubusercontent.com/Azure-Samples/openai-end-to-end-baseline/refs/heads/main/website/chatui.zip -OutFile chatui.zip
@@ -412,13 +418,13 @@ For this deployment guide, you'll continue using your your jump box (or VPN-conn
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
 
-| :computer: | Unless otherwise noted, all of the following steps are all performed from your original workstation, not from the jump box. |
+| :computer: | Unless otherwise noted, the following steps are all performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
 
 1. Get the public IP address of the Application Gateway.
 
    ```bash
-   # query the Azure Application Gateway Public IP
+   # Query the Azure Application Gateway Public IP
    APPGW_PUBLIC_IP=$(az network public-ip show -g $RESOURCE_GROUP -n "pip-$BASE_NAME" --query [ipAddress] --output tsv)
    echo APPGW_PUBLIC_IP: $APPGW_PUBLIC_IP
    ```
@@ -435,7 +441,7 @@ This section will help you to validate that the workload is exposed correctly an
 
 1. Try it out!
 
-   Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
+   Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included content from Wikipedia such as recent data or events.
 
 ### 8. Rehost the prompt flow in Azure App Service
 
@@ -443,7 +449,7 @@ This is a second option for deploying the prompt flow code. With this option, yo
 
 You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. Using the jump box again simulates a build agent in the network. To perform these build and deploy tasks, you'll need to install some developer tools on the jump box.
 
-| :computer: | Unless otherwise noted, all of the following steps are all performed from the jump box or from your VPN-connected workstation. |
+| :computer: | Unless otherwise noted, the following steps are all performed from the jump box or from your VPN-connected workstation. |
 | :--------: | :------------------------- |
 
 1. From your *existing* **Anaconda PowerShell Prompt** instance, start a conda session and install the promptflow tools (pf CLI).
@@ -544,16 +550,16 @@ You will need access to the prompt flow files for this experience, since we'll b
 
 ## :checkered_flag: Try it out. Test the final deployment
 
-| :computer: | Unless otherwise noted, all of the remaining steps are performed from your original workstation, not from the jump box. |
+| :computer: | Unless otherwise noted, the remaining steps are performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
 
-Browse to the site (e.g. <https://www.contoso.com>) once again. Once you're there, ask your solution a question. Like before, you question should ideally involve recent data or events, something that would only be known by the RAG process including content from Wikipedia.
+Browse to the site (e.g. <https://www.contoso.com>) once again. Once there, ask your solution a question. Like before, your question should involve something that would only be known if the RAG process included content from Wikipedia such as recent data or events.
 
-In this final configuration, your chat UI is asking the prompt flow code hosted in another Web App in your Azure App Service instance. Your Azure Machine Learning online endpoint is not used, and Wikipedia and Azure OpenAI is being called right from your prompt flow Web App.
+In this final configuration, your chat UI is interacting with the prompt flow code hosted in another Web App in your Azure App Service instance. Your Azure Machine Learning online endpoint is not used, and Wikipedia and Azure OpenAI are being called right from your prompt flow Web App.
 
 ## :broom: Clean up resources
 
-Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. Additionally, a few of the resources deployed go into a soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota, so it is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. Additionally, a few of the resources deployed go into soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota. It is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
 | :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
 | :--------: | :------------------------- |
