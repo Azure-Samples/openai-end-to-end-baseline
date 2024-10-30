@@ -6,9 +6,6 @@ param location string = resourceGroup().location
 @maxLength(8)
 param baseName string
 
-@description('Optional. When true will deploy a cost-optimised environment for development purposes. Note that when this param is true, the deployment is not suitable or recommended for Production environments. Default = false.')
-param developmentEnvironment bool = false
-
 @description('Domain name to use for App Gateway')
 param customDomainName string = 'contoso.com'
 
@@ -44,13 +41,12 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   }
 }
 
-// Deploy vnet with subnets and NSGs
+// Deploy Virtual Network, with subnets, NSGs, and DDoS Protection.
 module networkModule 'network.bicep' = {
   name: 'networkDeploy'
   params: {
     location: location
     baseName: baseName
-    developmentEnvironment: developmentEnvironment
   }
 }
 
@@ -152,7 +148,6 @@ module gatewayModule 'gateway.bicep' = {
   params: {
     location: location
     baseName: baseName
-    developmentEnvironment: developmentEnvironment
     customDomainName: customDomainName
     appName: webappModule.outputs.appName
     vnetName: networkModule.outputs.vnetNName

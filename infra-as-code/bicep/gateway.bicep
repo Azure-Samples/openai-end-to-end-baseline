@@ -10,9 +10,6 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-@description('Optional. When true will deploy a cost-optimised environment for development purposes.')
-param developmentEnvironment bool
-
 @description('Domain name to use for App Gateway')
 param customDomainName string
 
@@ -289,8 +286,8 @@ resource appGateWay 'Microsoft.Network/applicationGateways@2024-01-01' = {
       }
     ]
     autoscaleConfiguration: {
-      minCapacity: developmentEnvironment ? 2 : 3
-      maxCapacity: developmentEnvironment ? 3 : 5
+      minCapacity: 2
+      maxCapacity: 5
     }
   }
   dependsOn: [

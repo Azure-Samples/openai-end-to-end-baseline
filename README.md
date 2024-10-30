@@ -233,7 +233,7 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
    This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
 
-   :bug: Occasionally, you may receive the following error:
+   :bug: Occasionally, you might receive the following error:
 
    > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
 

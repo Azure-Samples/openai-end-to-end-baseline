@@ -8,12 +8,7 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-param developmentEnvironment bool
-
 // variables
-var vnetName = 'vnet-${baseName}'
-var ddosPlanName = 'ddos-${baseName}'
-
 var vnetAddressPrefix = '10.0.0.0/16'
 var appGatewaySubnetPrefix = '10.0.1.0/24'
 var appServicesSubnetPrefix = '10.0.0.0/24'
@@ -24,20 +19,23 @@ var jumpboxSubnetPrefix = '10.0.2.128/28'
 var trainingSubnetPrefix = '10.0.3.0/24'
 var scoringSubnetPrefix = '10.0.4.0/24'
 
-var enableDdosProtection = !developmentEnvironment
+var enableDdosProtection = true
 
 // ---- Networking resources ----
 
 // DDoS Protection Plan
-resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2022-11-01' = if (enableDdosProtection) {
-  name: ddosPlanName
+// Cost otpimization: DDoS protection plans are relatively expensive. If deploying this as part of
+// a POC and your environment can be down during a targeted DDoS attack, consider not deplying 
+// this resource by setting `enableDdosProtection` to false.
+resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' = if (enableDdosProtection) {
+  name: 'ddos-${baseName}'
   location: location
   properties: {}
 }
 
 // Virtual network and subnets
 resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
-  name: vnetName
+  name: 'vnet-${baseName}'
   location: location
   properties: {
     enableDdosProtection: enableDdosProtection
