@@ -25,6 +25,7 @@ This implementation builds off of the [basic implementation](https://github.com/
 The implementation covers the following scenarios:
 
 1. Authoring a flow - Authoring a flow using prompt flow in Azure AI Studio
+
 1. Deploying a flow to managed compute behind an Azure Machine Learning endpoint - The deployment of the executable flow created in Azure AI Studio to managed online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
 
 1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
