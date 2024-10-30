@@ -153,6 +153,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     enableServiceSideCMKEncryption: false
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
+      // Cost optimization, firewall rules in the managed virtual network are a signifcant part of the cost of this solution.
       outboundRules: {
         wikipedia: {
           type: 'FQDN'

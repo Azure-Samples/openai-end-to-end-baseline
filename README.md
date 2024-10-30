@@ -559,7 +559,9 @@ In this final configuration, your chat UI is interacting with the prompt flow co
 
 ## :broom: Clean up resources
 
-Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. Additionally, a few of the resources deployed go into soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota. It is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection and Azure AI Studio's managed network's firewall. Promptly delete resources when you are done using them.
+
+Additionally, a few of the resources deployed go into soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota. It is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
 | :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
 | :--------: | :------------------------- |
