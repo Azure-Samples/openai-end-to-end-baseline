@@ -42,7 +42,7 @@ The diagram further illustrates how AI Studio is configured for [managed virtual
 
 ![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI studio environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Studio.](docs/media/openai-end-to-end-baseline-aml-compute.png)
 
-The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow can connect to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
+The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow connects to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
 
 ### Deploying a flow to Azure App Service (alternative)
 
@@ -362,9 +362,11 @@ As a quick checkpoint of progress, you should test to make sure your Azure Machi
    ```powershell
    $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
    ```
+
    ```powershell
    $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
    ```
+
    ```powershell
    $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
    ```
