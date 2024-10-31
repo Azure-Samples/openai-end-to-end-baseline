@@ -1,19 +1,20 @@
 # Azure OpenAI end-to-end baseline reference implementation
 
-This reference implementation illustrates an approach for authoring and running a chat application in a single region with Prompt flow and Azure OpenAI. This reference implementation showcases a secure environment for authoring a chat flow and two options for deploying the flow:
+This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This repository supports the [Baseline OpenAI end-to-end chat reference architecture](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn and showcases a secure environment for authoring a chat flow and two options for deploying the flow:
 
 - An Azure Machine Learning managed online endpoint in a managed virtual network.
+
   - If your application requires high availability and you favor using a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
 - A network-isolated, zone-redundant, highly available deployment in Azure App Service.
 
-The implementation will have you build and test a [Prompt flow](https://microsoft.github.io/promptflow/) in an [Azure Machine Learning](https://azure.microsoft.com/products/machine-learning) workspace and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
+The implementation will have you build and test a [prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Studio](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
 
 - Creating prompts
 - Querying data stores for grounding data
 - Python code
 - Calling language models (such as GPT models)
 
-This implementation builds off of the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
+This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
 - Network isolation
 - Security
@@ -23,41 +24,43 @@ This implementation builds off of the [basic implementation](https://github.com/
 
 The implementation covers the following scenarios:
 
-1. Authoring a flow - Authoring a flow using Prompt flow in an Azure Machine Learning workspace
-1. Deploying a flow to Azure Machine Learning (AML hosted option) - The deployment of an executable flow to an Azure Machine Learning online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
+1. Authoring a flow - Authoring a flow using prompt flow in Azure AI Studio
+
+1. Deploying a flow to managed compute behind an Azure Machine Learning endpoint - The deployment of the executable flow created in Azure AI Studio to managed online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
+
 1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
 
 ### Authoring a flow
 
-![Diagram of the authoring architecture using Azure Machine Learning.](docs/media/azure-machine-learning-authoring.png)
+![Diagram of the authoring architecture using Azure AI Studio. It demonstrates key architecture components and flow when using AI studio as an authoring environment. ](docs/media/openai-end-to-end-baseline-authoring.png)
 
-The authoring architecture diagram illustrates how flow authors [connect to an Azure Machine Learning Workspace through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine jumpbox. Connectivity to the virtual network is more commonly done in enterprises through ExpressRoute or virtual network peering.
+The authoring architecture diagram illustrates how flow authors [connect to an Azure AI Studio through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine. Connectivity to the virtual network is more commonly done in enterprises using private connectivity options like ExpressRoute or virtual network peering.
 
-The diagram further illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the workplace Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI Service and Azure AI Search (previously named Cognitive Search).
+The diagram further illustrates how AI Studio is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI service and Azure AI Search.
 
 ### Deploying a flow to Azure Machine Learning managed online endpoint
 
-![Diagram of the deploying a flow to Azure Machine Learning managed online endpoint.](docs/media/openai-chat-e2e-deployment-amlcompute.png)
+![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI studio environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Studio.](docs/media/openai-end-to-end-baseline-aml-compute.png)
 
-The Azure Machine Learning deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/machine-learning/how-to-configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the Machine Learning Workspace is configured for [Workspace managed virtual network isolation](https://learn.microsoft.com/azure/machine-learning/how-to-managed-network). The deployed flow is able to connect to required resources such as Azure OpenAI and Cognitive Search through managed private endpoints.
+The Azure AI Studio deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Studio project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow connects to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
 
 ### Deploying a flow to Azure App Service (alternative)
 
-![Diagram of the deploying a flow to Azure App Service.](docs/media/openai-chat-e2e-deployment-appservices.png)
+![Diagram of the deploying a flow to Azure App Service. This drawing emphasizes how AI Studio compute and endpoints are bypassed, and Azure App Service and its virtual network become responsible for connecting to the private endpoints for dependencies.](docs/media/openai-end-to-end-baseline-app-services.png)
 
-The Azure App Service deployment architecture diagram illustrates how the same prompt flow can be containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure Machine Learning managed online endpoint.
+The Azure App Service deployment architecture diagram illustrates how the same prompt flow is containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure AI Studio managed online endpoint.
 
-The flow is still authored in a network-isolated Azure Machine Learning workspace. To deploy in App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints to the App Service.
+The flow is still authored in a network-isolated Azure AI Studio project. To deploy an App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints by the App Service.
 
 ### :recycle: Transitioning to Azure AI Studio
 
-Azure patterns & practices team is transitioning this and related content from Azure Machine Learning workspaces to Azure AI Studio hub + projects. During ths transition period some of the assets might be out of sync with each other technology wise. Architecturally, these two technologies are very similar to each other, even down to the resource provider level. Pardon our dust as we make this transition across the assets. Here is the current status.
+Azure patterns & practices team is transitioning this and related content from Azure Machine Learning workspaces to Azure AI Studio hub + projects. During this transition period some of the assets might be out of sync with each other technology wise. Architecturally, these two technologies are very similar to each other, even down to the resource provider level. Pardon our dust as we make this transition across the assets. Here is the current status:
 
 | Asset | Workspace |
 | :---- | :-------- |
 | [Basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic) | :ballot_box_with_check: AI Studio project |
-| [Basic architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat) | :white_square_button: AML workspace |
-| Baseline implementation *(this repo)* | :white_square_button: AML workspace |
+| [Basic architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat) | :ballot_box_with_check: AI Studio project |
+| Baseline implementation *(this repo)* | :ballot_box_with_check: AI Studio project |
 | [Baseline architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) | :white_square_button: AML workspace |
 | [Azure landing zone implementation](https://github.com/Azure-Samples/azure-openai-chat-baseline-landing-zone) | :white_square_button: AML workspace |
 | [Azure landing zone architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/azure-openai-baseline-landing-zone) | :white_square_button: AML workspace |
@@ -74,18 +77,25 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
     - `Microsoft.AlertsManagement`
     - `Microsoft.CognitiveServices`
+    - `Microsoft.Compute`
     - `Microsoft.ContainerRegistry`
     - `Microsoft.KeyVault`
     - `Microsoft.Insights`
     - `Microsoft.MachineLearningServices`
     - `Microsoft.ManagedIdentity`
+    - `Microsoft.Network`
     - `Microsoft.OperationalInsights`
     - `Microsoft.Storage`
+    - `Microsoft.Web`
 
   - The subscription selected must have the following quota available in the location you'll select to deploy this implementation.
 
     - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
-    - Storage Accounts: 2
+    - Storage Accounts: 2 instances
+    - App Service Plans: P1v3 (AZ), 3 instances
+    - Azure DDoS protection plan: 1
+    - Standard, static Public IP Addresses: 2
+    - Standard DASv4 Family Cluster Dedicated vCPUs for machine learning: 8
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -94,7 +104,9 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - The [Azure CLI installed](https://learn.microsoft.com/cli/azure/install-azure-cli)
 
-- The [az Bicep tools installed](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
+  If you're executing this from WSL, be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` should show `/usr/bin/az`.
+
+- The [OpenSSL CLI](https://docs.openssl.org/3.3/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
 
 ### 1. :rocket: Deploy the infrastructure
 
@@ -104,7 +116,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    ```bash
    git clone https://github.com/Azure-Samples/openai-end-to-end-baseline
-   cd openai-end-to-end-basic
+   cd openai-end-to-end-baseline
    ```
 
 1. Log in and set your target subscription.
@@ -116,22 +128,22 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Obtain the App gateway certificate
 
-   Azure Application Gateway support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstrational purposes.
+   Azure Application Gateway includes support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstration purposes.
 
    - Set a variable for the domain used in the rest of this deployment.
 
      ```bash
-     export DOMAIN_NAME_APPSERV_BASELINE="contoso.com"
+     DOMAIN_NAME_APPSERV="contoso.com"
      ```
 
    - Generate a client-facing, self-signed TLS certificate.
 
-     :warning: Do not use the certificate created by this script for actual deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your App Service solution, use your organization's requirements for procurement and lifetime management of TLS certificates, _even for development purposes_.
+     :warning: Do not use the certificate created by this script for actual deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your App Service solution, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
 
      Create the certificate that will be presented to web clients by Azure Application Gateway for your domain.
 
      ```bash
-     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out appgw.crt -keyout appgw.key -subj "/CN=${DOMAIN_NAME_APPSERV_BASELINE}/O=Contoso" -addext "subjectAltName = DNS:${DOMAIN_NAME_APPSERV_BASELINE}" -addext "keyUsage = digitalSignature" -addext "extendedKeyUsage = serverAuth"
+     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out appgw.crt -keyout appgw.key -subj "/CN=${DOMAIN_NAME_APPSERV}/O=Contoso" -addext "subjectAltName = DNS:${DOMAIN_NAME_APPSERV}" -addext "keyUsage = digitalSignature" -addext "extendedKeyUsage = serverAuth"
      openssl pkcs12 -export -out appgw.pfx -in appgw.crt -inkey appgw.key -passout pass:
      ```
 
@@ -140,36 +152,16 @@ The following steps are required to deploy the infrastructure from the command l
      :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for proper storage in Key Vault later.
 
      ```bash
-     export APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE=$(cat appgw.pfx | base64 | tr -d '\n')
-     echo APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE: $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE
+     APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV=$(cat appgw.pfx | base64 | tr -d '\n')
+     echo APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV: $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV
      ```
 
-1. Update the infra-as-code/parameters file
+1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   ```json
-   {
-     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-     "contentVersion": "1.0.0.0",
-     "parameters": {
-       "baseName": {
-         "value": ""
-       },
-       "developmentEnvironment": {
-         "value": true
-       },
-       "appGatewayListenerCertificate": {
-         "value": "[base64 cert data from $APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV_BASELINE]"
-       }
-     }
-   }
-   ```
-
-1. Set the deployment location to one with available quota in your subscription.
-
-   The location you choose must [support availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) as well.
+   This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
    ```bash
-   LOCATION=eastus
+   LOCATION=eastus2
    ```
 
 1. Set the base name value that will be used as part of the Azure resource names for the resources deployed in this solution.
@@ -180,61 +172,109 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Create a resource group and deploy the infrastructure.
 
-   You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
+   You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
+
+   :clock8: *This might take about 25 minutes.*
 
    ```bash
-   RESOURCE_GROUP=<resource-group-name>
+   RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
    az group create -l $LOCATION -n $RESOURCE_GROUP
 
-   # This takes about 30 minutes to run.
+   PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv)
+
    az deployment group create -f ./infra-as-code/bicep/main.bicep \
      -g $RESOURCE_GROUP \
-     -p @./infra-as-code/bicep/parameters.json \
-     -p baseName=$BASE_NAME
+     -p appGatewayListenerCertificate=${APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV} \
+     -p baseName=${BASE_NAME} \
+     -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
-### 2. Deploy a Prompt flow from Azure Machine Learning workspace
+1. Apply workaround for Azure AI Studio not deploying its managed network.
 
-1. Connect to the virtual network via Azure Bastion and the jump box (deployed as part of this solution) or through a force-tunneled VPN or virtual network peering that you manually configure.
+   Azure AI Studio tends to delay deploying its managed network, which causes problems when trying to access Azure AI Studio's portal experience in the next step. Your final IaC implementation must account for this.
 
-1. Open the [Machine Learning Workspace](https://ml.azure.com/) and choose your workspace. Ensure you have [enabled Prompt flow in your Azure Machine Learning workspace](https://learn.microsoft.com/azure/machine-learning/prompt-flow/get-started-prompt-flow?view=azureml-api-2#prerequisites-enable-prompt-flow-in-your-azure-machine-learning-workspace).
+   :clock8: *This might take about 15 minutes.*
 
-1. Create a prompt flow connection to your gpt35 Azure OpenAI deployment. This will be used by the prompt flow you clone in the next step.
-    1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
-    1. Click on the 'Connections' tab and click 'Create' 'Azure OpenAI.'
-    1. Fill out the properties:
-        - Name: 'gpt35'   **Make sure you use this name.**
-        - Provider: Azure OpenAI
-        - Subscription Id: <Choose your subscription>
-        - Azure OpenAI Account Names: <Choose the Azure OpenAI Account created in this deployment>
-        - API Key: <Choose a key from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
-        - API Base: <Choose the endpoint from 'Keys and endpoint' in your Azure OpenAI instance in the Portal>
-        - API type: azure
-        - API version: <Leave default>
-1. Clone an existing prompt flow
-    1. Click on 'Prompt flow' in the left navigation in Machine Learning Studio
-    1. Click on the 'Flows' tab and click 'Create'
-    1. Click 'Clone' under 'Chat with Wikipedia'
-    1. Name it 'chat_wiki' and Press 'Clone'
-    1. Set the 'Connection' and 'deployment_name' to 'gpt35'and set the max_tokens property of the deployment_name to 256, for the following steps:
-        - extract_query_from_question
-        - augmented_chat
-    1. Save
+   ```bash
+   az extension add --name ml
+   az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP
+   ```
 
-1. Add runtime
+### 2. Deploy a prompt flow from Azure AI Studio
 
-   - Click Add runtime
-   - Add compute instance runtime and give it a name
-   - Choose the compute instance created by the Bicep  
-   - Accept the other defaults and click 'Create'
+To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network perimeter is established, and you must interact with Azure AI Studio and its resources from the network.
 
-### 3. Test the Prompt flow from Azure Machine Learning workspace
+1. Connect to the virtual network via [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp) or through a force-tunneled VPN or virtual network peering that you manually configure.
 
-1. :clock8: Wait for the runtime to be created. This may take about five minutes.
+   The username for the Windows jump box deployed in this solution is `vmadmin`.
+
+   | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
+   | :--------: | :------------------------- |
+
+1. Open the Azure portal to your subscription and navigate to the Azure AI project named **aiproj-chat** in your resource group.
+
+   You'll need to sign in if this is the first time you are connecting through the jump box.
+
+1. Open Azure AI Studio by clicking the **Launch studio** button.
+
+   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all your AI Studio hubs and projects by going to <https://ai.azure.com>.
+
+1. Click on **Prompt flow** in the left navigation.
+
+1. On the **Flows** tab, click **+ Create**.
+
+1. Under **Explore gallery**, find "Chat with Wikipedia" and click **Clone**.
+
+1. Set the Folder name to `chat_wiki` and click **Clone**.
+
+   This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
+
+   :bug: Occasionally, you might receive the following error:
+
+   > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
+
+   If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
+
+1. Connect the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
+
+   - For **Connection**, select 'aoai' from the dropdown menu. This is your deployed Azure OpenAI instance.
+   - For **deployment_name**, select 'gpt35' from the dropdown menu. This is the model you've deployed in that Azure OpenAI instance.
+   - For **response_format**, select '{"type":"text"}' from the dropdown menu
+
+1. Also connect the `augmented_chat` prompt flow step to your Azure OpenAI model deployment.
+
+   - For **Connection**, select the same 'aoai' from the dropdown menu.
+   - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
+   - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
+
+1. Work around a telemetry issue that results in an error at the point of inferencing.
+
+   At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`.
+
+   This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of late October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
+
+   1. Click the **Raw file mode** toggle at the top of the flow and click **Save** if it asked to save.
+   1. At the very bottom of the `flow.diag.yml` file, add the following two lines:
+
+      ```yml
+      environment_variables:
+        PF_DISABLE_TRACING: true
+      ```
+
+   1. Click **Save** on the file.
+   1. Untoggle the **Raw file mode** to get back to the flow designer.
+
+1. Click **Save** on the whole flow.
+
+### 3. Test the prompt flow from Azure AI Studio
+
+Here you'll test your flow by invoking it directly from the Azure AI Studio. The flow still requires you to bring compute to execute it from. The compute you'll use when in the portal is the default *Serverless* offering, which is only used for portal-based prompt flow experiences. The interactions against Azure OpenAI are performed by your identity; the bicep template has already granted your user data plane access. The Serverless compute is run from the managed virtual network and is beholden to the egress network rules defined.
+
+1. Click **Start compute session**.
+
+1. :clock8: Wait for that button to change to *Compute session running*. This might take about ten minutes.
 
    *Do not advance until the serverless compute is running.*
-
-1. Select the runtime in the UI
 
 1. Click the enabled **Chat** button on the UI.
 
@@ -242,91 +282,144 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Deploy the Prompt flow to an Azure Machine Learning managed online endpoint
+### 4. Deploy the prompt flow to an Azure Machine Learning managed online endpoint
 
-Here you'll take your tested flow and deploy it to a managed online endpoint.
+Here you'll take your tested flow and deploy it to a managed online endpoint using Azure AI Studio.
 
-1. Click on 'Deploy' in the UI
+1. Click the **Deploy** button in the UI.
 
-1. Choose 'Existing' Endpoint and select the one called _ept-<basename>_.
+1. Choose **Existing** endpoint and select the one called *ept-chat-BASE_NAME*.
 
-1. Name the deployment ept-<basename>. **Make sure you name the deployment ept-<basename>. An App Service environment variable is set, assuming that naming convention**
+1. Set the following Basic settings and click **Next**.
 
-1. Choose a small Virtual Machine size for testing and set the number of instances.
+   - **Deployment name**: ept-chat-deployment
+   - **Virtual machine**: Choose a small virtual machine size from which you have quota. 'Standard_D2as_v4' is plenty for this sample.
+   - **Instance count**: 3. This is the recommended minimum count.
+   - **Inferencing data collection**: Enabled
 
-1. Press 'Review + Create'
+1. Set the following Advanced settings and click **Next**.
 
-1. Press 'Create'
+   - **Deployment tags**: You can leave blank.
+   - **Environment**: Use environment of current flow definition.
+   - **Application Insights diagnostics**: Enabled
 
-### 5. Publish the chat front-end web app
+1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the prompt flow and click **Next**.
 
-The baseline architecture uses [run from zip file in App Service](https://learn.microsoft.com/azure/app-service/deploy-run-package). This approach has many benefits, including eliminating file lock conflicts when deploying.
+1. Click the **Create** button.
 
-> :bulb: Read through the next steps, but follow the guidance in the **Workaround** section.
+   There is a notice on the final screen that says:
 
-To use run from zip, you do the following:
+   > Following connection(s) are using Microsoft Entra ID based authentication. You need to manually grant the endpoint identity access to the related resource of these connection(s).
+   > - aoai
 
-1. Create a [project zip package](https://learn.microsoft.com/azure/app-service/deploy-run-package#create-a-project-zip-package) which is a zip file of your project.
-1. Upload that zip file to a location accessible to your website. This implementation uses private endpoints to connect to the storage account securely. The web app has a managed identity authorized to access the blob.
-1. Set the environment variable `WEBSITE_RUN_FROM_PACKAGE` to the URL of the zip file.
+   This has already been taken care of by your IaC deployment. The managed online endpoint identity already has this permission to Azure OpenAI, so there is no action for you to take.
 
-In a production environment, you would likely use a CI/CD pipeline to:
+1. :clock9: Wait for the deployment to finish creating.
 
-1. Build your application
-1. Create the project zip package
-1. Upload the zip file to your storage account
+   The deployment can take over 15 minutes to create. To check on the process, navigate to the **Deployments** screen using the link in the left navigation. If you are asked about unsaved changes, just click **Confirm**.
 
-The CI/CD pipeline would likely use a [self-hosted agent](https://learn.microsoft.com/azure/devops/pipelines/agents/agents?view=azure-devops&tabs=browser#install) that can connect to the storage account through a private endpoint to upload the zip. We have not implemented that here.
+   Eventually 'ept-chat-deployment' will be on this list and then eventually the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
 
-**Workaround**
+   *Do not advance until this deployment is complete.*
 
-We need a workaround to upload the file to the storage account because we have not implemented a CI/CD pipeline with a self-hosted agent. There are two workaround steps you need to do in order to manually upload the zip file using the portal.
+### 5. Test the Azure Machine Learning online endpoint from the network
 
-1. The deployed storage account does not allow public access, so you will need to temporarily allow access public access from your IP address.
-1. You must authorize your user to upload a blob to the storage account.
+As a quick checkpoint of progress, you should test to make sure your Azure Machine Learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
 
-Run the following to:
+1. Install some tooling on the jump box.
 
-- Allow public access from your IP address.
-- Give the logged-in user permission to upload a blob
-- Upload the zip file `./website/chatui.zip` to the existing `deploy` container
-- Tell the web app to restart
+   Since your jump box is acting as a developer workstation and build agent, you'll need some tooling installed. Install the Azure CLI and Miniconda. The instructions that follow can be run from new Terminal session to install both.
 
-```bash
-CLIENT_IP_ADDRESS=<your-public-ip-address>
+   ```powershell
+   winget install -e --id=Microsoft.AzureCLI
+   winget install -e --id=Anaconda.Miniconda3
+   ```
 
-STORAGE_ACCOUNT_PREFIX=st
-WEB_APP_PREFIX=app-
-NAME_OF_STORAGE_ACCOUNT="$STORAGE_ACCOUNT_PREFIX$BASE_NAME"
-NAME_OF_WEB_APP="$WEB_APP_PREFIX$BASE_NAME"
-LOGGED_IN_USER_ID=$(az ad signed-in-user show --query id -o tsv)
-RESOURCE_GROUP_ID=$(az group show --resource-group $RESOURCE_GROUP --query id -o tsv)
-STORAGE_BLOB_DATA_CONTRIBUTOR=ba92f5b4-2d11-453d-a403-e96b0029c9fe
+   Restart your terminal to get `az` included in your path and install the ML Azure CLI extension.
 
-az storage account network-rule add -g $RESOURCE_GROUP --account-name "$NAME_OF_STORAGE_ACCOUNT" --ip-address $CLIENT_IP_ADDRESS
-az role assignment create --assignee-principal-type User --assignee-object-id $LOGGED_IN_USER_ID --role $STORAGE_BLOB_DATA_CONTRIBUTOR --scope $RESOURCE_GROUP_ID
+   ```powershell
+   az extension add --name ml
+   ```
 
-az storage blob upload -f ./website/chatui.zip \
-  --account-name $NAME_OF_STORAGE_ACCOUNT \
-  --auth-mode login \
-  -c deploy -n chatui.zip
+1. Close your terminal.
 
-az webapp restart --name $NAME_OF_WEB_APP --resource-group $RESOURCE_GROUP
-```
+1. Open an **Anaconda PowerShell Prompt** instance from the Start Menu.
 
-### 6. Validate the web app
+   You'll need a PowerShell prompt with a Python environnment available eventually in these instructions. It's best to open it now to only need to set environment variables once.
 
-This section will help you to validate that the workload is exposed correctly and responding to HTTP requests.
+1. Log in through the Azure CLI so the terminal has access to your subscription.
 
-#### Steps
+   If prompted, choose **No, sign in to this app only**.
+
+1. Carry over some context from your workstation.
+
+   ```powershell
+   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
+   ```
+
+   ```powershell
+   $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
+   ```
+
+   ```powershell
+   $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
+   ```
+
+1. Execute an HTTP request to the online endpoint.
+
+   Feel free to adjust for your own question.
+
+   ```powershell
+   New-Item "request.json" -ItemType File -Value '{"question":"Who were the top three medal winning countries in the 2024 Paris Olympics?"}'
+   az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g $RESOURCE_GROUP -r request.json
+   ```
+
+1. A grounded response to your question should appear in the output. This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
+
+### 6. Publish the chat front-end web app
+
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
+
+In a production environment, you use a CI/CD pipeline to:
+
+- Build your web application
+- Create the project zip package
+- Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
+
+For this deployment guide, you'll continue using your jump box (or VPN-connected workstation) to simulate part of that process.
+
+1. Using the same Powershell terminal session from previous steps, download the web UI.
+
+   ```powershell
+   Invoke-WebRequest -Uri https://raw.githubusercontent.com/Azure-Samples/openai-end-to-end-baseline/refs/heads/main/website/chatui.zip -OutFile chatui.zip
+   ```
+
+   If you are using a VPN-connected workstation, download the same zip to your workstation.
+
+1. Upload the web application to Azure Storage, where the web app will load the code from.
+
+   ```powershell
+   az storage blob upload -f chatui.zip --account-name "st${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
+   ```
+
+1. Restart the web app to launch the site. *(This can be done from your workstation or the jump box.)*
+
+   ```powershell
+   az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
+   ```
+
+### 7. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
+
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
+
+| :computer: | Unless otherwise noted, the following steps are all performed from your original workstation, not from the jump box. |
+| :--------: | :------------------------- |
 
 1. Get the public IP address of the Application Gateway.
 
-   > :book: The app team conducts a final acceptance test to be sure that traffic is flowing end-to-end as expected, so they place a request against the Azure Application Gateway endpoint.
-
    ```bash
-   # query the Azure Application Gateway Public Ip
-   APPGW_PUBLIC_IP=$(az network public-ip show --resource-group $RESOURCE_GROUP --name "pip-$BASE_NAME" --query [ipAddress] --output tsv)
+   # Query the Azure Application Gateway Public IP
+   APPGW_PUBLIC_IP=$(az network public-ip show -g $RESOURCE_GROUP -n "pip-$BASE_NAME" --query [ipAddress] --output tsv)
    echo APPGW_PUBLIC_IP: $APPGW_PUBLIC_IP
    ```
 
@@ -334,144 +427,138 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: You can simulate this via a local hosts file modification.  Alternatively, you can add a real DNS entry for your specific deployment's application domain name if permission to do so.
 
-   Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP} www.${DOMAIN_NAME_APPSERV_BASELINE}` (e.g. `50.140.130.120  www.contoso.com`)
+   Map the Azure Application Gateway public IP address to the application domain name. To do that, please edit your hosts file (`C:\Windows\System32\drivers\etc\hosts` or `/etc/hosts`) and add the following record to the end: `${APPGW_PUBLIC_IP} www.${DOMAIN_NAME_APPSERV}` (e.g. `50.140.130.120  www.contoso.com`)
 
 1. Browse to the site (e.g. <https://www.contoso.com>).
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-### 7. Deploying the flow to Azure App Service option
+1. Try it out!
 
-This is a second option for deploying the flow. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint. At a high-level, you must do the following:
+   Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included content from Wikipedia such as recent data or events.
 
-- Prerequisites - Ensure you have the prerequisites
-- Download your flow - Download the flow from the Machine Learning Workspace
-- Build the flow - Use the ```pf``` CLI to build your flow
-- Build and push the image - Containerize the flow and push to your Azure Container Registry
-- Publish the image to Azure App Service
+### 8. Rehost the prompt flow in Azure App Service
 
-#### Prerequisites for this option
+This is a second option for deploying the prompt flow code. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint.
 
-The following are the requirements for building the image, pushing to ACR, and deploying to Azure App Service:
+You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. Using the jump box again simulates a build agent in the network. To perform these build and deploy tasks, you'll need to install some developer tools on the jump box.
 
-- az CLI
-- Python
-- Anaconda
-- Promptflow pf CLI
+| :computer: | Unless otherwise noted, the following steps are all performed from the jump box or from your VPN-connected workstation. |
+| :--------: | :------------------------- |
 
-Below are commands to create and activate a conda environment and install the promptflow tools. See [Set up your dev environment](https://microsoft.github.io/promptflow/how-to-guides/quick-start.html#set-up-your-dev-environment) for more information.
+1. From your *existing* **Anaconda PowerShell Prompt** instance, start a conda session and install the promptflow tools (pf CLI).
 
-```bash
-conda create --name pf python=3.11.4
-conda activate pf
-pip install promptflow promptflow-tools
+   ```powershell
+   conda create -y --name pf python=3.12
+   conda activate pf
 
-# You will need to install the following if you build the docker image locally
-pip install keyrings.alt
-pip install bs4
-```
+   pip install promptflow[azure] promptflow-tools bs4
+   ```
 
-#### Download your flow
+1. Open the Prompt flow UI again in your Azure AI Studio project.
 
-1. Open the Prompt flow UI in Azure Machine Learning Studio
-1. Expand the 'Files' tab in the right pane of the UI
-1. Click on the download icon to download the flow as a zip file
+1. Expand the **Files** tab in the upper-right pane of the UI.
 
-> :bulb: If you are using a jumpbox to connect to Azure Machine Learning workspace, when you download the flow, it will be downloaded to your jumpbox. You will either need to have the prerequisites installed on the jumpbox, or you will need to transfer the zip file to a system that has the prerequisites.
+1. Click on the download icon to download the flow as a zip file.
 
-#### Build the flow
+1. Unzip the prompt flow zip file you downloaded.
 
-> :bulb: This example assumes your flow has a connection to Azure OpenAI
+   *Ensure this file name is set to the directory name you used when first cloning this prompt flow.*
 
-1. Unzip the prompt flow zip file you downloaded
-1. In your terminal, change the directory to the root of the unzipped flow
-1. Create a folder called 'connections'
-1. Create a file for each connection you created in the Prompt flow UI
-    1. Make sure you name the file to match the name you gave the connection. For example, if you named your connection 'gpt35' in Prompt flow, create a file called 'gpt35.yaml' under the connections folder.
-    1. Enter the following values in the file:
+   ```powershell
+   cd Downloads
+   Expand-Archive chat_wiki.zip
+   cd chat_wiki
+   ```
 
-        ```bash
-        $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
-        name: gpt35
-        type: azure_open_ai
-        api_key: "${env:OPENAICONNECTION_API_KEY}"
-        api_base: "${env:OPENAICONNECTION_API_BASE}"
-        api_type: "azure"
-        api_version: "2023-07-01-preview"
-        ```
+1. Add packages to requirements.txt, which ensures they are installed in your container.
 
-        > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_KEY``` and ```OPENAICONNECTION_API_BASE```.
+   ```powershell
+   Add-Content requirements.txt -Value @'
+   promptflow[azure]
+   promptflow-tools
+   python-dotenv
+   bs4
+   '@
+   ```
 
-1. Build the flow
+1. Create a file for the Azure OpenAI connection named **aoai.yaml** and register it.
 
-    ```bash
-    pf flow build --source ./ --output dist --format docker
-    ```
+   ```powershell
+   New-Item aoai.yaml -ItemType File -Value @'
+   $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
+   name: aoai
+   type: azure_open_ai
+   api_base: "${env:OPENAICONNECTION_API_BASE}"
+   api_type: "azure"
+   api_version: "2024-02-01"
+   auth_mode: "meid_token"
+   '@
 
-    The following code will create a folder named 'dist' with a docker file and all the required flow files.
+   pf connection create -f aoai.yaml
+   ```
 
-#### Build and push the image
+   > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_BASE```.
 
-1. Ensure the requirements.txt in the dist/flow folder has the appropriate requirements. At the time of writing, they were as follows:
+1. Bundle the prompt flow to support creating a container image.
 
-    ```bash
-    promptflow[azure]
-    promptflow-tools==0.1.0.b5
-    python-dotenv
-    bs4
-    ```
+   ```bash
+   pf flow build --source ./ --output dist --format docker
+   ```
 
-1. Ensure the connections folder with the connection was created in the dist folder. If not, copy the connections folder, along with the connection file to the dist folder.
+   The following code will create a directory named 'dist' with a Dockerfile and all the required flow code files.
 
-1. Make sure you have network access to your Azure Container Registry and have an RBAC role such as ACRPush that will allow you to push an image. If you are running on a local workstation, you can set ```Public network access``` to ```All networks``` or ```Selected networks``` and add your machine ip to the allowed ip list.
+1. Build the container image and push it to your Azure Container Registry.
 
-1. Build and push the container image
+   ```powershell
+   cd dist
 
-    Run the following commands from the dist folder in your terminal:
+   $NAME_OF_ACR="cr${BASE_NAME}"
+   $ACR_CONTAINER_NAME="aoai"
+   $IMAGE_NAME="wikichatflow"
+   $IMAGE_TAG="1.0"
+   $FULL_IMAGE_NAME="${ACR_CONTAINER_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+   
+   az acr build --agent-pool imgbuild -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
+   ```
 
-    ```azurecli
-    az login
+1. Set the container image on the Web App that will be hosting the prompt flow.
 
-    NAME_OF_ACR="cr$BASE_NAME"
-    ACR_CONTAINER_NAME="aoai"
-    IMAGE_NAME="wikichatflow"
-    IMAGE_TAG="1.1"
-    FULL_IMAGE_NAME="$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
+   ```powershell
+   $PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
+   $ACR_IMAGE_NAME="${NAME_OF_ACR}.azurecr.io/${FULL_IMAGE_NAME}"
 
-    az acr build -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
-    ```
+   az webapp config container set -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP -i $ACR_IMAGE_NAME -r "https://${NAME_OF_ACR}.azurecr.io"
+   az webapp deployment container config -e true -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP
+   ```
 
-#### Host the chat flow container image in Azure App Service
+1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed prompt flow endpoint hosted in App Service instead of the managed online endpoint.
 
-Perform the following steps to deploy the container image to Azure App Service:
+   ```powershell
+   $UI_APP_SERVICE_NAME="app-$BASE_NAME"
+   $ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
 
-1. Set the container image on the pf App Service
+   az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
+   az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
+   ```
 
-    ```azurecli
-    PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
-    ACR_IMAGE_NAME="$NAME_OF_ACR.azurecr.io/$ACR_CONTAINER_NAME/$IMAGE_NAME:$IMAGE_TAG"
+## :checkered_flag: Try it out. Test the final deployment
 
-    az webapp config container set --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --docker-custom-image-name $ACR_IMAGE_NAME --docker-registry-server-url https://$NAME_OF_ACR.azurecr.io
-    az webapp deployment container config --enable-cd true --name $PF_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
-    ```
+| :computer: | Unless otherwise noted, the remaining steps are performed from your original workstation, not from the jump box. |
+| :--------: | :------------------------- |
 
-1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed promptflow endpoint hosted in App Service instead of the managed online endpoint.
+Browse to the site (e.g. <https://www.contoso.com>) once again. Once there, ask your solution a question. Like before, your question should involve something that would only be known if the RAG process included content from Wikipedia such as recent data or events.
 
-    ```azurecli
-    UI_APP_SERVICE_NAME="app-$BASE_NAME"
-    ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
-    
-    az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
-    az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
-    ```
-
-1. Validate the client application that is now pointing at the flow deployed in a container still works
+In this final configuration, your chat UI is interacting with the prompt flow code hosted in another Web App in your Azure App Service instance. Your Azure Machine Learning online endpoint is not used, and Wikipedia and Azure OpenAI are being called right from your prompt flow Web App.
 
 ## :broom: Clean up resources
 
-Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. Additionally, a few of the resources deployed go into a soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota, so it is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection and Azure AI Studio's managed network's firewall. Promptly delete resources when you are done using them.
 
-> **Note:** This will completely delete any data you may have included in this example and it will be unrecoverable.
+Additionally, a few of the resources deployed go into soft delete status which may restrict the ability to redeploy another resource with the same name and may not release quota. It is best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+
+| :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
+| :--------: | :------------------------- |
 
 ```bash
 az group delete -n $RESOURCE_GROUP -y

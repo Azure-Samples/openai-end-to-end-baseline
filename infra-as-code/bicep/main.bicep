@@ -6,9 +6,6 @@ param location string = resourceGroup().location
 @maxLength(8)
 param baseName string
 
-@description('Optional. When true will deploy a cost-optimised environment for development purposes. Note that when this param is true, the deployment is not suitable or recommended for Production environments. Default = false.')
-param developmentEnvironment bool = false
-
 @description('Domain name to use for App Gateway')
 param customDomainName string = 'contoso.com'
 
@@ -25,8 +22,10 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
-// ---- Availability Zones ----
-var availabilityZones = [ '1', '2', '3' ]
+@description('Assign your user some roles to support fluid access when working in AI Studio')
+@maxLength(36)
+@minLength(36)
+param yourPrincipalId string
 
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -42,13 +41,12 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   }
 }
 
-// Deploy vnet with subnets and NSGs
+// Deploy Virtual Network, with subnets, NSGs, and DDoS Protection.
 module networkModule 'network.bicep' = {
   name: 'networkDeploy'
   params: {
     location: location
     baseName: baseName
-    developmentEnvironment: developmentEnvironment
   }
 }
 
@@ -74,6 +72,7 @@ module storageModule 'storage.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+    yourPrincipalId: yourPrincipalId
   }
 }
 
@@ -85,9 +84,7 @@ module keyVaultModule 'keyvault.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    createPrivateEndpoints: true
     appGatewayListenerCertificate: appGatewayListenerCertificate
-    apiKey: 'key'
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -100,7 +97,7 @@ module acrModule 'acr.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    createPrivateEndpoints: true
+    buildAgentSubnetName: networkModule.outputs.agentSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -124,13 +121,12 @@ module openaiModule 'openai.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    keyVaultName: keyVaultModule.outputs.keyVaultName
   }
 }
 
-// Deploy machine learning workspace with private endpoint and private DNS zone
-module mlwModule 'machinelearning.bicep' = {
-  name: 'mlwDeploy'
+// Deploy Azure AI Studio with private networking
+module aiStudioModule 'machinelearning.bicep' = {
+  name: 'aiStudioDeploy'
   params: {
     location: location
     baseName: baseName
@@ -138,10 +134,11 @@ module mlwModule 'machinelearning.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    mlStorageAccountName: storageModule.outputs.mlDeployStorageName
+    aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
+    yourPrincipalId: yourPrincipalId
   }
 }
 
@@ -151,14 +148,12 @@ module gatewayModule 'gateway.bicep' = {
   params: {
     location: location
     baseName: baseName
-    developmentEnvironment: developmentEnvironment
-    availabilityZones: availabilityZones
     customDomainName: customDomainName
     appName: webappModule.outputs.appName
     vnetName: networkModule.outputs.vnetNName
     appGatewaySubnetName: networkModule.outputs.appGatewaySubnetName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    gatewayCertSecretUri: keyVaultModule.outputs.gatewayCertSecretUri
+    gatewayCertSecretKey: keyVaultModule.outputs.gatewayCertSecretKey
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -169,8 +164,10 @@ module webappModule 'webapp.bicep' = {
   params: {
     location: location
     baseName: baseName
-    developmentEnvironment: developmentEnvironment
+    managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
+    acrName: acrModule.outputs.acrName
     publishFileName: publishFileName
+    openAIName: openaiModule.outputs.openAiResourceName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     storageName: storageModule.outputs.appDeployStorageName
     vnetName: networkModule.outputs.vnetNName
@@ -178,8 +175,4 @@ module webappModule 'webapp.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
   }
-  dependsOn: [
-    mlwModule
-    acrModule
-  ]
 }

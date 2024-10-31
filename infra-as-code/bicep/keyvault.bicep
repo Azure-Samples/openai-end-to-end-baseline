@@ -13,10 +13,6 @@ param location string = resourceGroup().location
 @description('The certificate data for app gateway TLS termination. The value is base64 encoded')
 @secure()
 param appGatewayListenerCertificate string
-param apiKey string
-
-@description('Determines whether or not a private endpoint, DNS Zone, Zone Link and Zone Group is created for this resource.')
-param createPrivateEndpoints bool = false
 
 // existing resource name params 
 param vnetName string
@@ -44,7 +40,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
   properties: {
@@ -56,17 +52,20 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       defaultAction: 'Deny'
       bypass: 'AzureServices' // Required for AppGW communication
     }
+    publicNetworkAccess: 'Disabled'
 
     tenantId: subscription().tenantId
 
     enableRbacAuthorization: true       // Using RBAC
     enabledForDeployment: true          // VMs can retrieve certificates
     enabledForTemplateDeployment: true  // ARM can retrieve values
+    enabledForDiskEncryption: false
 
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
     createMode: 'default'               // Creating or updating the key vault (not recovering)
   }
+
   resource kvsGatewayPublicCert 'secrets' = {
     name: 'gateway-public-cert'
     properties: {
@@ -74,18 +73,17 @@ resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' = {
       contentType: 'application/x-pkcs12'
     }
   }
-
 }
 
 //Key Vault diagnostic settings
 resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${keyVault.name}-diagnosticSettings'
+  name: 'default'
   scope: keyVault
   properties: {
     workspaceId: logWorkspace.id
     logs: [
         {
-            categoryGroup: 'allLogs'
+            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
             enabled: true
             retentionPolicy: {
                 enabled: false
@@ -97,7 +95,7 @@ resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
   }
 }
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = if (createPrivateEndpoints) {
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
   name: keyVaultPrivateEndpointName
   location: location
   properties: {
@@ -118,25 +116,24 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01'
   }
 }
 
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: keyVaultDnsZoneName
   location: 'global'
   properties: {}
-}
 
-resource keyVaultDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = if (createPrivateEndpoints) {
-  parent: keyVaultDnsZone
-  name: '${keyVaultDnsZoneName}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource keyVaultDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${keyVaultDnsZoneName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
 }
 
-resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = if (createPrivateEndpoints) {
+resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
   name: keyVaultDnsGroupName
   properties: {
     privateDnsZoneConfigs: [
@@ -153,16 +150,8 @@ resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZone
   ]
 }
 
-resource apiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-02-01' = {
-  parent: keyVault
-  name: 'apiKey'
-  properties: {
-    value: apiKey
-  }
-}
-
 @description('The name of the key vault.')
 output keyVaultName string = keyVault.name
 
-@description('Uri to the secret holding the cert.')
-output gatewayCertSecretUri string = keyVault::kvsGatewayPublicCert.properties.secretUri
+@description('Name of the secret holding the cert.')
+output gatewayCertSecretKey string = keyVault::kvsGatewayPublicCert.name

@@ -13,8 +13,6 @@ param privateEndpointsSubnetName string
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
-param keyVaultName string
-
 //variables
 var openaiName = 'oai-${baseName}'
 var openaiPrivateEndpointName = 'pep-${openaiName}'
@@ -34,17 +32,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2019-09-01' existing = {
-  name: keyVaultName
-  resource kvsGatewayPublicCert 'secrets' = {
-    name: 'openai-key'
-    properties: {
-      value: openAiAccount.listKeys().key1
-    }
-  }
-}
-
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview' = {
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: openaiName
   location: location
   kind: 'OpenAI'
@@ -54,7 +42,9 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
     networkAcls: {
       defaultAction: 'Deny'
     }
-    // TODO: disableLocalAuth: true
+    disableLocalAuth: true
+    restrictOutboundNetworkAccess: true
+    allowedFqdnList: []
   }
   sku: {
     name: 'S0'
@@ -64,53 +54,47 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
   resource blockingFilter 'raiPolicies' = {
     name: 'blocking-filter'
     properties: {
-      #disable-next-line BCP037
+#disable-next-line BCP073
       type: 'UserManaged'
       basePolicyName: 'Microsoft.Default'
       mode: 'Default'
       contentFilters: [
         /* PROMPT FILTERS */
         {
-          #disable-next-line BCP037
           name: 'hate'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'sexual'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'selfharm'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'violence'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'jailbreak'
           blocking: true
           enabled: true
           source: 'Prompt'
         }
         {
-          #disable-next-line BCP037
           name: 'profanity'
           blocking: true
           enabled: true
@@ -118,39 +102,34 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
         }
         /* COMPLETION FILTERS */
         {
-          #disable-next-line BCP037
           name: 'hate'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'sexual'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'selfharm'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'violence'
           blocking: true
           enabled: true
-          allowedContentLevel: 'Low'
+          severityThreshold: 'Low'
           source: 'Completion'
         }
         {
-          #disable-next-line BCP037
           name: 'profanity'
           blocking: true
           enabled: true
@@ -181,13 +160,13 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-10-01-preview'
 
 //OpenAI diagnostic settings
 resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${openAiAccount.name}-diagnosticSettings'
+  name: 'default'
   scope: openAiAccount
   properties: {
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -218,22 +197,25 @@ resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' =
       }
     ]
   }
+  dependsOn: [
+    openAiAccount::blockingFilter
+    openAiAccount::gpt35
+  ]
 }
 
-resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: openaiDnsZoneName
   location: 'global'
   properties: {}
-}
 
-resource openaiDnsZoneLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
-  parent: openaiDnsZone
-  name: '${openaiDnsZoneName}-link'
-  location: 'global'
-  properties: {
-    registrationEnabled: false
-    virtualNetwork: {
-      id: vnet.id
+  resource openaiDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${openaiDnsZoneName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
     }
   }
 }

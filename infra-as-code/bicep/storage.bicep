@@ -17,6 +17,10 @@ param privateEndpointsSubnetName string
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
+@maxLength(36)
+@minLength(36)
+param yourPrincipalId string
+
 // variables
 var appDeployStorageName = 'st${baseName}'
 var appDeployStoragePrivateEndpointName = 'pep-${appDeployStorageName}'
@@ -38,8 +42,14 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
+@description('Built-in Role: [Storage Blob Data Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor)')
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+  scope: subscription()
+}
+
 // ---- Storage resources ----
-resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: appDeployStorageName
   location: location
   sku: {
@@ -49,7 +59,7 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   properties: {
     accessTier: 'Hot'
     allowBlobPublicAccess: false
-    allowSharedKeyAccess: true
+    allowSharedKeyAccess: false
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
@@ -66,6 +76,10 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       }
     }
     minimumTlsVersion: 'TLS1_2'
+    isHnsEnabled: false
+    isSftpEnabled: false
+    isLocalUserEnabled: false
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
@@ -87,13 +101,13 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 
 // Enable App Service deployment Storage Account blob diagnostic settings
 resource appDeployStorageDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${appDeployStorage.name}-diagnosticSettings'
+  name: 'default'
   scope: appDeployStorage::blobService
   properties: {
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -102,6 +116,17 @@ resource appDeployStorageDiagSettings 'Microsoft.Insights/diagnosticSettings@202
       }
     ]
     logAnalyticsDestinationType: null
+  }
+}
+
+@description('Assign your user the ability to manage prompt flow state files from blob storage. This is needed to execute the prompt flow from within in Azure AI Studio.')
+resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: appDeployStorage::blobService::deployContainer
+  name: guid(appDeployStorage::blobService::deployContainer.id, yourPrincipalId, storageBlobDataContributorRole.id)
+  properties: {
+    roleDefinitionId: storageBlobDataContributorRole.id
+    principalType: 'User'
+    principalId: yourPrincipalId  // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here.
   }
 }
 
@@ -126,7 +151,7 @@ resource appDeployStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@202
   }
 }
 
-resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: mlStorageName
   location: location
   sku: {
@@ -157,6 +182,7 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
+    publicNetworkAccess: 'Disabled'
     supportsHttpsTrafficOnly: true
   }
   resource Blob 'blobServices' existing = {
@@ -169,13 +195,13 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 
 // Enable Machine Learning Storage Account blob diagnostic settings
 resource mlStorageBlobDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${mlStorage.name}-blobdiagnosticSettings'
+  name: 'default'
   scope: mlStorage::Blob
   properties: {
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -189,13 +215,13 @@ resource mlStorageBlobDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-0
 
 // Enable Machine Learning Storage Account file diagnostic settings
 resource mlStorageFileDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: '${mlStorage.name}-filediagnosticSettings'
+  name: 'default'
   scope: mlStorage::File
   properties: {
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'
+        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
