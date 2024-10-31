@@ -264,7 +264,8 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     kind: 'Managed'
     identity: {
       type: 'SystemAssigned' // This resource's identity is automatically assigned AcrPull access to ACR, Storage Blob Data Contributor, and AML Metrics Writer on the project. It is also assigned two additional permissions below.
-                             // Given the permissions assigned to the identity, it is recommended only include deployments in the AOAI service that are trusted to run in the endpoint.
+                             // Given the permissions assigned to the identity, it is recommended only include deployments in the Azure OpenAI service that are trusted to be invoked from this endpoint.
+
     }
     properties: {
       description: 'This is the /score endpoint for the "Chat with Wikipedia" example prompt flow deployment. Called by the UI hosted in Web Apps.'
