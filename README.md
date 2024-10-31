@@ -158,7 +158,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   TODO (P2 Jon): Verify for Baseline (this is copy from Basic)
+   TODO (Jon): Verify for Baseline (this is currently a copy from Basic)
 
    This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
@@ -192,8 +192,6 @@ The following steps are required to deploy the infrastructure from the command l
    ```
 
 1. Apply workaround for Azure AI Studio not deploying its managed network.
-
-   TODO (P1 Jon): Open issue with PG and track to resolution.
 
    Azure AI Studio tends to delay deploying its managed network, which causes problems when trying to access Azure AI Studio's portal experience in the next step. Your final IaC implementation must account for this.
 
@@ -238,8 +236,6 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
    > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
 
    If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
-
-   TODO (P1 Jon): Open issue with PG and track to resolution.
 
 1. Connect the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
 

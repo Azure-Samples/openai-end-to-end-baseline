@@ -260,7 +260,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     kind: 'Managed'
     identity: {
       type: 'SystemAssigned' // This resource's identity is automatically assigned AcrPull access to ACR, Storage Blob Data Contributor, and AML Metrics Writer on the project. It is also assigned two additional permissions below.
-                             // TODO (P2 Joey): Evaluate moving back to UserAssigned for more granular control.
+                             // TODO (Joey): Evaluate moving back to UserAssigned for more granular control.
     }
     properties: {
       description: 'This is the /score endpoint for the "Chat with Wikipedia" example prompt flow deployment. Called by the UI hosted in Web Apps.'
