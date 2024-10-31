@@ -158,8 +158,6 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Set the deployment location to one that [supports availability zones](https://learn.microsoft.com/azure/reliability/availability-zones-service-support) and has available quota.
 
-   TODO (Jon): Verify for Baseline (this is currently a copy from Basic)
-
    This deployment has been tested in the following locations: `australiaeast`, `eastus`, `eastus2`, `francecentral`, `japaneast`, `southcentralus`, `swedencentral`, `switzerlandnorth`, or `uksouth`. You might be successful in other locations as well.
 
    ```bash
