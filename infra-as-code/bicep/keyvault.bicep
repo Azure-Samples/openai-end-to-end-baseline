@@ -1,5 +1,5 @@
 /*
-  Deploy key vault with private endpoint and private DNS zone
+  Deploy Key Vault with private endpoint and private DNS zone
 */
 
 @description('This is the base name for each Azure resource name (6-8 chars)')
@@ -63,7 +63,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
-    createMode: 'default'               // Creating or updating the key vault (not recovering)
+    createMode: 'default'               // Creating or updating the Key Vault (not recovering)
   }
 
   resource kvsGatewayPublicCert 'secrets' = {
@@ -150,7 +150,7 @@ resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZone
   ]
 }
 
-@description('The name of the key vault.')
+@description('The name of the Key Vault.')
 output keyVaultName string = keyVault.name
 
 @description('Name of the secret holding the cert.')

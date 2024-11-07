@@ -1,5 +1,5 @@
 /*
-  This template creates a role assignment for a managed identity to access secrets in key vault.
+  This template creates a role assignment for a managed identity to access secrets in Key Vault.
 
   To ensure that each deployment has a unique role assignment ID, you can use the guid() function with a seed value that is based in part on the 
   managed identity's principal ID. However, because Azure Resource Manager requires each resource's name to be available at the beginning of the deployment, 
@@ -11,7 +11,7 @@ param roleDefinitionId string
 @description('The principalId property of the managed identity.')
 param principalId string
 
-@description('The name of the key vault resource.')
+@description('The name of the Key Vault resource.')
 param keyVaultName string
 
 // ---- Existing resources ----

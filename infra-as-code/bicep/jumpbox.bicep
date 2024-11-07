@@ -1,5 +1,6 @@
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
+@maxLength(8)
 param baseName string
 
 @description('The region in which this architecture is deployed.')
@@ -269,10 +270,12 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
     }
     storageProfile: {
       dataDisks: []
+      diskControllerType: 'SCSI'
       osDisk: {
         createOption: 'FromImage'
         caching: 'ReadOnly'
         deleteOption: 'Delete'
+        diffDiskSettings: null
         managedDisk: {
           storageAccountType: 'Premium_LRS'
         }
