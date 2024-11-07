@@ -78,7 +78,7 @@ resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
   location: location
 }
 
-// Grant the Azure Application Gateway managed identity with key vault secrets role permissions; this allows pulling certificates.
+// Grant the Azure Application Gateway managed identity with Key Vault secrets role permissions; this allows pulling certificates.
 module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignment.bicep' = {
   name: 'appGatewaySecretsUserRoleAssignmentDeploy'
   params: {

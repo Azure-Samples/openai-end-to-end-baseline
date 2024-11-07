@@ -108,7 +108,7 @@ resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
   location: location
 }
 
-// Grant the App Service managed identity key vault secrets role permissions
+// Grant the App Service managed identity Key Vault secrets role permissions
 module appServiceSecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignment.bicep' = {
   name: 'appServiceSecretsUserRoleAssignmentDeploy'
   params: {
@@ -159,8 +159,12 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     virtualNetworkSubnetId: vnet::appServicesSubnet.id
-    httpsOnly: false
+    httpsOnly: true
+    vnetContentShareEnabled: true
+    vnetImagePullEnabled: true
+    publicNetworkAccess: 'Disabled'
     keyVaultReferenceIdentity: appServiceManagedIdentity.id
+    vnetRouteAllEnabled: true
     hostNamesDisabled: false
     siteConfig: {
       vnetRouteAllEnabled: true
@@ -344,7 +348,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 /*Promptflow app service*/
 // Web App
-resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
+resource webAppPf 'Microsoft.Web/sites@2023-12-01' = {
   name: '${appName}-pf'
   location: location
   kind: 'linux'
@@ -357,10 +361,13 @@ resource webAppPf 'Microsoft.Web/sites@2022-09-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     virtualNetworkSubnetId: vnet::appServicesSubnet.id
-    httpsOnly: false
+    httpsOnly: true
     keyVaultReferenceIdentity: appServiceManagedIdentity.id
     hostNamesDisabled: false
     vnetImagePullEnabled: true
+    publicNetworkAccess: 'Disabled'
+    vnetRouteAllEnabled: true
+    vnetContentShareEnabled: true
     siteConfig: {
       linuxFxVersion: 'DOCKER|mcr.microsoft.com/appsvc/staticsite:latest'
       vnetRouteAllEnabled: true
