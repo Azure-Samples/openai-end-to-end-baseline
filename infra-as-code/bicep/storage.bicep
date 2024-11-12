@@ -57,13 +57,14 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
+    allowedCopyScope: 'AAD'
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: false
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false
+      requireInfrastructureEncryption: false // This app service code host doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
@@ -88,6 +89,12 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   resource blobService 'blobServices' = {
     name: 'default'
+
+    properties: {
+      containerDeleteRetentionPolicy: {
+        enabled: false
+      }
+    }
 
     // Storage container in which the Chat UI App's "Run from Zip" will be sourced
     resource deployContainer 'containers' = {
@@ -159,19 +166,28 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
+    allowedCopyScope: 'AAD'
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false
+      requireInfrastructureEncryption: false  // In this scenario, this account for Azure AI Studio doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
           keyType: 'Account'
         }
         file: {
+          enabled: true
+          keyType: 'Account'
+        }
+        queue: {
+          enabled: true
+          keyType: 'Account'
+        }
+        table: {
           enabled: true
           keyType: 'Account'
         }
