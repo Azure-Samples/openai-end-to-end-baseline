@@ -22,7 +22,7 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
-@description('Assign your user some roles to support fluid access when working in AI Studio')
+@description('Assign your user some roles to support fluid access when working in the Azure AI Foundry portal')
 @maxLength(36)
 @minLength(36)
 param yourPrincipalId string
@@ -124,7 +124,7 @@ module openaiModule 'openai.bicep' = {
   }
 }
 
-// Deploy Azure AI Studio with private networking
+// Deploy Azure AI Foundry with private networking
 module aiStudioModule 'machinelearning.bicep' = {
   name: 'aiStudioDeploy'
   params: {

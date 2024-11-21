@@ -44,7 +44,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
-@description('The container registry used by Azure AI Studio to store prompt flow images.')
+@description('The container registry used by Azure AI Foundry to store prompt flow images.')
 resource acrResource 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' = {
   name: acrName
   location: location
