@@ -90,12 +90,6 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   resource blobService 'blobServices' = {
     name: 'default'
 
-    properties: {
-      containerDeleteRetentionPolicy: {
-        enabled: false
-      }
-    }
-
     // Storage container in which the Chat UI App's "Run from Zip" will be sourced
     resource deployContainer 'containers' = {
       name: 'deploy'
