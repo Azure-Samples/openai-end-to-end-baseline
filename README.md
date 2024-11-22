@@ -52,19 +52,6 @@ The Azure App Service deployment architecture diagram illustrates how the same p
 
 The flow is still authored in a network-isolated Azure AI Foundry project. To deploy an App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints by the App Service.
 
-### :recycle: Transitioning to Azure AI Foundry
-
-Azure patterns & practices team is transitioning this and related content from Azure Machine Learning workspaces to Azure AI Foundry hub + projects. During this transition period some of the assets might be out of sync with each other technology wise. Architecturally, these two technologies are very similar to each other, even down to the resource provider level. Pardon our dust as we make this transition across the assets. Here is the current status:
-
-| Asset | Workspace |
-| :---- | :-------- |
-| [Basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic) | :ballot_box_with_check: AI Foundry project |
-| [Basic architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/basic-openai-e2e-chat) | :ballot_box_with_check: AI Foundry project |
-| Baseline implementation *(this repo)* | :ballot_box_with_check: AI Foundry project |
-| [Baseline architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) | :ballot_box_with_check: AI Foundry project |
-| [Azure landing zone implementation](https://github.com/Azure-Samples/azure-openai-chat-baseline-landing-zone) | :white_square_button: AML workspace |
-| [Azure landing zone architecture on Microsoft Learn](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/azure-openai-baseline-landing-zone) | :white_square_button: AML workspace |
-
 ## Deployment guide
 
 Follow these instructions to deploy this example to your Azure subscription, try out what you've deployed, and learn how to clean up those resources.
