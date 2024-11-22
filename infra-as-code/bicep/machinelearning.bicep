@@ -195,7 +195,6 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     applicationInsights: applicationInsights.id
     hbiWorkspace: false
     imageBuildCompute: null
-    primaryUserAssignedIdentity: null
   }
 
   resource aoaiConnection 'connections' = {
@@ -257,7 +256,6 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     allowPublicAccessWhenBehindVnet: false
     enableDataIsolation: true
     hubResourceId: aiHub.id
-    primaryUserAssignedIdentity: null
   }
 
   resource endpoint 'onlineEndpoints' = {
