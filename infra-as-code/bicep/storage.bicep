@@ -57,13 +57,14 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
+    allowedCopyScope: 'AAD'
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: false
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false
+      requireInfrastructureEncryption: false // This app service code host doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
@@ -159,13 +160,14 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   }
   kind: 'StorageV2'
   properties: {
+    allowedCopyScope: 'AAD'
     accessTier: 'Hot'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false
+      requireInfrastructureEncryption: false  // In this scenario, this account for Azure AI Studio doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
