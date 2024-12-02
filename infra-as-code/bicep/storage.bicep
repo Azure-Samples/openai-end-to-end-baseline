@@ -177,14 +177,6 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
           enabled: true
           keyType: 'Account'
         }
-        queue: {
-          enabled: true
-          keyType: 'Account'
-        }
-        table: {
-          enabled: true
-          keyType: 'Account'
-        }
       }
     }
     minimumTlsVersion: 'TLS1_2'
