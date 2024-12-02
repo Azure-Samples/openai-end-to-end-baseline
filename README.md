@@ -234,23 +234,6 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
    - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
    - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
 
-1. Work around a telemetry issue that results in an error at the point of inferencing.
-
-   At the time of this writing, there is a prompt flow + OpenTelemetry related [bug](https://github.com/microsoft/promptflow/issues/3751) that manifests itself after the prompt flow is deployed to a managed online endpoint. Proper requests to the `/score` endpoint result in an error response of `unsupported operand type(s) for +: 'NoneType' and 'NoneType'`.
-
-   This issue should be resolved once default containers for managed online compute for running prompt flows are shipped with promptflow-tracing >= 1.16.1. As of late October 2024, the containers are still using 1.15.x. Until those packages are updated in the container, you'll need to perform the following steps.
-
-   1. Click the **Raw file mode** toggle at the top of the flow and click **Save** if it asked to save.
-   1. At the very bottom of the `flow.diag.yml` file, add the following two lines:
-
-      ```yml
-      environment_variables:
-        PF_DISABLE_TRACING: true
-      ```
-
-   1. Click **Save** on the file.
-   1. Untoggle the **Raw file mode** to get back to the flow designer.
-
 1. Click **Save** on the whole flow.
 
 ### 3. Test the prompt flow from the Azure AI Foundry portal
