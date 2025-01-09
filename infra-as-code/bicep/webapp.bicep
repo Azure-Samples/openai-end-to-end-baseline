@@ -41,7 +41,7 @@ var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: vnetName
 
   resource appServicesSubnet 'subnets' existing = {
@@ -52,13 +52,13 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   }
 }
 
-resource azureOpenAI 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' existing ={
+resource azureOpenAI 'Microsoft.CognitiveServices/accounts@2024-10-01' existing = {
   name: openAIName
 }
 
-resource chatProj 'Microsoft.MachineLearningServices/workspaces@2024-04-01' existing = {
+resource chatProj 'Microsoft.MachineLearningServices/workspaces@2024-10-01' existing = {
   name: split(managedOnlineEndpointResourceId, '/')[8]
-  
+
   resource onlineEndpoint 'onlineEndpoints' existing = {
     name: split(managedOnlineEndpointResourceId, '/')[10]
   }
@@ -68,7 +68,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -76,13 +76,13 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: acrName
 }
 
-// Built-in Azure RBAC role that is applied to a Key Vault to grant secrets content read permissions. 
+// Built-in Azure RBAC role that is applied to a Key Vault to grant secrets content read permissions.
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
 }
 
-// Built-in Azure RBAC role that is applied to a Key storage to grant data reader permissions. 
+// Built-in Azure RBAC role that is applied to a Key storage to grant data reader permissions.
 resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   scope: subscription()
@@ -130,7 +130,7 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
 }
 
 //App service plan
-resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'asp-${appName}${uniqueString(subscription().subscriptionId)}'
   location: location
   kind: 'linux'
@@ -146,7 +146,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 @description('This is the web app that contains the UI application.')
-resource webApp 'Microsoft.Web/sites@2023-12-01' = {
+resource webApp 'Microsoft.Web/sites@2024-04-01' = {
   name: appName
   location: location
   kind: 'app'
@@ -197,7 +197,6 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-
 // Web App diagnostic settings
 resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
@@ -235,7 +234,7 @@ resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   }
 }
 
-resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: appServicePrivateEndpointName
   location: location
   properties: {
@@ -348,7 +347,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 
 /*Promptflow app service*/
 // Web App
-resource webAppPf 'Microsoft.Web/sites@2023-12-01' = {
+resource webAppPf 'Microsoft.Web/sites@2024-04-01' = {
   name: '${appName}-pf'
   location: location
   kind: 'linux'
@@ -389,7 +388,7 @@ resource webAppPf 'Microsoft.Web/sites@2023-12-01' = {
     properties: {
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
-      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
       WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
       OPENAICONNECTION_API_BASE: azureOpenAI.properties.endpoint
       WEBSITES_PORT: '8080'
@@ -434,7 +433,7 @@ resource webAppPfDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
   }
 }
 
-resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2024-01-01' = {
+resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: appServicePfPrivateEndpointName
   location: location
   properties: {

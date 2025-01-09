@@ -14,7 +14,7 @@ param location string = resourceGroup().location
 @secure()
 param appGatewayListenerCertificate string
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 param privateEndpointsSubnetName string
 
@@ -28,15 +28,15 @@ var keyVaultDnsGroupName = '${keyVaultPrivateEndpointName}/default'
 var keyVaultDnsZoneName = 'privatelink.vaultcore.azure.net' //Cannot use 'privatelink${environment().suffixes.keyvaultDns}', per https://github.com/Azure/bicep/issues/9708
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }  
+  }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -56,14 +56,14 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
     tenantId: subscription().tenantId
 
-    enableRbacAuthorization: true       // Using RBAC
-    enabledForDeployment: true          // VMs can retrieve certificates
-    enabledForTemplateDeployment: true  // ARM can retrieve values
+    enableRbacAuthorization: true // Using RBAC
+    enabledForDeployment: true // VMs can retrieve certificates
+    enabledForTemplateDeployment: true // ARM can retrieve values
     enabledForDiskEncryption: false
 
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
-    createMode: 'default'               // Creating or updating the Key Vault (not recovering)
+    createMode: 'default' // Creating or updating the Key Vault (not recovering)
   }
 
   resource kvsGatewayPublicCert 'secrets' = {
@@ -82,20 +82,20 @@ resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
   }
 }
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: keyVaultPrivateEndpointName
   location: location
   properties: {
@@ -116,7 +116,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01'
   }
 }
 
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: keyVaultDnsZoneName
   location: 'global'
   properties: {}
@@ -133,7 +133,7 @@ resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }
 }
 
-resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
+resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
   name: keyVaultDnsGroupName
   properties: {
     privateDnsZoneConfigs: [

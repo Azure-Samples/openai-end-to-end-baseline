@@ -6,7 +6,7 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 param privateEndpointsSubnetName string
 
@@ -32,7 +32,7 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' exis
   name: logWorkspaceName
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   name: openaiName
   location: location
   kind: 'OpenAI'
@@ -54,7 +54,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
   resource blockingFilter 'raiPolicies' = {
     name: 'blocking-filter'
     properties: {
-#disable-next-line BCP073
+      #disable-next-line BCP073
       type: 'UserManaged'
       basePolicyName: 'Microsoft.Default'
       mode: 'Default'
@@ -153,7 +153,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
         version: '0613' // If your selected region doesn't support this version, please change it.
       }
       raiPolicyName: openAiAccount::blockingFilter.name
-      versionUpgradeOption: 'NoAutoUpgrade'  // Always pin your dependencies, be intentional about updates.
+      versionUpgradeOption: 'NoAutoUpgrade' // Always pin your dependencies, be intentional about updates.
     }
   }
 }
@@ -166,7 +166,7 @@ resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -178,7 +178,7 @@ resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
   }
 }
 
-resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: openaiPrivateEndpointName
   location: location
   properties: {
@@ -220,7 +220,7 @@ resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   }
 }
 
-resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
+resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
   name: openaiDnsGroupName
   properties: {
     privateDnsZoneConfigs: [

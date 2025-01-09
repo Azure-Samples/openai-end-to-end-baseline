@@ -37,22 +37,22 @@ var appGatewayName = 'agw-${baseName}'
 var appGatewayManagedIdentityName = 'id-${appGatewayName}'
 var appGatewayPublicIpName = 'pip-${baseName}'
 var appGatewayFqdn = 'fe-${baseName}'
-var wafPolicyName= 'waf-${baseName}'
+var wafPolicyName = 'waf-${baseName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
-  
+
   resource appGatewaySubnet 'subnets' existing = {
     name: appGatewaySubnetName
   }
 }
 
-resource webApp 'Microsoft.Web/sites@2022-09-01' existing = {
+resource webApp 'Microsoft.Web/sites@2024-04-01' existing = {
   name: appName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -72,7 +72,7 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-0
 
 // ---- App Gateway resources ----
 
-// Managed Identity for App Gateway. 
+// Managed Identity for App Gateway.
 resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: appGatewayManagedIdentityName
   location: location
@@ -89,7 +89,7 @@ module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignme
 }
 
 //External IP for App Gateway
-resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: appGatewayPublicIpName
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -107,7 +107,7 @@ resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
 }
 
 //WAF policy definition
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2023-05-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
   name: wafPolicyName
   location: location
   properties: {
@@ -134,7 +134,7 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
 }
 
 //App Gateway
-resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
+resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
   name: appGatewayName
   location: location
   zones: pickZones('Microsoft.Network', 'applicationGateways', location, 3)
@@ -252,14 +252,22 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
         name: 'WebAppListener'
         properties: {
           frontendIPConfiguration: {
-            id: resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', appGatewayName, 'appGwPublicFrontendIp')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/frontendIPConfigurations',
+              appGatewayName,
+              'appGwPublicFrontendIp'
+            )
           }
           frontendPort: {
             id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGatewayName, 'port-443')
           }
           protocol: 'Https'
           sslCertificate: {
-            id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', appGatewayName, '${appGatewayName}-ssl-certificate')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/sslCertificates',
+              appGatewayName,
+              '${appGatewayName}-ssl-certificate'
+            )
           }
           hostName: 'www.${customDomainName}'
           hostNames: []
@@ -277,10 +285,18 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
             id: resourceId('Microsoft.Network/applicationGateways/httpListeners', appGatewayName, 'WebAppListener')
           }
           backendAddressPool: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendAddressPools', appGatewayName, 'pool-${appName}')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/backendAddressPools',
+              appGatewayName,
+              'pool-${appName}'
+            )
           }
           backendHttpSettings: {
-            id: resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', appGatewayName, 'WebAppBackendHttpSettings')
+            id: resourceId(
+              'Microsoft.Network/applicationGateways/backendHttpSettingsCollection',
+              appGatewayName,
+              'WebAppBackendHttpSettings'
+            )
           }
         }
       }
@@ -302,14 +318,14 @@ resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-0
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
   }
