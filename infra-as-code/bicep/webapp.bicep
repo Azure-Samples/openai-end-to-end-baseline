@@ -58,7 +58,7 @@ resource azureOpenAI 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' e
 
 resource chatProj 'Microsoft.MachineLearningServices/workspaces@2024-04-01' existing = {
   name: split(managedOnlineEndpointResourceId, '/')[8]
-  
+
   resource onlineEndpoint 'onlineEndpoints' existing = {
     name: split(managedOnlineEndpointResourceId, '/')[10]
   }
@@ -76,13 +76,13 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' e
   name: acrName
 }
 
-// Built-in Azure RBAC role that is applied to a Key Vault to grant secrets content read permissions. 
+// Built-in Azure RBAC role that is applied to a Key Vault to grant secrets content read permissions.
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
 }
 
-// Built-in Azure RBAC role that is applied to a Key storage to grant data reader permissions. 
+// Built-in Azure RBAC role that is applied to a Key storage to grant data reader permissions.
 resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   scope: subscription()
@@ -389,7 +389,7 @@ resource webAppPf 'Microsoft.Web/sites@2023-12-01' = {
     properties: {
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
-      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'    
+      ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
       WEBSITES_CONTAINER_START_TIME_LIMIT: '1800'
       OPENAICONNECTION_API_BASE: azureOpenAI.properties.endpoint
       WEBSITES_PORT: '8080'

@@ -25,7 +25,7 @@ var enableDdosProtection = true
 
 // DDoS Protection Plan
 // Cost otpimization: DDoS protection plans are relatively expensive. If deploying this as part of
-// a POC and your environment can be down during a targeted DDoS attack, consider not deplying 
+// a POC and your environment can be down during a targeted DDoS attack, consider not deploing
 // this resource by setting `enableDdosProtection` to false.
 resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' = if (enableDdosProtection) {
   name: 'ddos-${baseName}'
@@ -90,7 +90,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
           }
           privateEndpointNetworkPolicies: 'NetworkSecurityGroupEnabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
-          defaultOutboundAccess: false    // This subnet should never be the source of egress traffic.
+          defaultOutboundAccess: false // This subnet should never be the source of egress traffic.
         }
       }
       {
@@ -236,7 +236,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           priority: 120
           direction: 'Inbound'
         }
-      }      
+      }
       {
         name: 'DenyAllInBound'
         properties: {
@@ -249,7 +249,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
           priority: 1000
           direction: 'Inbound'
         }
-      }      
+      }
       {
         name: 'AppGw.Out.Allow.PrivateEndpoints'
         properties: {
@@ -482,7 +482,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           priority: 130
           direction: 'Inbound'
         }
-      }      
+      }
       {
         name: 'DenyAllInBound'
         properties: {
@@ -496,7 +496,6 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           direction: 'Inbound'
         }
       }
-      
       {
         name: 'Bastion.Out.Allow.SshRdp'
         properties: {
@@ -572,7 +571,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           priority: 140
           direction: 'Outbound'
         }
-      }      
+      }
       {
         name: 'DenyAllOutBound'
         properties: {
@@ -590,7 +589,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
   }
 }
 
-// Jump box subnet NSG 
+// Jump box subnet NSG
 resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
   name: 'nsg-jumpboxSubnet'
   location: location

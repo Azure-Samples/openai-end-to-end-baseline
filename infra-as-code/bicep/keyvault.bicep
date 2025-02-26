@@ -14,7 +14,7 @@ param location string = resourceGroup().location
 @secure()
 param appGatewayListenerCertificate string
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 param privateEndpointsSubnetName string
 
@@ -33,7 +33,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
-  }  
+  }
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
@@ -56,14 +56,14 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
     tenantId: subscription().tenantId
 
-    enableRbacAuthorization: true       // Using RBAC
-    enabledForDeployment: true          // VMs can retrieve certificates
-    enabledForTemplateDeployment: true  // ARM can retrieve values
+    enableRbacAuthorization: true      // Using RBAC
+    enabledForDeployment: true         // VMs can retrieve certificates
+    enabledForTemplateDeployment: true // ARM can retrieve values
     enabledForDiskEncryption: false
 
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
-    createMode: 'default'               // Creating or updating the Key Vault (not recovering)
+    createMode: 'default'              // Creating or updating the Key Vault (not recovering)
   }
 
   resource kvsGatewayPublicCert 'secrets' = {
@@ -82,14 +82,14 @@ resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
   }
