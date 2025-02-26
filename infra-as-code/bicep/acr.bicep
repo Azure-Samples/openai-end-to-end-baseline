@@ -28,7 +28,7 @@ var acrPrivateEndpointName = 'pep-${acrName}'
 var acrDnsZoneName = 'privatelink${environment().suffixes.acrLoginServer}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
+resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
@@ -91,20 +91,20 @@ resource acrResourceDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
   }
 }
 
-resource acrPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-01-01' = {
+resource acrPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: acrPrivateEndpointName
   location: location
   properties: {

@@ -10,7 +10,7 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 
 @description('The name of the existing subnet within the identified vnet that will contains all private endpoints for this workload.')
@@ -34,7 +34,7 @@ param yourPrincipalId string
 var workspaceName = 'mlw-${baseName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
@@ -42,7 +42,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -50,7 +50,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   name: applicationInsightsName
 }
 
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-08-01-preview' existing = {
+resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-preview' existing = {
   name: containerRegistryName
 }
 
@@ -58,7 +58,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
   name: keyVaultName
 }
 
-resource aiStudioStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
+resource aiStudioStorageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: aiStudioStorageAccountName
 }
 
@@ -99,8 +99,8 @@ resource storageFileDataContributorForUserRoleAssignment 'Microsoft.Authorizatio
   properties: {
     roleDefinitionId: storageFileDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the prompt flow developer portal in production, so this role
-                                  // assignment would only be needed in pre-production environments.
+    principalId: yourPrincipalId // Production readiness change: Users shouldn't be using the prompt flow developer portal in production, so this role
+    // assignment would only be needed in pre-production environments.
   }
 }
 
@@ -111,10 +111,9 @@ resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/ro
   properties: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId  // Production readiness change: Users shouldn't be using the prompt flow developer portal in production, so this role
-                                  // assignment would only be needed in pre-production environments. In pre-production, use conditions on this assignment
-                                  // to restrict access to just the blob containers used by the project.
-
+    principalId: yourPrincipalId // Production readiness change: Users shouldn't be using the prompt flow developer portal in production, so this role
+    // assignment would only be needed in pre-production environments. In pre-production, use conditions on this assignment
+    // to restrict access to just the blob containers used by the project.
   }
 }
 
@@ -141,9 +140,9 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     tier: 'Basic'
   }
   identity: {
-    type: 'SystemAssigned'  // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
-                            // Since the priveleges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
-                            // to a resource group that only contains the project/hub and relevant resources.
+    type: 'SystemAssigned' // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
+    // Since the priveleges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
+    // to a resource group that only contains the project/hub and relevant resources.
   }
   properties: {
     friendlyName: 'Azure OpenAI Chat Hub'
@@ -182,7 +181,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     allowRoleAssignmentOnRG: false // Require role assignments at the resource level.
     v1LegacyMode: false
     workspaceHubConfig: {
-      defaultWorkspaceResourceGroup: resourceGroup().id  // Setting this to the same resource group as the workspace
+      defaultWorkspaceResourceGroup: resourceGroup().id // Setting this to the same resource group as the workspace
     }
 
     // Default settings for projects
@@ -235,7 +234,7 @@ resource aiHubDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
 }
 
 @description('This is a container for the chat project.')
-resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' = {
+resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-10-01' = {
   name: 'aiproj-chat'
   location: location
   kind: 'Project'
@@ -244,9 +243,9 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     tier: 'Basic'
   }
   identity: {
-    type: 'SystemAssigned'  // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights. 
-                            // Since the priveleges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
-                            // to a resource group that only contains the project/hub.
+    type: 'SystemAssigned' // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
+    // Since the priveleges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
+    // to a resource group that only contains the project/hub.
   }
   properties: {
     friendlyName: 'Chat with Wikipedia project'
@@ -264,8 +263,7 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     kind: 'Managed'
     identity: {
       type: 'SystemAssigned' // This resource's identity is automatically assigned AcrPull access to ACR, Storage Blob Data Contributor, and AML Metrics Writer on the project. It is also assigned two additional permissions below.
-                             // Given the permissions assigned to the identity, it is recommended only include deployments in the Azure OpenAI service that are trusted to be invoked from this endpoint.
-
+      // Given the permissions assigned to the identity, it is recommended only include deployments in the Azure OpenAI service that are trusted to be invoked from this endpoint.
     }
     properties: {
       description: 'This is the /score endpoint for the "Chat with Wikipedia" example prompt flow deployment. Called by the UI hosted in Web Apps.'
@@ -311,7 +309,7 @@ resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
     logs: [
       {
         categoryGroup: 'allLogs' // Production readiness change: In production, all logs are probably excessive. Please tune to just the log streams that add value to your workload's operations.
-                                 // This this scenario, the logs of interest are mostly found in AmlComputeClusterEvent, AmlDataSetEvent, AmlEnvironmentEvent, and AmlModelsEvent
+        // This this scenario, the logs of interest are mostly found in AmlComputeClusterEvent, AmlDataSetEvent, AmlEnvironmentEvent, and AmlModelsEvent
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -357,7 +355,7 @@ resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-
   }
 }
 
-resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-01-01' = {
+resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: 'pep-${workspaceName}'
   location: location
   properties: {
@@ -366,7 +364,7 @@ resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024
         name: 'pep-${workspaceName}'
         properties: {
           groupIds: [
-            'amlworkspace'  // Inbound access to the workspace
+            'amlworkspace' // Inbound access to the workspace
           ]
           privateLinkServiceId: aiHub.id
         }

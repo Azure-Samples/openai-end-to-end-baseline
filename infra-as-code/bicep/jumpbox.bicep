@@ -34,7 +34,7 @@ var jumpBoxName = 'jmp-${baseName}'
 // ---- Existing resources ----
 
 @description('Existing virtual network for the solution.')
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: virtualNetworkName
 
   resource jumpBoxSubnet 'subnets' existing = {
@@ -47,14 +47,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing 
 }
 
 @description('Existing Log Analyitics workspace, used as the common log sink for the workload.')
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
 // New resources
 
 @description('Required public IP for the Azure Bastion service, used for jump box access.')
-resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
+resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: 'pip-${bastionHostName}'
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -77,7 +77,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
 }
 
 @description('Deploys Azure Bastion for secure access to the jump box.')
-resource bastion 'Microsoft.Network/bastionHosts@2024-01-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2024-05-01' = {
   name: bastionHostName
   location: location
   sku: {
@@ -178,7 +178,7 @@ resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-
 }
 
 @description('VM will only receive a private IP.')
-resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   name: 'nic-${jumpBoxName}'
   location: location
   properties: {
@@ -206,7 +206,7 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 @description('The Azure ML and Azure OpenAI portal experiences are only able to be accessed from the virtual network, this jump box gives you access to those UIs.')
-resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-03-01' = {
   name: 'vm-${jumpBoxName}'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachines', location, 1)

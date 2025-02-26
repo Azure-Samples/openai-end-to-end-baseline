@@ -10,7 +10,7 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 param privateEndpointsSubnetName string
 
@@ -30,7 +30,7 @@ var mlBlobStoragePrivateEndpointName = 'pep-blob-${mlStorageName}'
 var mlFileStoragePrivateEndpointName = 'pep-file-${mlStorageName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+resource vnet 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: vnetName
 
   resource privateEndpointsSubnet 'subnets' existing = {
@@ -38,7 +38,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -127,11 +127,11 @@ resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/ro
   properties: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId  // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here.
+    principalId: yourPrincipalId // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here.
   }
 }
 
-resource appDeployStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource appDeployStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: appDeployStoragePrivateEndpointName
   location: location
   properties: {
@@ -167,7 +167,7 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false  // In this scenario, this account for Azure AI Studio doesn't require double encryption, but if your scenario does, please enable.
+      requireInfrastructureEncryption: false // In this scenario, this account for Azure AI Studio doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
@@ -203,7 +203,7 @@ resource mlStorageBlobDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-0
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -223,7 +223,7 @@ resource mlStorageFileDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-0
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -272,7 +272,7 @@ resource mlBlobStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-1
 }
 
 @description('Azure Machine Learning File Storage Private Endpoint')
-resource mlFileStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
+resource mlFileStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: mlFileStoragePrivateEndpointName
   location: location
   properties: {
@@ -308,7 +308,7 @@ resource mlFileStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-1
 }
 
 @description('Azure Storage - Blob private DNS zone.')
-resource blobStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource blobStorageDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: 'privatelink.blob.${environment().suffixes.storage}'
   location: 'global'
   properties: {}
@@ -327,7 +327,7 @@ resource blobStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
 }
 
 @description('Azure Storage - File private DNS zone.')
-resource fileStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource fileStorageDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: 'privatelink.file.${environment().suffixes.storage}'
   location: 'global'
   properties: {}
@@ -345,7 +345,7 @@ resource fileStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   }
 }
 
-resource appDeployStorageDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
+resource appDeployStorageDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
   name: 'default'
   parent: appDeployStoragePrivateEndpoint
   properties: {
