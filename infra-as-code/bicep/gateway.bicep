@@ -42,7 +42,7 @@ var wafPolicyName= 'waf-${baseName}'
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   name: vnetName
-  
+
   resource appGatewaySubnet 'subnets' existing = {
     name: appGatewaySubnetName
   }
@@ -72,7 +72,7 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-0
 
 // ---- App Gateway resources ----
 
-// Managed Identity for App Gateway. 
+// Managed Identity for App Gateway.
 resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: appGatewayManagedIdentityName
   location: location
@@ -302,14 +302,14 @@ resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-0
   properties: {
     workspaceId: logWorkspace.id
     logs: [
-        {
-            categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
-            enabled: true
-            retentionPolicy: {
-                enabled: false
-                days: 0
-            }
+      {
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
         }
+      }
     ]
     logAnalyticsDestinationType: null
   }

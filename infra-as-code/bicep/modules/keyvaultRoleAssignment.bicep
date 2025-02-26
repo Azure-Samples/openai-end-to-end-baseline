@@ -1,8 +1,8 @@
 /*
   This template creates a role assignment for a managed identity to access secrets in Key Vault.
 
-  To ensure that each deployment has a unique role assignment ID, you can use the guid() function with a seed value that is based in part on the 
-  managed identity's principal ID. However, because Azure Resource Manager requires each resource's name to be available at the beginning of the deployment, 
+  To ensure that each deployment has a unique role assignment ID, you can use the guid() function with a seed value that is based in part on the
+  managed identity's principal ID. However, because Azure Resource Manager requires each resource's name to be available at the beginning of the deployment,
   you can't use this approach in the same Bicep file that defines the managed identity. This sample uses a Bicep module to work around this issue.
 */
 @description('The Id of the role definition.')
