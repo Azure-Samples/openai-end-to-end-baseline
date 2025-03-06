@@ -27,6 +27,12 @@ param jumpBoxAdminPassword string
 @minLength(36)
 param yourPrincipalId string
 
+@description('Set to true to opt-out of deployment telemetry.')
+param telemetryOptOut bool = false
+
+// Customer Usage Attribution Id
+var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
+
 // ---- Log Analytics workspace ----
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: 'log-${baseName}'
@@ -175,4 +181,11 @@ module webappModule 'webapp.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
   }
+}
+
+// Optional Deployment for Customer Usage Attribution
+module customerUsageAttributionModule 'customerUsageAttribution/cuaIdResourceGroup.bicep' = if (!telemetryOptOut) {
+  #disable-next-line no-loc-expr-outside-params // Only to ensure telemetry data is stored in same location as deployment. See https://github.com/Azure/ALZ-Bicep/wiki/FAQ#why-are-some-linter-rules-disabled-via-the-disable-next-line-bicep-function for more information
+  name: 'pid-${varCuaid}-${uniqueString(resourceGroup().location)}'
+  params: {}
 }
