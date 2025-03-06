@@ -157,7 +157,8 @@ The following steps are required to deploy the infrastructure from the command l
    BASE_NAME=<base resource name, between 6 and 8 lowercase characters, all DNS names will include this text, so it must be unique.>
    ```
 
-1. Create a resource group and deploy the infrastructure.
+1. Create a resource group and deploy the infrastructure.<br>
+   **_NOTE:_** There is an optional tracking ID on this deployment. To opt out of its use add the following parameter to the deployment code below: "-p parTelemetryOptOut TRUE"
 
    You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
