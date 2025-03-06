@@ -10,7 +10,7 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-// existing resource name params 
+// existing resource name params
 param vnetName string
 param privateEndpointsSubnetName string
 
@@ -127,7 +127,7 @@ resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/ro
   properties: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId  // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here.
+    principalId: yourPrincipalId // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here.
   }
 }
 
@@ -167,7 +167,7 @@ resource mlStorage 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     allowCrossTenantReplication: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false  // In this scenario, this account for Azure AI Studio doesn't require double encryption, but if your scenario does, please enable.
+      requireInfrastructureEncryption: false // In this scenario, this account for Azure AI Studio doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
@@ -203,7 +203,7 @@ resource mlStorageBlobDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-0
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -223,7 +223,7 @@ resource mlStorageFileDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-0
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs'  // All logs is a good choice for production on this resource.
+        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
         enabled: true
         retentionPolicy: {
           enabled: false

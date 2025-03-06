@@ -489,7 +489,7 @@ You will need access to the prompt flow files for this experience, since we'll b
    $IMAGE_NAME="wikichatflow"
    $IMAGE_TAG="1.0"
    $FULL_IMAGE_NAME="${ACR_CONTAINER_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-   
+
    az acr build --agent-pool imgbuild -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
    ```
 
@@ -535,7 +535,7 @@ Additionally, a few of the resources deployed go into soft delete status which m
 az group delete -n $RESOURCE_GROUP -y
 
 # Purge the soft delete resources
-az keyvault purge -n kv-${BASE_NAME} -l $LOCATION 
+az keyvault purge -n kv-${BASE_NAME} -l $LOCATION
 az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n oai-${BASE_NAME}
 ```
 
