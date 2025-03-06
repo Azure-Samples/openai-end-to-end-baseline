@@ -27,7 +27,7 @@ param jumpBoxAdminPassword string
 @minLength(36)
 param yourPrincipalId string
 
-@sys.description('Set Parameter to true to Opt-out of deployment telemetry.')
+@description('Set to true to opt-out of deployment telemetry.')
 param telemetryOptOut bool = false
 
 // Customer Usage Attribution Id
