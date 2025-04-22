@@ -288,7 +288,7 @@ Here you'll take your tested flow and deploy it to a managed online endpoint usi
 
 1. :clock9: Wait for the deployment to finish creating.
 
-   The deployment can take over 15 minutes to create. To check on the process, navigate to the deployments screen using **Models + endpoints** the link in the left navigation. If you are asked about unsaved changes, just click **Confirm**.
+   The deployment can take over 15 minutes to create. To check on the process, navigate to the deployments screen using the **Models + endpoints** link in the left navigation. If you are asked about unsaved changes, just click **Confirm**.
 
    Eventually 'ept-chat-deployment' will be on this list and the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
 
@@ -527,7 +527,7 @@ In this final configuration, your chat UI is interacting with the prompt flow co
 
 Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection and Azure AI Foundry's managed network's firewall. Promptly delete resources when you are done using them.
 
-Additionally, a few of the resources deployed go into a soft delete status which will restrict the ability to redeploy another resource with the same name and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
 | :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
 | :--------: | :------------------------- |
