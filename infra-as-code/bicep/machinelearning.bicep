@@ -42,7 +42,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -54,11 +54,11 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-08-01-pr
   name: containerRegistryName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
   name: keyVaultName
 }
 
-resource aiStudioStorageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
+resource aiStudioStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
   name: aiStudioStorageAccountName
 }
 
@@ -141,8 +141,8 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     tier: 'Basic'
   }
   identity: {
-    type: 'SystemAssigned' // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
-                           // Since the priveleges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
+    type: 'SystemAssigned' // This resource's identity is automatically assigned privileged access to ACR, Storage, Key Vault, and Application Insights.
+                           // Since the privileges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
                            // to a resource group that only contains the project/hub and relevant resources.
   }
   properties: {
@@ -155,7 +155,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     enableServiceSideCMKEncryption: false
     managedNetwork: {
       isolationMode: 'AllowOnlyApprovedOutbound'
-      // Cost optimization, firewall rules in the managed virtual network are a signifcant part of the cost of this solution.
+      // Cost optimization, firewall rules in the managed virtual network are a significant part of the cost of this solution.
       outboundRules: {
         wikipedia: {
           type: 'FQDN'
@@ -215,7 +215,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
   }
 }
 
-@description('Azure Diagnostics: Azure AI Foundry hub - allLogs')
+@description('Azure Diagnostics: Azure AI Foundry hub')
 resource aiHubDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: aiHub
@@ -223,7 +223,7 @@ resource aiHubDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        category: 'ComputeInstanceEvent'
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -244,8 +244,8 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     tier: 'Basic'
   }
   identity: {
-    type: 'SystemAssigned' // This resource's identity is automatically assigned priviledge access to ACR, Storage, Key Vault, and Application Insights.
-                           // Since the priveleges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
+    type: 'SystemAssigned' // This resource's identity is automatically assigned privileged access to ACR, Storage, Key Vault, and Application Insights.
+                           // Since the privileges are granted at the project/hub level have elevated access to the resources, it is recommended to isolate these resources
                            // to a resource group that only contains the project/hub.
   }
   properties: {
@@ -302,16 +302,176 @@ resource projectOpenAIUserForOnlineEndpointRoleAssignment 'Microsoft.Authorizati
   }
 }
 
-@description('Azure Diagnostics: AI Foundry chat project - allLogs')
+@description('Azure Diagnostics: AI Foundry chat project')
 resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: chatProject
   properties: {
     workspaceId: logWorkspace.id
     logs: [
+      // Production readiness change: In production, these log categories are probably excessive. Please tune to just enable the log streams that add value to your workload's operations.
       {
-        categoryGroup: 'allLogs' // Production readiness change: In production, all logs are probably excessive. Please tune to just the log streams that add value to your workload's operations.
-                                 // This this scenario, the logs of interest are mostly found in AmlComputeClusterEvent, AmlDataSetEvent, AmlEnvironmentEvent, and AmlModelsEvent
+        category: 'AmlComputeClusterEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AmlComputeClusterNodeEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AmlComputeJobEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AmlComputeCpuGpuUtilization'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AmlRunStatusChangedEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'ModelsChangeEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'ModelsReadEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'ModelsActionEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'DeploymentReadEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'DeploymentEventACI'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'InferencingOperationACI'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'EnvironmentChangeEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'EnvironmentReadEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'DataLabelChangeEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'DataLabelReadEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'DataSetChangeEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'DataSetReadEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'PipelineChangeEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'PipelineReadEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'RunEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'RunReadEvent'
         enabled: true
         retentionPolicy: {
           enabled: false
@@ -322,7 +482,7 @@ resource chatProjectDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-
   }
 }
 
-@description('Azure Diagnostics: AI Foundry chat project online endpoint - allLogs')
+@description('Azure Diagnostics: AI Foundry chat project online endpoint')
 resource chatProjectOnlineEndpointDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: chatProject::endpoint
@@ -330,7 +490,23 @@ resource chatProjectOnlineEndpointDiagSettings 'Microsoft.Insights/diagnosticSet
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        category: 'AmlOnlineEndpointConsoleLog'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AmlOnlineEndpointTrafficLog'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AmlOnlineEndpointEventLog'
         enabled: true
         retentionPolicy: {
           enabled: false

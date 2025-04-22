@@ -28,7 +28,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -151,7 +151,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
         format: 'OpenAI'
         name: 'gpt-35-turbo'
         version: '0125' // If your selected region doesn't support this version, please change it.
-                        // az cognitiveservices model list -l YOUR_REGION --query "sort([?model.name == 'gpt-35-turbo' && kind == 'OpenAI'].model.version)" -o tsv
+                        // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-35-turbo' && kind == 'OpenAI'].model.version)" -o tsv
       }
       raiPolicyName: openAiAccount::blockingFilter.name
       versionUpgradeOption: 'NoAutoUpgrade' // Always pin your dependencies, be intentional about updates.
@@ -167,7 +167,31 @@ resource openAIDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pr
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        category: 'Audit'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'RequestResponse'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AzureOpenAIRequestUsage'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'Trace'
         enabled: true
         retentionPolicy: {
           enabled: false
