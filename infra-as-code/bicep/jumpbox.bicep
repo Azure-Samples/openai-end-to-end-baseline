@@ -47,7 +47,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing 
 }
 
 @description('Existing Log Analyitics workspace, used as the common log sink for the workload.')
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
@@ -117,8 +117,12 @@ resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        category: 'BastionAuditLogs'
         enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
       }
     ]
   }

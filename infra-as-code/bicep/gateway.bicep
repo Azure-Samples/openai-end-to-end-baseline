@@ -52,11 +52,11 @@ resource webApp 'Microsoft.Web/sites@2022-09-01' existing = {
   name: appName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
   name: keyVaultName
 
   resource kvsGatewayPublicCert 'secrets' existing = {
@@ -303,7 +303,23 @@ resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-0
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        category: 'ApplicationGatewayAccessLog'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'ApplicationGatewayPerformanceLog'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'ApplicationGatewayFirewallLog'
         enabled: true
         retentionPolicy: {
           enabled: false

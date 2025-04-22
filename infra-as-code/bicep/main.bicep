@@ -34,7 +34,7 @@ param telemetryOptOut bool = false
 var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 
 // ---- Log Analytics workspace ----
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: 'log-${baseName}'
   location: location
   properties: {
@@ -42,6 +42,10 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
       name: 'PerGB2018'
     }
     retentionInDays: 30
+    forceCmkForQuery: false
+    workspaceCapping: {
+      dailyQuotaGb: 10 // Production readiness change: In production, tune this value to ensure operational logs are collected, but a reasonable cap is set.
+    }
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
   }

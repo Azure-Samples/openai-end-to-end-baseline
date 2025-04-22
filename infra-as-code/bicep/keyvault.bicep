@@ -36,11 +36,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
   name: keyVaultName
   location: location
   properties: {
@@ -51,6 +51,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     networkAcls: {
       defaultAction: 'Deny'
       bypass: 'AzureServices' // Required for AppGW communication
+      ipRules: []
+      virtualNetworkRules: []
     }
     publicNetworkAccess: 'Disabled'
 
@@ -59,6 +61,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true      // Using RBAC
     enabledForDeployment: true         // VMs can retrieve certificates
     enabledForTemplateDeployment: true // ARM can retrieve values
+    accessPolicies: []                 // Using RBAC
     enabledForDiskEncryption: false
 
     enableSoftDelete: true
@@ -83,7 +86,15 @@ resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
     workspaceId: logWorkspace.id
     logs: [
       {
-        categoryGroup: 'allLogs' // All logs is a good choice for production on this resource.
+        category: 'AuditEvent'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+      {
+        category: 'AzurePolicyEvaluationDetails'
         enabled: true
         retentionPolicy: {
           enabled: false
