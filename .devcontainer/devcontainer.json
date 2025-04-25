@@ -1,5 +1,5 @@
 {
-    "name": "Azure OpenAI end-to-end basic reference implementation",
+    "name": "Azure OpenAI end-to-end baseline reference implementation",
     "image": "mcr.microsoft.com/devcontainers/dotnet:dev-8.0-jammy",
     "runArgs": ["--network=host"],
     "remoteUser": "vscode",
