@@ -1,8 +1,27 @@
+using chatui.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddOptions<ChatApiOptions>()
+    .Bind(builder.Configuration)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpClient("ChatClient")
+    .ConfigurePrimaryHttpMessageHandler(() =>
+    {
+        HttpClientHandler handler = new();
+
+        if (builder.Environment.IsDevelopment())
+        {
+            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+            handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
+        }
+
+        return handler;
+    });
+
+builder.Services.AddControllersWithViews();
 
 builder.Services.AddCors(options =>
 {
@@ -20,8 +39,6 @@ var app = builder.Build();
 app.UseStaticFiles();
 
 app.UseRouting();
-
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
