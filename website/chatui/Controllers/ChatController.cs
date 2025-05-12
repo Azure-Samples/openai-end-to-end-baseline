@@ -1,9 +1,8 @@
-﻿using System.Net.Http.Headers;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using chatui.Configuration;
+using Azure.AI.Projects;
 using chatui.Models;
+using chatui.Configuration;
 
 namespace chatui.Controllers;
 
@@ -11,11 +10,11 @@ namespace chatui.Controllers;
 [Route("[controller]/[action]")]
 
 public class ChatController(
-    IHttpClientFactory httpClientFactory,
-    IOptionsMonitor<ChatApiOptions> options, 
+    AgentsClient client,
+    IOptionsMonitor<ChatApiOptions> options,
     ILogger<ChatController> logger) : ControllerBase
 {
-    private readonly HttpClient _client = httpClientFactory.CreateClient("ChatClient");
+    private readonly AgentsClient _client = client;
     private readonly IOptionsMonitor<ChatApiOptions> _options = options;
     private readonly ILogger<ChatController> _logger = logger;
 
@@ -26,43 +25,37 @@ public class ChatController(
             throw new ArgumentException("Prompt cannot be null, empty, or whitespace.", nameof(prompt));
 
         _logger.LogDebug("Prompt received {Prompt}", prompt);
-
         var _config = _options.CurrentValue;
+        Agent agent = (await _client.CreateAgentAsync(
+                model: _config.DefaultModel,
+                name: "Chatbot Agent",
+                instructions: "You are a helpful Chatbot agent.",
+                tools: [])).Value;
 
-        var requestBody = JsonSerializer.Serialize(new Dictionary<string, string>
+        var thread = (await _client.CreateThreadAsync()).Value;
+
+        ThreadMessage message = (await _client.CreateMessageAsync(
+            thread.Id,
+            MessageRole.User,
+            prompt)).Value;
+
+        ThreadRun run = (await _client.CreateRunAsync(thread.Id, agent.Id)).Value;
+
+        while (run.Status == RunStatus.Queued || run.Status == RunStatus.InProgress)
         {
-            [_config.ChatInputName] = prompt
-        });
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, _config.ChatApiEndpoint)
-        {
-            Content = new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json"),
-        };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _config.ChatApiKey);
-
-        var response = await _client.SendAsync(request);
-        var responseContent = await response.Content.ReadAsStringAsync();
-
-        _logger.LogInformation("HTTP status code: {StatusCode}", response.StatusCode);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogError("Error response: {Content}", responseContent);
-
-            foreach (var (key, value) in response.Headers)
-                _logger.LogDebug("Header {Key}: {Value}", key, string.Join(", ", value));
-
-            foreach (var (key, value) in response.Content.Headers)
-                _logger.LogDebug("Content-Header {Key}: {Value}", key, string.Join(", ", value));
-
-            return BadRequest(responseContent);
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+            run = (await _client.GetRunAsync(thread.Id, run.Id)).Value;
         }
 
-        _logger.LogInformation("Successful response: {Content}", responseContent);
+        IReadOnlyList<ThreadMessage> messages = (await _client.GetMessagesAsync(thread.Id)).Value.Data;
 
-        var result = JsonSerializer.Deserialize<Dictionary<string, string>>(responseContent);
-        var output = result?.GetValueOrDefault(_config.ChatOutputName) ?? string.Empty;
+        var fullText = string.Concat(
+            messages
+                .Where(m => m.Role == MessageRole.Agent)
+                .SelectMany(m => m.ContentItems.OfType<MessageTextContent>())
+                .Select(c => c.Text)
+        );
 
-        return Ok(new HttpChatResponse(true, output));
+        return Ok(new HttpChatResponse(true, fullText));
     }
 }
