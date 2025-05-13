@@ -107,7 +107,7 @@ module acrModule 'acr.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    buildAgentSubnetName: networkModule.outputs.agentSubnetName
+    buildAgentSubnetName: networkModule.outputs.buildAgentSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }

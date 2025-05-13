@@ -13,7 +13,7 @@ var vnetAddressPrefix = '10.0.0.0/16'
 var appGatewaySubnetPrefix = '10.0.1.0/24'
 var appServicesSubnetPrefix = '10.0.0.0/24'
 var privateEndpointsSubnetPrefix = '10.0.2.0/27'
-var agentsSubnetPrefix = '10.0.2.32/27'
+var buildAgentsSubnetPrefix = '10.0.2.32/27'
 var bastionSubnetPrefix = '10.0.2.64/26'
 var jumpboxSubnetPrefix = '10.0.2.128/28'
 var trainingSubnetPrefix = '10.0.3.0/24'
@@ -95,11 +95,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
       }
       {
         // Build agents subnet
-        name: 'snet-agents'
+        name: 'snet-buildAgents'
         properties: {
-          addressPrefix: agentsSubnetPrefix
+          addressPrefix: buildAgentsSubnetPrefix
           networkSecurityGroup: {
-            id: agentsSubnetNsg.id
+            id: buildAgentsSubnetNsg.id
           }
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
@@ -168,8 +168,8 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
     name: 'snet-privateEndpoints'
   }
 
-  resource agentsSubnet 'subnets' existing = {
-    name: 'snet-agents'
+  resource buildAgentsSubnet 'subnets' existing = {
+    name: 'snet-buildAgents'
   }
 
   resource azureBastionSubnet 'subnets' existing = {
@@ -345,8 +345,8 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
 }
 
 // Build agents subnet NSG
-resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
-  name: 'nsg-agentsSubnet'
+resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+  name: 'nsg-buildAgentsSubnet'
   location: location
   properties: {
     securityRules: [
@@ -676,4 +676,4 @@ output bastionSubnetName string = vnet::azureBastionSubnet.name
 output jumpboxSubnetName string = vnet::jumpBoxSubnet.name
 
 @description('The name of the build agent subnet.')
-output agentSubnetName string = vnet::agentsSubnet.name
+output buildAgentSubnetName string = vnet::buildAgentsSubnet.name
