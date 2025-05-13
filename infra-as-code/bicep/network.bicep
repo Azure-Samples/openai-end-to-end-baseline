@@ -18,6 +18,7 @@ var bastionSubnetPrefix = '10.0.2.64/26'
 var jumpboxSubnetPrefix = '10.0.2.128/28'
 var trainingSubnetPrefix = '10.0.3.0/24'
 var scoringSubnetPrefix = '10.0.4.0/24'
+var agentsSubnetPrefix = '10.0.5.0/24'
 
 var enableDdosProtection = true
 
@@ -153,6 +154,21 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
+      {
+        // Agents subnet
+        name: 'snet-agents'
+        properties: {
+          addressPrefix: agentsSubnetPrefix
+          delegations: [
+            {
+              name: 'Microsoft.app/environments'
+              properties: {
+                serviceName: 'Microsoft.app/environments'
+              }
+            }
+          ]
+        }
+      }
     ]
   }
 
@@ -187,6 +203,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
   resource scoringSubnet 'subnets' existing = {
     name: 'snet-scoring'
   }
+
+  resource agentsSubnet 'subnets' existing = {
+    name: 'snet-agents'
+  }
+
 }
 
 // App Gateway subnet NSG
@@ -677,3 +698,6 @@ output jumpboxSubnetName string = vnet::jumpBoxSubnet.name
 
 @description('The name of the build agent subnet.')
 output buildAgentSubnetName string = vnet::buildAgentsSubnet.name
+
+@description('The name of the agents subnet.')
+output agentsSubnetName string = vnet::agentsSubnet.name
