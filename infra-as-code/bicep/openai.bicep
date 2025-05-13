@@ -35,19 +35,23 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: openaiName
   location: location
-  kind: 'OpenAI'
+  kind: 'AIServices'
+  sku: {
+    name: 'S0'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     customSubDomainName: 'oai${baseName}'
     publicNetworkAccess: 'Disabled'
     networkAcls: {
+      bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
     disableLocalAuth: true
     restrictOutboundNetworkAccess: true
     allowedFqdnList: []
-  }
-  sku: {
-    name: 'S0'
   }
 
   @description('Fairly aggressive filter that attempts to block prompts and completions that are likely unprofessional. Tune to your specific requirements.')
