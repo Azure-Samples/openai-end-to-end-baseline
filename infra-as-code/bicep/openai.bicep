@@ -143,19 +143,19 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
     }
   }
 
-  @description('Add a gpt-3.5 turbo deployment.')
-  resource gpt35 'deployments' = {
-    name: 'gpt35'
+  @description('Add a gpt-4o turbo deployment.')
+  resource gpt4o 'deployments' = {
+    name: 'gpt-4o-mini'
     sku: {
-      name: 'Standard'
-      capacity: 25
+      name: 'GlobalStandard'
+      capacity: 50
     }
     properties: {
       model: {
         format: 'OpenAI'
-        name: 'gpt-35-turbo'
-        version: '0125' // If your selected region doesn't support this version, please change it.
-                        // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-35-turbo' && kind == 'OpenAI'].model.version)" -o tsv
+        name: 'gpt-4o-mini'
+        version: '2024-07-18' // If your selected region doesn't support this version, please change it.
+                              // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-4o-mini' && kind == 'OpenAI'].model.version)" -o tsv
       }
       raiPolicyName: openAiAccount::blockingFilter.name
       versionUpgradeOption: 'NoAutoUpgrade' // Always pin your dependencies, be intentional about updates.
@@ -228,7 +228,7 @@ resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' =
   }
   dependsOn: [
     openAiAccount::blockingFilter
-    openAiAccount::gpt35
+    openAiAccount::gpt4o
   ]
 }
 
