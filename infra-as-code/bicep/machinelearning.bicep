@@ -16,6 +16,9 @@ param vnetName string
 @description('The name of the existing subnet within the identified vnet that will contains all private endpoints for this workload.')
 param privateEndpointsSubnetName string
 
+@description('The name of the existing subnet within the identified vnet that will contains all the agents hosted for this workload.')
+param agentsSubnetName string
+
 param applicationInsightsName string
 param containerRegistryName string
 param keyVaultName string
@@ -39,6 +42,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
+  }
+
+  resource agentsSubnet 'subnets' existing = {
+    name: agentsSubnetName
   }
 }
 
@@ -132,7 +139,7 @@ resource cognitiveServicesOpenAiUserForUserRoleAssignment 'Microsoft.Authorizati
 // ---- Azure AI Foundry resources ----
 
 @description('A hub provides the hosting environment for this AI workload. It provides security, governance controls, and shared configurations.')
-resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview' = {
+resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
   name: 'aihub-${baseName}'
   location: location
   kind: 'Hub'
@@ -195,6 +202,14 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     applicationInsights: applicationInsights.id
     hbiWorkspace: false
     imageBuildCompute: null
+  }
+
+  resource capabilityHost 'capabilityHosts' = {
+    name: 'HubAgents'
+    properties: {
+      capabilityHostKind: 'Agents'
+      customerSubnet: vnet::agentsSubnet.id
+    }
   }
 
   resource aoaiConnection 'connections' = {
