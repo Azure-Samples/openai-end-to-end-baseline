@@ -39,6 +39,8 @@ var appName = 'app-${baseName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
 var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
+var aiProjectConnectionString = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/aiProjectConnectionString)'
+var defaultModelName = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/defaultModelName)'
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -193,10 +195,11 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       chatApiEndpoint: chatProj::onlineEndpoint.properties.scoringUri
       chatInputName: 'question'
       chatOutputName: 'answer'
+      aiProjectConnectionString: aiProjectConnectionString
+      defaultModel: defaultModelName
     }
   }
 }
-
 
 // Web App diagnostic settings
 resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
