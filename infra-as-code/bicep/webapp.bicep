@@ -171,7 +171,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       publicNetworkAccess: 'Disabled'
       alwaysOn: true
-      linuxFxVersion: 'DOTNETCORE|7.0'
+      linuxFxVersion: 'DOTNETCORE|8.0'
       netFrameworkVersion: null
       windowsFxVersion: null
     }
