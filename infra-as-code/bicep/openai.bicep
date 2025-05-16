@@ -44,9 +44,6 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
   sku: {
     name: 'S0'
   }
-  identity: {
-    type: 'SystemAssigned'
-  }
   properties: {
     customSubDomainName: 'oai${baseName}'
     publicNetworkAccess: 'Disabled'
