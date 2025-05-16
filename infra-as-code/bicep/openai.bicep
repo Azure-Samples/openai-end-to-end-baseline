@@ -9,7 +9,6 @@ param location string = resourceGroup().location
 // existing resource name params
 param vnetName string
 param privateEndpointsSubnetName string
-param keyVaultName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
@@ -31,10 +30,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
-}
-
-resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
-  name: keyVaultName
 }
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
@@ -268,19 +263,8 @@ resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGr
   ]
 }
 
-@description('Key Vault Secret: The Azure AI Services deployment model name.')
-resource defaultModelName 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name: 'defaultModelName'
-  properties: {
-    value: openAiAccount::gpt4o.properties.model.name
-    contentType: 'text/plain'
-    attributes: {
-      enabled: true
-    }
-  }
-}
-
 // ---- Outputs ----
 
 output openAiResourceName string = openAiAccount.name
+@description('The Azure AI Agent Services deployment model name.')
+output defaultModelName string = openAiAccount::gpt4o.properties.model.name

@@ -559,19 +559,6 @@ resource managedEndpointPrimaryKeyEntry 'Microsoft.KeyVault/vaults/secrets@2023-
   }
 }
 
-@description('Key Vault Secret: The Azure Foundry AI project connection string.')
-resource aiProjectConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name: 'aiProjectConnectionString'
-  properties: {
-    value: '${first(split(replace(chatProject.properties.discoveryUrl, 'https://', ''),'/'))};${subscription().subscriptionId};${resourceGroup().name};${chatProject.name}'
-    contentType: 'text/plain'
-    attributes: {
-      enabled: true
-    }
-  }
-}
-
 resource machineLearningPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-01-01' = {
   name: 'pep-${workspaceName}'
   location: location
@@ -647,3 +634,5 @@ resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' =
 }
 
 output managedOnlineEndpointResourceId string = chatProject::endpoint.id
+@description('The Azure Foundry AI project connection string.')
+output aiProjectConnectionString string = '${first(split(replace(chatProject.properties.discoveryUrl, 'https://', ''),'/'))};${subscription().subscriptionId};${resourceGroup().name};${chatProject.name}'

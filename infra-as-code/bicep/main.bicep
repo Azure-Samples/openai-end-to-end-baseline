@@ -131,7 +131,6 @@ module openaiModule 'openai.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    keyVaultName: keyVaultModule.outputs.keyVaultName
   }
 }
 
@@ -186,6 +185,8 @@ module webappModule 'webapp.bicep' = {
     appServicesSubnetName: networkModule.outputs.appServicesSubnetName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+    aiProjectConnectionString: aiStudioModule.outputs.aiProjectConnectionString
+    defaultModelName: openaiModule.outputs.defaultModelName
   }
 }
 

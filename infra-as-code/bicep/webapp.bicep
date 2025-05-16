@@ -33,14 +33,16 @@ param privateEndpointsSubnetName string
 param storageName string
 param keyVaultName string
 param logWorkspaceName string
+@description('The Azure Foundry AI project connection string.')
+param aiProjectConnectionString string
+@description('The Azure AI Agent Services deployment model name.')
+param defaultModelName string
 
 // variables
 var appName = 'app-${baseName}'
 var appServicePrivateEndpointName = 'pep-${appName}'
 var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
-var aiProjectConnectionString = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/aiProjectConnectionString)'
-var defaultModelName = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/defaultModelName)'
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
