@@ -292,6 +292,17 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
   }
 }
 
+@description('Assign the AI Foundry project the ability to invoke assistant endpoints in Azure AI Agent Services. This is needed to inference from an agent on behalf of the user.')
+resource projectAzAIUserForAgentsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: openAiAccount
+  name: guid(openAiAccount.id, chatProject.id, cognitiveServicesOpenAiUserRole.id)
+  properties: {
+    roleDefinitionId: cognitiveServicesOpenAiUserRole.id
+    principalType: 'ServicePrincipal'
+    principalId: chatProject.identity.principalId
+  }
+}
+
 // Many role assignments are automatically managed by Azure for system managed identities, but the following two were needed to be added
 // manually specifically for the endpoint.
 
