@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Options;
+using Azure.AI.Projects;
+using Azure.Identity;
 using chatui.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,19 +10,13 @@ builder.Services.AddOptions<ChatApiOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-builder.Services.AddHttpClient("ChatClient")
-    .ConfigurePrimaryHttpMessageHandler(() =>
-    {
-        HttpClientHandler handler = new();
+builder.Services.AddSingleton((provider) =>
+{
+    var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
+    var client = new AgentsClient(config.AIProjectConnectionString, new DefaultAzureCredential());
 
-        if (builder.Environment.IsDevelopment())
-        {
-            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
-        }
-
-        return handler;
-    });
+    return client;
+});
 
 builder.Services.AddControllersWithViews();
 

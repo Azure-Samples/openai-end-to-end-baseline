@@ -107,7 +107,7 @@ module acrModule 'acr.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    buildAgentSubnetName: networkModule.outputs.agentSubnetName
+    buildAgentSubnetName: networkModule.outputs.buildAgentSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -142,6 +142,7 @@ module aiStudioModule 'machinelearning.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    agentsSubnetName: networkModule.outputs.agentsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
@@ -184,6 +185,8 @@ module webappModule 'webapp.bicep' = {
     appServicesSubnetName: networkModule.outputs.appServicesSubnetName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+    aiProjectConnectionString: aiStudioModule.outputs.aiProjectConnectionString
+    defaultModelName: openaiModule.outputs.defaultModelName
   }
 }
 
