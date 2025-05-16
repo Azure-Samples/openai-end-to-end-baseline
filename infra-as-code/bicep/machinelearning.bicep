@@ -216,7 +216,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
     name: 'aoai'
     properties: {
       authType: 'AAD'
-      category: 'AzureOpenAI'
+      category: 'AIServices'
       isSharedToAll: true
       useWorkspaceManagedIdentity: true
       peRequirement: 'Required'
