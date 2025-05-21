@@ -73,6 +73,18 @@ module deployAzureFirewall 'azure-firewall.bicep' = {
   }
 }
 
+@description('Deploy Azure AI Foundry with Azure AI Agent capability. No projects yet deployed.')
+module deployAzureAIFoundry 'ai-foundry.bicep' = {
+  params: {
+    location: location
+    baseName: baseName
+    logAnalyticsWorkspaceName: logWorkspace.name
+    agentSubnetResourceId: deployVirtualNetwork.outputs.agentsEgressSubnetResourceId
+    privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
+    aiFoundryPortalUserPrincipalId: yourPrincipalId
+  }
+}
+
 @description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
 module jumpBoxModule 'jumpbox.bicep' = {
   name: 'jumpBoxDeploy'

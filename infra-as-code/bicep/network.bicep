@@ -707,7 +707,7 @@ resource jumpBoxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' =
 @description('Placeholder route table for egress traffic from subnets that we want to control routing for. When the firewall is created, the routes will be added.')
 resource egressRouteTable 'Microsoft.Network/routeTables@2024-05-01' = {
   name: 'udr-internet-to-firewall'
-  location: resourceGroup().location
+  location: location
   properties: {
     disableBgpRoutePropagation: true
   }
@@ -845,3 +845,9 @@ output buildAgentsSubnetName string = virtualNetwork::buildAgentsSubnet.name
 
 @description('The name of the Azure AI Agents egress subnet.')
 output agentsEgressSubnetName string = virtualNetwork::agentsEgressSubnet.name
+
+@description('The resource ID of the Azure AI Agents egress subnet.')
+output agentsEgressSubnetResourceId string = virtualNetwork::agentsEgressSubnet.id
+
+@description('The resource ID of the private endpoints subnet.')
+output privateEndpointsSubnetResourceId string = virtualNetwork::privateEndpointsSubnet.id

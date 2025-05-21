@@ -199,7 +199,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
 @description('Our workload\'s egress firewall. This is used to control outbound traffic from the workload to the Internet.')
 resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   name: 'fw-egress'
-  location: resourceGroup().location
+  location: location
   zones: [
     '1'
     '2'
