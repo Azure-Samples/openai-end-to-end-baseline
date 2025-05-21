@@ -9,13 +9,13 @@ param location string = resourceGroup().location
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
-// Existing resources
+// ---- Existing resources ----
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
-// New resources
+// ---- New resources ----
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: 'appi-${baseName}'
@@ -30,5 +30,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
     publicNetworkAccessForQuery: 'Enabled'
   }
 }
+
+// ---- Outputs ----
 
 output applicationInsightsName string = applicationInsights.name

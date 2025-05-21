@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 @description('The location in which all resources should be deployed.')
 param location string = resourceGroup().location
 
@@ -33,8 +35,10 @@ param telemetryOptOut bool = false
 // Customer Usage Attribution Id
 var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 
-// ---- Log Analytics workspace ----
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+/*** NEW RESOURCES ***/
+
+@description('This is the log sink for all Azure Diagnostics in the workload.')
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: 'log-${baseName}'
   location: location
   properties: {
@@ -51,22 +55,31 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   }
 }
 
-// Deploy Virtual Network, with subnets, NSGs, and DDoS Protection.
-module networkModule 'network.bicep' = {
-  name: 'networkDeploy'
+@description('Deploy Virtual Network, with subnets, NSGs, and DDoS Protection.')
+module deployVirtualNetwork 'network.bicep' = {
   params: {
     location: location
-    baseName: baseName
   }
 }
 
-@description('Deploys Azure Bastion and the jump box, which is used for private access to the Azure ML and Azure OpenAI portals.')
+@description('Control egress traffic through Azure Firewall restrictions.')
+module deployAzureFirewall 'azure-firewall.bicep' = {
+  params: {
+    location: location
+    logWorkspaceName: logWorkspace.name
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
+    agentsEgressSubnetName: deployVirtualNetwork.outputs.agentsEgressSubnetName
+    jumpBoxesSubnetName: deployVirtualNetwork.outputs.jumpBoxesSubnetName
+  }
+}
+
+@description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
 module jumpBoxModule 'jumpbox.bicep' = {
   name: 'jumpBoxDeploy'
   params: {
     location: location
     baseName: baseName
-    virtualNetworkName: networkModule.outputs.vnetNName
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     logWorkspaceName: logWorkspace.name
     jumpBoxAdminName: 'vmadmin'
     jumpBoxAdminPassword: jumpBoxAdminPassword
@@ -79,8 +92,8 @@ module storageModule 'storage.bicep' = {
   params: {
     location: location
     baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
     yourPrincipalId: yourPrincipalId
   }
@@ -92,8 +105,8 @@ module keyVaultModule 'keyvault.bicep' = {
   params: {
     location: location
     baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     appGatewayListenerCertificate: appGatewayListenerCertificate
     logWorkspaceName: logWorkspace.name
   }
@@ -105,9 +118,9 @@ module acrModule 'acr.bicep' = {
   params: {
     location: location
     baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    buildAgentSubnetName: networkModule.outputs.agentSubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
+    buildAgentSubnetName: deployVirtualNetwork.outputs.buildAgentsSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -128,8 +141,8 @@ module openaiModule 'openai.bicep' = {
   params: {
     location: location
     baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -140,8 +153,8 @@ module aiStudioModule 'machinelearning.bicep' = {
   params: {
     location: location
     baseName: baseName
-    vnetName: networkModule.outputs.vnetNName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
@@ -160,8 +173,8 @@ module gatewayModule 'gateway.bicep' = {
     baseName: baseName
     customDomainName: customDomainName
     appName: webappModule.outputs.appName
-    vnetName: networkModule.outputs.vnetNName
-    appGatewaySubnetName: networkModule.outputs.appGatewaySubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    appGatewaySubnetName: deployVirtualNetwork.outputs.appGatewaySubnetName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     gatewayCertSecretKey: keyVaultModule.outputs.gatewayCertSecretKey
     logWorkspaceName: logWorkspace.name
@@ -180,9 +193,9 @@ module webappModule 'webapp.bicep' = {
     openAIName: openaiModule.outputs.openAiResourceName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     storageName: storageModule.outputs.appDeployStorageName
-    vnetName: networkModule.outputs.vnetNName
-    appServicesSubnetName: networkModule.outputs.appServicesSubnetName
-    privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
+    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
