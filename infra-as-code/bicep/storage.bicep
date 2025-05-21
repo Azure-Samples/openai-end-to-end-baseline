@@ -29,6 +29,12 @@ var mlStorageName = 'stml${baseName}'
 var mlBlobStoragePrivateEndpointName = 'pep-blob-${mlStorageName}'
 var mlFileStoragePrivateEndpointName = 'pep-file-${mlStorageName}'
 
+var agentsThreadStorageName = 'cosmos-ml${baseName}'
+var agentsThreadStoragePrivateEndpointName = 'pep-${agentsThreadStorageName}'
+
+var agentsVectorStoreName = 'aisearch-ml${baseName}'
+var agentsVectorStorePrivateEndpointName = 'pep-${agentsVectorStoreName}'
+
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
@@ -46,6 +52,18 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   scope: subscription()
+}
+
+@description('Built-in Role: [Storage Blob Data Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-owner)')
+resource storageBlobDataOwner 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
+  scope: resourceGroup()
+}
+
+@description('Built-in Role: [Storage Queue Data Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-queue-data-contributor)')
+resource storageQueueDataContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '974c5e8b-45b9-4653-ba55-5f855dd0fb88'
+  scope: resourceGroup()
 }
 
 // ---- Storage resources ----
@@ -413,8 +431,232 @@ resource appDeployStorageDnsZoneGroup 'Microsoft.Network/privateEndpoints/privat
   }
 }
 
+@description('The thread storage Cosmos DB account. Agent will save chat sessions in there.')
+resource agentsCosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
+  name: agentsThreadStorageName
+  location: location
+  kind: 'GlobalDocumentDB'
+  properties: {
+    consistencyPolicy: {
+      defaultConsistencyLevel: 'Session'
+    }
+    publicNetworkAccess: 'Disabled'        // Block public access
+    disableLocalAuth: true
+    enableAutomaticFailover: false
+    enableMultipleWriteLocations: false
+    enableFreeTier: false
+    locations: [
+      {
+        locationName: location
+        failoverPriority: 0
+        isZoneRedundant: false
+      }
+    ]
+    databaseAccountOfferType: 'Standard'
+  }
+}
+
+@description('The thread storage Cosmos DB account diagnostic settings.')
+resource agentsCosmosDbDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: agentsCosmosDb
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'QueryRuntimeStatistics'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+    ]
+    logAnalyticsDestinationType: null
+  }
+}
+
+@description('Azure Machine Learning Cosmos Db Private Endpoint')
+resource agentsCosmosDbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: agentsThreadStoragePrivateEndpointName
+  location: location
+  properties: {
+    subnet: {
+      id: vnet::privateEndpointsSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: agentsThreadStoragePrivateEndpointName
+        properties: {
+          groupIds: [
+            'Sql'
+          ]
+          privateLinkServiceId: agentsCosmosDb.id
+        }
+      }
+    ]
+  }
+
+  resource dnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: cosmosDbDnsZone.name
+          properties: {
+            privateDnsZoneId: cosmosDbDnsZone.id
+          }
+        }
+      ]
+    }
+  }
+}
+
+@description('Azure Cosmos Db - private DNS zone.')
+resource cosmosDbDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.documents.azure.com'
+  location: 'global'
+  properties: {}
+
+  @description('Link private DNS zone to our workload virtual network')
+  resource vnetLink 'virtualNetworkLinks' = {
+    name: '${cosmosDbDnsZone.name}-to-${vnet.name}'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
+    }
+  }
+}
+
+resource agentsAiSearch 'Microsoft.Search/searchServices@2025-02-01-preview' = {
+  name: agentsVectorStoreName
+  location: location
+  identity: {
+    type: 'SystemAssigned'                               // Use managed identity for authentication
+  }
+  properties: {
+    disableLocalAuth: true                               // Allow Entra ID only. API key auth is not allowed
+    authOptions: null
+    encryptionWithCmk: {
+      enforcement: 'Unspecified'                          // Default encryption mode
+    }
+    hostingMode: 'default'                                // Standard hosting mode
+    partitionCount: 1                                     // Number of search partitions
+    publicNetworkAccess: 'Disabled'                       // Force private endpoint access
+    replicaCount: 1                                       // Number of search replicas
+    semanticSearch: 'disabled'                            // Semantic search capability
+  }
+  sku: {
+    name: 'standard'                                      // Production-grade SKU
+  }
+}
+
+@description('The vector store Azure AI Search service index diagnostic settings.')
+resource agentsAiSearchDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: agentsAiSearch
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'OperationLogs'
+        enabled: true
+        retentionPolicy: {
+          enabled: false
+          days: 0
+        }
+      }
+    ]
+    logAnalyticsDestinationType: null
+  }
+}
+
+@description('The vector store Azure AI Search service index Private Endpoint')
+resource agentsAiSearchPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: agentsVectorStorePrivateEndpointName
+  location: location
+  properties: {
+    subnet: {
+      id: vnet::privateEndpointsSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: agentsVectorStorePrivateEndpointName
+        properties: {
+          groupIds: [
+            'searchService'
+          ]
+          privateLinkServiceId: agentsAiSearch.id
+        }
+      }
+    ]
+  }
+
+  resource dnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'default'
+    properties: {
+      privateDnsZoneConfigs: [
+        {
+          name: aiSearchDnsZone.name
+          properties: {
+            privateDnsZoneId: aiSearchDnsZone.id
+          }
+        }
+      ]
+    }
+  }
+}
+
+@description('Azure AI Search service - private DNS zone.')
+resource aiSearchDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.search.windows.net'
+  location: 'global'
+  properties: {}
+
+  @description('Link private DNS zone to our workload virtual network')
+  resource vnetLink 'virtualNetworkLinks' = {
+    name: '${aiSearchDnsZone.name}-to-${vnet.name}'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
+    }
+  }
+}
+
+resource storageBlobDataOwnerForAISearchRoleAssignment  'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: mlStorage
+  name: guid(agentsAiSearch.id, mlStorage.id, storageBlobDataOwner.id)
+  properties: {
+    roleDefinitionId: storageBlobDataOwner.id
+    principalType: 'ServicePrincipal'
+    principalId: agentsAiSearch.identity.principalId
+  }
+}
+
+resource storageQueueDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: mlStorage
+  name: guid(agentsAiSearch.id, mlStorage.id, storageQueueDataContributor.id)
+  properties: {
+    roleDefinitionId: storageQueueDataContributor.id
+    principalType: 'ServicePrincipal'
+    principalId: agentsAiSearch.identity.principalId
+  }
+}
+
 @description('The name of the appDeploy storage account.')
 output appDeployStorageName string = appDeployStorage.name
 
 @description('The name of the ML storage account.')
 output mlDeployStorageName string = mlStorage.name
+
+@description('The name of the Azure AI Foundry Project agents vector store.')
+output agentsVectorStoreName string = agentsAiSearch.name
+
+@description('The name of the Azure AI Foundry Project agents thread storage Cosmos Db.')
+output agentsThreadStorageCosmosDbName string = agentsCosmosDb.name

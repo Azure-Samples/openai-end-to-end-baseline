@@ -146,12 +146,32 @@ module aiStudioModule 'machinelearning.bicep' = {
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
+    agentsVectorStoreName: storageModule.outputs.agentsVectorStoreName
+    agentsThreadStorageCosmosDbName: storageModule.outputs.agentsThreadStorageCosmosDbName
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
     yourPrincipalId: yourPrincipalId
   }
 }
+
+// Deploy Azure AI Foundry project agents role assingments
+module aiStudioCapabilityHosts 'machinelearning-capabilityHosts.bicep' = {
+  name: 'aiStudioCapabilityHostsDeploy'
+  params: {
+    vnetName: networkModule.outputs.vnetNName
+    agentsSubnetName: networkModule.outputs.agentsSubnetName
+    aiHubName: aiStudioModule.outputs.aiHubName
+    chatProjectName: aiStudioModule.outputs.chatProjectName
+    aoaiConnectionName: aiStudioModule.outputs.aoaiConnectionName
+    aaisConnectionName: aiStudioModule.outputs.aaisConnectionName
+    cdbConnectionName: aiStudioModule.outputs.cdbConnectionName
+    agentsVectorStoreName: storageModule.outputs.agentsVectorStoreName
+    agentsThreadStorageCosmosDbName: storageModule.outputs.agentsThreadStorageCosmosDbName
+    chatProjectWorkspaceId:aiStudioModule.outputs.chatProjectNameWorkspaceId
+  }
+}
+
 
 //Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 module gatewayModule 'gateway.bicep' = {
