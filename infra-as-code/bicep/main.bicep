@@ -120,6 +120,7 @@ module deployJumpBox 'jump-box.bicep' = {
 
 // Deploy Azure Storage account used by the Azure App Service
 module deployWebAppStorage 'web-app-storage.bicep' = {
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -132,7 +133,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
 
 // Deploy Azure Key Vault with private endpoint and private DNS zone
 module keyVaultModule 'keyvault.bicep' = {
-  name: 'keyVaultDeploy'
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -145,7 +146,7 @@ module keyVaultModule 'keyvault.bicep' = {
 
 // Deploy Azure Container Registry with private endpoint and private DNS zone
 module acrModule 'acr.bicep' = {
-  name: 'acrDeploy'
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -158,6 +159,7 @@ module acrModule 'acr.bicep' = {
 
 // Deploy Application Insights for the web app
 module appInsightsModule 'application-insights.bicep' = {
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -167,7 +169,7 @@ module appInsightsModule 'application-insights.bicep' = {
 
 // Deploy Azure OpenAI service with private endpoint and private DNS zone
 module openaiModule 'openai.bicep' = {
-  name: 'openaiDeploy'
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -179,7 +181,7 @@ module openaiModule 'openai.bicep' = {
 
 // Deploy Azure AI Foundry with private networking
 module aiStudioModule 'machinelearning.bicep' = {
-  name: 'aiStudioDeploy'
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -197,7 +199,7 @@ module aiStudioModule 'machinelearning.bicep' = {
 
 //Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 module gatewayModule 'gateway.bicep' = {
-  name: 'gatewayDeploy'
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -213,7 +215,7 @@ module gatewayModule 'gateway.bicep' = {
 
 // Deploy the web apps for the front end demo UI and the containerized prompt flow endpoint
 module webappModule 'webapp.bicep' = {
-  name: 'webappDeploy'
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -234,5 +236,6 @@ module webappModule 'webapp.bicep' = {
 module customerUsageAttributionModule 'customerUsageAttribution/cuaIdResourceGroup.bicep' = if (!telemetryOptOut) {
   #disable-next-line no-loc-expr-outside-params // Only to ensure telemetry data is stored in same location as deployment. See https://github.com/Azure/ALZ-Bicep/wiki/FAQ#why-are-some-linter-rules-disabled-via-the-disable-next-line-bicep-function for more information
   name: 'pid-${varCuaid}-${uniqueString(resourceGroup().location)}'
+  scope: resourceGroup()
   params: {}
 }
