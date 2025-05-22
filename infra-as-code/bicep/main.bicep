@@ -103,8 +103,8 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
 }
 
 @description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
-module jumpBoxModule 'jumpbox.bicep' = {
-  name: 'jumpBoxDeploy'
+module deployJumpBox 'jump-box.bicep' = {
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
@@ -118,9 +118,8 @@ module jumpBoxModule 'jumpbox.bicep' = {
   ]
 }
 
-// Deploy Azure Storage account with private endpoint and private DNS zone
-module storageModule 'storage.bicep' = {
-  name: 'storageDeploy'
+// Deploy Azure Storage account used by the Azure App Service
+module deployWebAppStorage 'web-app-storage.bicep' = {
   params: {
     location: location
     baseName: baseName
@@ -188,7 +187,7 @@ module aiStudioModule 'machinelearning.bicep' = {
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
+    aiStudioStorageAccountName: deployWebAppStorage.outputs.mlDeployStorageName
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
@@ -212,7 +211,7 @@ module gatewayModule 'gateway.bicep' = {
   }
 }
 
-// Deploy the web apps for the front end demo UI and the containerised promptflow endpoint
+// Deploy the web apps for the front end demo UI and the containerized prompt flow endpoint
 module webappModule 'webapp.bicep' = {
   name: 'webappDeploy'
   params: {
@@ -223,7 +222,7 @@ module webappModule 'webapp.bicep' = {
     publishFileName: publishFileName
     openAIName: openaiModule.outputs.openAiResourceName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    storageName: storageModule.outputs.appDeployStorageName
+    storageName: deployWebAppStorage.outputs.appDeployStorageName
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
