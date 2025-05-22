@@ -154,18 +154,6 @@ module deployApplicationInsights 'application-insights.bicep' = {
   }
 }
 
-// Deploy Azure OpenAI service with private endpoint and private DNS zone
-module openaiModule 'openai.bicep' = {
-  scope: resourceGroup()
-  params: {
-    location: location
-    baseName: baseName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
-    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    logWorkspaceName: logWorkspace.name
-  }
-}
-
 // Deploy Azure AI Foundry with private networking
 module aiStudioModule 'machinelearning.bicep' = {
   scope: resourceGroup()
@@ -174,12 +162,12 @@ module aiStudioModule 'machinelearning.bicep' = {
     baseName: baseName
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
+    applicationInsightsName: deployApplicationInsights.outputs.applicationInsightsName
     keyVaultName: deployKeyVault.outputs.keyVaultName
     aiStudioStorageAccountName: 'not-available'
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
-    openAiResourceName: openaiModule.outputs.openAiResourceName
+    openAiResourceName: 'not-available'
     yourPrincipalId: yourPrincipalId
   }
 }
@@ -209,7 +197,7 @@ module webappModule 'webapp.bicep' = {
     managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
     acrName: 'not-available'
     publishFileName: publishFileName
-    openAIName: openaiModule.outputs.openAiResourceName
+    openAIName: 'not-available'
     keyVaultName: deployKeyVault.outputs.keyVaultName
     storageName: deployWebAppStorage.outputs.appDeployStorageName
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
