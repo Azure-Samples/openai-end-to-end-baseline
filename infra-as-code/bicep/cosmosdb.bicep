@@ -4,6 +4,11 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
+@description('This is the base name for each Azure resource name (6-8 chars)')
+@minLength(6)
+@maxLength(8)
+param baseName string
+
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
 param logAnalyticsWorkspaceName string
@@ -36,7 +41,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 // ---- New resources ----
 
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
-  name: 'cdbagentthreadstorage'
+  name: 'cdb-ai-agent-threads-${baseName}'
   location: location
   kind: 'GlobalDocumentDB'
   properties: {

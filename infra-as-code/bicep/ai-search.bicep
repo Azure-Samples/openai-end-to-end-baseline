@@ -4,6 +4,11 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
+@description('This is the base name for each Azure resource name (6-8 chars)')
+@minLength(6)
+@maxLength(8)
+param baseName string
+
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
 param logAnalyticsWorkspaceName string
@@ -35,7 +40,7 @@ resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefi
 // ---- New resources ----
 
 resource azureAiSearchService 'Microsoft.Search/searchServices@2025-02-01-preview' = {
-  name: 'ais-agent'
+  name: 'ais-ai-agent-vector-store-${baseName}'
   location: location
   identity: {
     type: 'SystemAssigned'

@@ -30,8 +30,8 @@ param jumpBoxAdminPassword string
 
 // ---- Variables ----
 
-var bastionHostName = 'ab-${baseName}'
-var jumpBoxName = 'jmp-${baseName}'
+var bastionHostName = 'ab-jump-box'
+var jumpBoxName = 'jump-box'
 
 // ---- Existing resources ----
 
@@ -212,7 +212,7 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 }
 
 @description('The Azure ML and Azure OpenAI portal experiences are only able to be accessed from the virtual network, this jump box gives you access to those UIs.')
-resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   name: 'vm-${jumpBoxName}'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachines', location, 1)
@@ -244,13 +244,12 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
       ]
     }
     osProfile: {
-      computerName: jumpBoxName
+      computerName: 'jumpbox'
       adminUsername: jumpBoxAdminName
       adminPassword: jumpBoxAdminPassword
       allowExtensionOperations: true
       windowsConfiguration: {
         enableAutomaticUpdates: true
-        enableVMAgentPlatformUpdates: true
         patchSettings: {
           patchMode: 'AutomaticByOS'
           assessmentMode: 'ImageDefault'
@@ -323,7 +322,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
       enableAutomaticUpgrade: true
       publisher: 'Microsoft.Azure.Monitor'
       type: 'AzureMonitorWindowsAgent'
-      typeHandlerVersion: '1.21'
+      typeHandlerVersion: '1.34'
     }
   }
 

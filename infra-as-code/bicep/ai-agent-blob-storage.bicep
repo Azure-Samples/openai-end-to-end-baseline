@@ -40,7 +40,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 // ---- New resources ----
 
 resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
-  name: 'stg${baseName}'
+  name: 'stagent${baseName}'
   location: location
   sku: {
     name: 'Standard_ZRS'  // TODO: For BC/DR, should we use GZRS?

@@ -41,6 +41,7 @@ module deployCosmosDbThreadStorageAccount 'cosmosdb.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
+    baseName: baseName
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
     debugUserPrincipalId: debugUserPrincipalId
     privateEndpointSubnetResourceId: privateEndpointSubnetResourceId
@@ -52,6 +53,7 @@ module deployAzureAISearchService 'ai-search.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
+    baseName: baseName
     logAnalyticsWorkspaceName: logAnalyticsWorkspaceName
     debugUserPrincipalId: debugUserPrincipalId
     privateEndpointSubnetResourceId: privateEndpointSubnetResourceId

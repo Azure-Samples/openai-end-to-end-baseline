@@ -56,11 +56,7 @@ resource publicIpForAzureFirewallEgress 'Microsoft.Network/publicIPAddresses@202
     name: 'Standard'
     tier: 'Regional'
   }
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
   properties: {
     publicIPAddressVersion: 'IPv4'
     publicIPAllocationMethod: 'Static'
@@ -76,11 +72,7 @@ resource publicIpForAzureFirewallManagement 'Microsoft.Network/publicIPAddresses
     name: 'Standard'
     tier: 'Regional'
   }
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
   properties: {
     publicIPAddressVersion: 'IPv4'
     publicIPAllocationMethod: 'Static'
@@ -201,11 +193,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
 resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
   name: 'fw-egress'
   location: location
-  zones: [
-    '1'
-    '2'
-    '3'
-  ]
+  zones: pickZones('Microsoft.Network', 'azureFirewalls', location, 3)
   properties: {
     sku: {
       name: 'AZFW_VNet'

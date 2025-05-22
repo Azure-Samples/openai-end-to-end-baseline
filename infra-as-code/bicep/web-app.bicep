@@ -29,7 +29,7 @@ param appServicesSubnetName string
 param privateEndpointsSubnetName string
 
 @description('The name of the existing Azure Storage account that the Azure Web App will be pulling code deployments from.')
-@minLength(1)
+@minLength(3)
 param webAppDeploymentStorageAccountName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
@@ -70,6 +70,7 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
   scope: subscription()
 }
 
+// TODO: Once the code is updated, figure out the correct role to apply to the managed identity.
 @description('Built-in Role: [Cognitive Services OpenAI User](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#cognitive-services-openai-user)')
 resource cognitiveServicesOpenAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'

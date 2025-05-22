@@ -57,7 +57,7 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions
 // ---- New resources ----
 
 resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
-  name: 'st${baseName}'
+  name: 'stwebapp${baseName}'
   location: location
   sku: {
     name: 'Standard_ZRS'
