@@ -16,7 +16,7 @@ param location string = resourceGroup().location
 param customDomainName string
 
 @description('The name of the existing virtual network that this Application Gateway instance will be deployed into.')
-param vnetName string
+param virtualNetworkName string
 
 @description('The name of the existing subnet for Application Gateway. Must in in the provided virtual network and sized appropriately.')
 param appGatewaySubnetName string
@@ -32,7 +32,7 @@ param keyVaultName string
 param gatewayCertSecretKey string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 //variables
 var appGatewayName = 'agw-${baseName}'
@@ -42,20 +42,21 @@ var appGatewayFqdn = 'fe-${baseName}'
 var wafPolicyName= 'waf-${baseName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
-  name: vnetName
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing =  {
+  name: virtualNetworkName
 
   resource appGatewaySubnet 'subnets' existing = {
     name: appGatewaySubnetName
   }
 }
 
-resource webApp 'Microsoft.Web/sites@2022-09-01' existing = {
+resource webApp 'Microsoft.Web/sites@2024-04-01' existing = {
   name: appName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
@@ -72,10 +73,10 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-0
   scope: subscription()
 }
 
-// ---- App Gateway resources ----
+// ---- New resources ----
 
 // Managed Identity for App Gateway.
-resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: appGatewayManagedIdentityName
   location: location
 }
@@ -91,7 +92,7 @@ module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignme
 }
 
 //External IP for App Gateway
-resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: appGatewayPublicIpName
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -109,7 +110,7 @@ resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
 }
 
 //WAF policy definition
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2023-05-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
   name: wafPolicyName
   location: location
   properties: {
@@ -136,7 +137,7 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
 }
 
 //App Gateway
-resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
+resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
   name: appGatewayName
   location: location
   zones: pickZones('Microsoft.Network', 'applicationGateways', location, 3)
@@ -165,7 +166,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
         name: 'appGatewayIpConfig'
         properties: {
           subnet: {
-            id: vnet::appGatewaySubnet.id
+            id: virtualNetwork::appGatewaySubnet.id
           }
         }
       }
@@ -297,8 +298,8 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
   ]
 }
 
-//Application Gateway diagnostic settings
-resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+@description('Enable Application Gateway diagnostic settings')
+resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: appGateway
   properties: {
@@ -333,5 +334,7 @@ resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-0
   }
 }
 
-@description('The name of the app gateway resource.')
-output appGatewayName string = appGateway.name
+// ---- Outputs ----
+
+@description('The name of the Azure Application Gateway resource.')
+output applicationGatewayName string = appGateway.name

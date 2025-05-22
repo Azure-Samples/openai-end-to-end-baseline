@@ -34,7 +34,7 @@ param appServicesSubnetName string
 param privateEndpointsSubnetName string
 param storageName string
 param keyVaultName string
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 // variables
 var appName = 'app-${baseName}'
@@ -76,7 +76,7 @@ resource storage 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+  name: logAnalyticsWorkspaceName
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {

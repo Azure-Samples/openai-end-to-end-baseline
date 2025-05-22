@@ -154,19 +154,19 @@ module deployApplicationInsights 'application-insights.bicep' = {
   }
 }
 
-//Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
-module gatewayModule 'gateway.bicep' = {
+@description('Deploy an Azure Application Gateway with WAF and a custom domain name + TLS cert.')
+module deployApplicationGateway 'application-gateway.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
+    logAnalyticsWorkspaceName: logWorkspace.name
     customDomainName: customDomainName
     appName: webappModule.outputs.appName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     appGatewaySubnetName: deployVirtualNetwork.outputs.appGatewaySubnetName
     keyVaultName: deployKeyVault.outputs.keyVaultName
     gatewayCertSecretKey: deployKeyVault.outputs.gatewayCertSecretKey
-    logWorkspaceName: logWorkspace.name
   }
 }
 
@@ -176,7 +176,8 @@ module webappModule 'webapp.bicep' = {
   params: {
     location: location
     baseName: baseName
-    managedOnlineEndpointResourceId: 'not-available'
+    logAnalyticsWorkspaceName: logWorkspace.name
+    managedOnlineEndpointResourceId: 'not-available-not-available-not-available'
     acrName: 'not-available'
     publishFileName: publishFileName
     openAIName: 'not-available'
@@ -185,7 +186,6 @@ module webappModule 'webapp.bicep' = {
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    logWorkspaceName: logWorkspace.name
   }
 }
 
