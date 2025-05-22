@@ -19,9 +19,9 @@ param customDomainName string
 param virtualNetworkName string
 
 @description('The name of the existing subnet for Application Gateway. Must in in the provided virtual network and sized appropriately.')
-param appGatewaySubnetName string
+param applicationGatewaySubnetName string
 
-@description('The name of the existing webapp that will be the backend origin for the primary application gateway route.')
+@description('The name of the existing webapp that will be the backend origin for the primary Application Gateway route.')
 param appName string
 
 @description('The name of the existing Key Vault that contains the SSL certificate for the Application Gateway.')
@@ -46,8 +46,8 @@ var wafPolicyName= 'waf-${baseName}'
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing =  {
   name: virtualNetworkName
 
-  resource appGatewaySubnet 'subnets' existing = {
-    name: appGatewaySubnetName
+  resource applicationGatewaySubnet 'subnets' existing = {
+    name: applicationGatewaySubnetName
   }
 }
 
@@ -166,7 +166,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
         name: 'appGatewayIpConfig'
         properties: {
           subnet: {
-            id: virtualNetwork::appGatewaySubnet.id
+            id: virtualNetwork::applicationGatewaySubnet.id
           }
         }
       }

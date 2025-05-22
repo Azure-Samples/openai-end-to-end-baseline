@@ -29,7 +29,7 @@ param acrName string
 @minLength(6)
 param openAIName string
 
-param vnetName string
+param virtualNetworkName string
 param appServicesSubnetName string
 param privateEndpointsSubnetName string
 param storageName string
@@ -48,8 +48,8 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: 'appi-${baseName}'
 }
 
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
-  name: vnetName
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
+  name: virtualNetworkName
 
   resource appServicesSubnet 'subnets' existing = {
     name: appServicesSubnetName
@@ -107,7 +107,7 @@ resource cognitiveServicesOpenAiUserRole 'Microsoft.Authorization/roleDefinition
   scope: subscription()
 }
 
-// ---- Web App resources ----
+// ---- New resources ----
 
 // Managed Identity for App Service
 resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -165,7 +165,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   }
   properties: {
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: vnet::appServicesSubnet.id
+    virtualNetworkSubnetId: virtualNetwork::appServicesSubnet.id
     httpsOnly: true
     vnetContentShareEnabled: true
     vnetImagePullEnabled: true
@@ -247,7 +247,7 @@ resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-0
   location: location
   properties: {
     subnet: {
-      id: vnet::privateEndpointsSubnet.id
+      id: virtualNetwork::privateEndpointsSubnet.id
     }
     privateLinkServiceConnections: [
       {
@@ -288,7 +288,7 @@ resource appServiceDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
     properties: {
       registrationEnabled: false
       virtualNetwork: {
-        id: vnet.id
+        id: virtualNetwork.id
       }
     }
   }
@@ -352,7 +352,7 @@ resource webAppPf 'Microsoft.Web/sites@2023-12-01' = {
   }
   properties: {
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: vnet::appServicesSubnet.id
+    virtualNetworkSubnetId: virtualNetwork::appServicesSubnet.id
     httpsOnly: true
     keyVaultReferenceIdentity: appServiceManagedIdentity.id
     hostNamesDisabled: false
@@ -431,7 +431,7 @@ resource appServicePrivateEndpointPf 'Microsoft.Network/privateEndpoints@2024-01
   location: location
   properties: {
     subnet: {
-      id: vnet::privateEndpointsSubnet.id
+      id: virtualNetwork::privateEndpointsSubnet.id
     }
     privateLinkServiceConnections: [
       {
@@ -482,6 +482,8 @@ resource azureOpenAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@
     principalId: webAppPf.identity.principalId
   }
 }
+
+// ---- Outputs ----
 
 @description('The name of the app service plan.')
 output appServicePlanName string = appServicePlan.name

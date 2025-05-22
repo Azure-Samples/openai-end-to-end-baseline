@@ -162,16 +162,16 @@ module deployApplicationGateway 'application-gateway.bicep' = {
     baseName: baseName
     logAnalyticsWorkspaceName: logWorkspace.name
     customDomainName: customDomainName
-    appName: webappModule.outputs.appName
+    appName: deployWebApp.outputs.appName
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
-    appGatewaySubnetName: deployVirtualNetwork.outputs.appGatewaySubnetName
+    applicationGatewaySubnetName: deployVirtualNetwork.outputs.applicationGatewaySubnetName
     keyVaultName: deployKeyVault.outputs.keyVaultName
     gatewayCertSecretKey: deployKeyVault.outputs.gatewayCertSecretKey
   }
 }
 
 // Deploy the web apps for the front end demo UI and the containerized prompt flow endpoint
-module webappModule 'webapp.bicep' = {
+module deployWebApp 'web-app.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
@@ -183,7 +183,7 @@ module webappModule 'webapp.bicep' = {
     openAIName: 'not-available'
     keyVaultName: deployKeyVault.outputs.keyVaultName
     storageName: deployWebAppStorage.outputs.appDeployStorageName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
   }

@@ -849,8 +849,8 @@ output virtualNetworkName string = virtualNetwork.name
 @description('The name of the app service plan subnet.')
 output appServicesSubnetName string = virtualNetwork::appServiceSubnet.name
 
-@description('The name of the application gateway subnet.')
-output appGatewaySubnetName string = virtualNetwork::appGatewaySubnet.name
+@description('The name of the Azure Application Gateway subnet.')
+output applicationGatewaySubnetName string = virtualNetwork::appGatewaySubnet.name
 
 @description('The name of the private endpoints subnet.')
 output privateEndpointsSubnetName string = virtualNetwork::privateEndpointsSubnet.name
