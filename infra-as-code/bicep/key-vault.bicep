@@ -17,11 +17,16 @@ param location string = resourceGroup().location
 @secure()
 param appGatewayListenerCertificate string
 
-// existing resource name params
+@description('The name of the existing virtual network. This Key Vault will expose a private endpoint into this network.')
+@minLength(1)
 param virtualNetworkName string
+
+@description('The name for the subnet that private endpoints in the workload should surface in.')
+@minLength(1)
 param privateEndpointsSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
 param logAnalyticsWorkspaceName string
 
 // ---- Existing resources ----

@@ -13,7 +13,7 @@ param location string = resourceGroup().location
 @minLength(1)
 param virtualNetworkName string
 
-@description('The name of the Log Analytics Workspace used as the workload\'s common log sink.')
+@description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
 param logAnalyticsWorkspaceName string
 

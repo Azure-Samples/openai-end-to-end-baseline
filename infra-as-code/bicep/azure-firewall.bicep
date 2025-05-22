@@ -4,11 +4,12 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
-@description('The name of the workload\'s virtual network in this resource group.')
+@description('The name of the workload\'s virtual network in this resource group. Azure Firewall and it\'s management NIC will be deployed into this network.')
 @minLength(1)
 param virtualNetworkName string
 
-@description('The name of the workload\'s existing Log Analytics workspace in this resource group.')
+@description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
 param logAnalyticsWorkspaceName string
 
 @description('The name of the subnet containing the Azure AI Agents. Must be in the same virtual network that is provided.')

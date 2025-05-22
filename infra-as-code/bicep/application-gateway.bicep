@@ -17,6 +17,7 @@ param location string = resourceGroup().location
 param customDomainName string
 
 @description('The name of the existing virtual network that this Application Gateway instance will be deployed into.')
+@minLength(1)
 param virtualNetworkName string
 
 @description('The name of the existing subnet for Application Gateway. Must in in the provided virtual network and sized appropriately.')
@@ -33,6 +34,7 @@ param keyVaultName string
 param gatewayCertSecretKey string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
 param logAnalyticsWorkspaceName string
 
 //variables
@@ -68,7 +70,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
   }
 }
 
-// Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload's identity.
+@description('Built-in Role: [Key Vault Secrets User](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-secrets-user)')
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
@@ -82,8 +84,8 @@ resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
   location: location
 }
 
-// Grant the Azure Application Gateway managed identity with Key Vault secrets role permissions; this allows pulling certificates.
-module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignment.bicep' = {
+@description('Grant the Application Gateway managed identity Key Vault secrets user role permissions. This allows pulling certificates.')
+module grantAppGatewaySecretsUserRoleAssignment './modules/keyvaultRoleAssignment.bicep' = {
   name: 'appGatewaySecretsUserRoleAssignmentDeploy'
   params: {
     roleDefinitionId: keyVaultSecretsUserRole.id
@@ -295,7 +297,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
     }
   }
   dependsOn: [
-    appGatewaySecretsUserRoleAssignmentModule
+    grantAppGatewaySecretsUserRoleAssignment
   ]
 }
 

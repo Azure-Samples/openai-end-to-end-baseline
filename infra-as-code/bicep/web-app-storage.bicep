@@ -13,7 +13,7 @@ param baseName string
 @minLength(1)
 param location string = resourceGroup().location
 
-@description('The name of the workload\'s virtual network in this resource group.')
+@description('The name of the workload\'s virtual network in this resource group, the Azure Storage private endpoint will be deployed into a subnet in here.')
 @minLength(1)
 param virtualNetworkName string
 
@@ -22,6 +22,7 @@ param virtualNetworkName string
 param privateEndpointsSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
 param logAnalyticsWorkspaceName string
 
 @description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')

@@ -10,6 +10,7 @@ param baseName string
 param location string = resourceGroup().location
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
 param logAnalyticsWorkspaceName string
 
 // ---- Existing resources ----

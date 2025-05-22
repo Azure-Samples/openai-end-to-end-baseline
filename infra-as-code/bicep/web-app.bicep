@@ -16,10 +16,20 @@ param location string = resourceGroup().location
 @minLength(1)
 param publishFileName string
 
+@description('The name of the existing virtual network that this Web App instance will be deployed into for egress and a private endpoint for ingress.')
+@minLength(1)
 param virtualNetworkName string
+
 param appServicesSubnetName string
+
+@description('The name for the subnet that private endpoints in the workload should surface in.')
+@minLength(1)
 param privateEndpointsSubnetName string
+
 param storageName string
+
+@description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
 param logAnalyticsWorkspaceName string
 
 // variables
