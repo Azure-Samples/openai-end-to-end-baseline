@@ -41,6 +41,11 @@ var appServicePfPrivateEndpointName = 'pep-${appName}-pf'
 var chatApiKey = '@Microsoft.KeyVault(SecretUri=https://${keyVaultName}.vault.azure.net/secrets/chatApiKey)'
 
 // ---- Existing resources ----
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: 'appi-${baseName}'
+}
+
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   name: vnetName
 
@@ -329,21 +334,6 @@ resource appServicePlanAutoScaleSettings 'Microsoft.Insights/autoscalesettings@2
   dependsOn: [
     webApp
   ]
-}
-
-// create application insights resource
-resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: 'appinsights-${appName}'
-  location: location
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-    WorkspaceResourceId: logWorkspace.id
-    RetentionInDays: 90
-    IngestionMode: 'LogAnalytics'
-    publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
-  }
 }
 
 /*Promptflow app service*/

@@ -137,9 +137,8 @@ module acrModule 'acr.bicep' = {
   }
 }
 
-// Deploy Application Insights and Log Analytics workspace
-module appInsightsModule 'applicationinsights.bicep' = {
-  name: 'appInsightsDeploy'
+// Deploy Application Insights for the web app
+module appInsightsModule 'application-insights.bicep' = {
   params: {
     location: location
     baseName: baseName
