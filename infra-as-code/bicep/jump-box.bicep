@@ -1,10 +1,5 @@
 targetScope = 'resourceGroup'
 
-@description('This is the base name for each Azure resource name (6-8 chars)')
-@minLength(6)
-@maxLength(8)
-param baseName string
-
 @description('The region in which this architecture is deployed. Should match the region of the resource group.')
 @minLength(1)
 param location string = resourceGroup().location
@@ -12,6 +7,10 @@ param location string = resourceGroup().location
 @description('The name of the virtual network in this resource group.')
 @minLength(1)
 param virtualNetworkName string
+
+@description('The name of the subnet for the jump box. Must be in the same virtual network that is provided.')
+@minLength(1)
+param jumpBoxSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
@@ -40,7 +39,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing 
   name: virtualNetworkName
 
   resource jumpBoxSubnet 'subnets' existing = {
-    name: 'snet-jumpbox'
+    name: jumpBoxSubnetName
   }
 
   resource bastionSubnet 'subnets' existing = {
@@ -112,7 +111,7 @@ resource bastion 'Microsoft.Network/bastionHosts@2024-01-01' = {
 }
 
 @description('Diagnostics settings for Azure Bastion')
-resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+resource azureDiagnosticsBastion 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: bastion
   properties: {
@@ -131,7 +130,7 @@ resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-
 }
 
 @description('Default VM Insights DCR rule, to be applied to the jump box.')
-resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: 'dcr-${jumpBoxName}'
   location: location
   kind: 'Windows'
@@ -184,7 +183,7 @@ resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-
 }
 
 @description('VM will only receive a private IP.')
-resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   name: 'nic-${jumpBoxName}'
   location: location
   properties: {
@@ -344,7 +343,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = 
 }
 
 @description('Associate jump box with Azure Monitor Agent VM Insights DCR.')
-resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = {
+resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11' = {
   name: 'dcra-vminsights'
   scope: jumpBoxVirtualMachine
   properties: {

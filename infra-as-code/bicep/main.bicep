@@ -10,13 +10,16 @@ param location string = resourceGroup().location
 param baseName string
 
 @description('Domain name to use for App Gateway')
+@minLength(3)
 param customDomainName string = 'contoso.com'
 
-@description('The certificate data for app gateway TLS termination. The value is base64 encoded')
+@description('The certificate data for app gateway TLS termination. The value is base64 encoded.')
 @secure()
+@minLength(1)
 param appGatewayListenerCertificate string
 
 @description('The name of the web deploy file. The file should reside in a deploy container in the storage account. Defaults to chatui.zip')
+@minLength(5)
 param publishFileName string = 'chatui.zip'
 
 @description('Specifies the password of the administrator account on the Windows jump box.\n\nComplexity requirements: 3 out of 4 conditions below need to be fulfilled:\n- Has lower characters\n- Has upper characters\n- Has a digit\n- Has a special character\n\nDisallowed values: "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word", "pass@word1", "Password!", "Password1", "Password22", "iloveyou!"')
@@ -25,7 +28,7 @@ param publishFileName string = 'chatui.zip'
 @maxLength(123)
 param jumpBoxAdminPassword string
 
-@description('Assign your user some roles to support fluid access when working in the Azure AI Foundry portal')
+@description('Assign your user some roles to support fluid access when working in the Azure AI Foundry portal and its dependencies.')
 @maxLength(36)
 @minLength(36)
 param yourPrincipalId string
@@ -106,9 +109,9 @@ module deployJumpBox 'jump-box.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
-    baseName: baseName
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
+    jumpBoxSubnetName: deployVirtualNetwork.outputs.jumpBoxSubnetName
     jumpBoxAdminName: 'vmadmin'
     jumpBoxAdminPassword: jumpBoxAdminPassword
   }

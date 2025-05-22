@@ -56,6 +56,7 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions
 
 // ---- New resources ----
 
+@description('Deploy a storage account for the web app to use as a deployment source for its web application code. Will be exposed only via private endpoint.')
 resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   name: 'stwebapp${baseName}'
   location: location

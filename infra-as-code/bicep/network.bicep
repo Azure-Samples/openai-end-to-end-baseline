@@ -887,3 +887,6 @@ output agentsEgressSubnetResourceId string = virtualNetwork::agentsEgressSubnet.
 
 @description('The resource ID of the private endpoints subnet.')
 output privateEndpointsSubnetResourceId string = virtualNetwork::privateEndpointsSubnet.id
+
+@description('The name of the subnet for jump boxes.')
+output jumpBoxSubnetName string = virtualNetwork::jumpBoxSubnet.name

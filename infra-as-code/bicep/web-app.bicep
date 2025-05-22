@@ -13,7 +13,8 @@ param baseName string
 @minLength(1)
 param location string = resourceGroup().location
 
-@minLength(1)
+@description('The name of the web deploy file. The file should reside in a deploy container in the storage account. E.g. chatui.zip.')
+@minLength(5)
 param publishFileName string
 
 @description('The name of the existing virtual network that this Web App instance will be deployed into for egress and a private endpoint for ingress.')
