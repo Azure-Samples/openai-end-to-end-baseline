@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 /*
   Deploy storage account used for the web app with private endpoint and private DNS zone
 */

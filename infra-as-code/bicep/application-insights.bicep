@@ -9,12 +9,12 @@ param baseName string
 param location string = resourceGroup().location
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 // ---- Existing resources ----
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
 // ---- New resources ----

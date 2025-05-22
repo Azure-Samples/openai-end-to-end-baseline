@@ -97,9 +97,6 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
     debugUserPrincipalId: yourPrincipalId
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
   }
-  dependsOn: [
-    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
-  ]
 }
 
 @description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
@@ -130,12 +127,10 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
     debugUserPrincipalId: yourPrincipalId
   }
   dependsOn: [
-    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
     deployAIAgentServiceDependencies // There is a storage account in the AI Agent dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
   ]
 }
 
-// Deploy Azure Key Vault with private endpoint and private DNS zone
 @description('Deploy Azure Key Vault. In this architecture, it\'s used to store the certificate for the Application Gateway.')
 module deployKeyVault 'key-vault.bicep' = {
   scope: resourceGroup()
@@ -149,26 +144,13 @@ module deployKeyVault 'key-vault.bicep' = {
   }
 }
 
-// Deploy Azure Container Registry with private endpoint and private DNS zone
-module acrModule 'acr.bicep' = {
+@description('Deploy Application Insights. Used from the Azure Web App to monitor the deployed application.')
+module deployApplicationInsights 'application-insights.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
-    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    buildAgentSubnetName: deployVirtualNetwork.outputs.buildAgentsSubnetName
-    logWorkspaceName: logWorkspace.name
-  }
-}
-
-// Deploy Application Insights for the web app
-module appInsightsModule 'application-insights.bicep' = {
-  scope: resourceGroup()
-  params: {
-    location: location
-    baseName: baseName
-    logWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logWorkspace.name
   }
 }
 
@@ -194,7 +176,7 @@ module aiStudioModule 'machinelearning.bicep' = {
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: deployKeyVault.outputs.keyVaultName
-    aiStudioStorageAccountName: 'NA'
+    aiStudioStorageAccountName: 'not-available'
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
@@ -225,7 +207,7 @@ module webappModule 'webapp.bicep' = {
     location: location
     baseName: baseName
     managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
-    acrName: acrModule.outputs.acrName
+    acrName: 'not-available'
     publishFileName: publishFileName
     openAIName: openaiModule.outputs.openAiResourceName
     keyVaultName: deployKeyVault.outputs.keyVaultName

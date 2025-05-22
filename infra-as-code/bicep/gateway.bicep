@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 /*
   Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 */

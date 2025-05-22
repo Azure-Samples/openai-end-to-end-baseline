@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 /*
   Deploy a web app with a managed identity, diagnostic, and a private endpoint
 */

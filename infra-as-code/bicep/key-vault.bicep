@@ -1,3 +1,5 @@
+targetScope = 'resourceGroup'
+
 /*
   Deploy Key Vault with private endpoint and private DNS zone
 */
