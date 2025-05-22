@@ -124,10 +124,10 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
   params: {
     location: location
     baseName: baseName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    yourPrincipalId: yourPrincipalId
+    debugUserPrincipalId: yourPrincipalId
   }
 }
 
@@ -189,7 +189,7 @@ module aiStudioModule 'machinelearning.bicep' = {
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
-    aiStudioStorageAccountName: deployWebAppStorage.outputs.mlDeployStorageName
+    aiStudioStorageAccountName: 'NA'
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName

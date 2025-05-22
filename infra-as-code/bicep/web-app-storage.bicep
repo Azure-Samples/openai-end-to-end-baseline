@@ -1,5 +1,5 @@
 /*
-  Deploy storage account with private endpoint and private DNS zone
+  Deploy storage account used for the web app with private endpoint and private DNS zone
 */
 
 @description('This is the base name for each Azure resource name (6-8 chars)')
@@ -10,36 +10,38 @@ param baseName string
 @description('The resource group location')
 param location string = resourceGroup().location
 
-// existing resource name params
-param vnetName string
+@description('The name of the workload\'s virtual network in this resource group.')
+@minLength(1)
+param virtualNetworkName string
+
+@description('The name for the subnet that private endpoints in the workload should surface in.')
+@minLength(1)
 param privateEndpointsSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
+@description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
-param yourPrincipalId string
-
-// variables
-var appDeployStorageName = 'st${baseName}'
-var appDeployStoragePrivateEndpointName = 'pep-${appDeployStorageName}'
-
-var mlStorageName = 'stml${baseName}'
-var mlBlobStoragePrivateEndpointName = 'pep-blob-${mlStorageName}'
-var mlFileStoragePrivateEndpointName = 'pep-file-${mlStorageName}'
+param debugUserPrincipalId string
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
-  name: vnetName
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
+  name: virtualNetworkName
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
   name: logWorkspaceName
+}
+
+resource blobStorageLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
+  name: 'privatelink.blob.${environment().suffixes.storage}'
 }
 
 @description('Built-in Role: [Storage Blob Data Contributor](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-contributor)')
@@ -48,9 +50,10 @@ resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions
   scope: subscription()
 }
 
-// ---- Storage resources ----
+// ---- New resources ----
+
 resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
-  name: appDeployStorageName
+  name: 'st${baseName}'
   location: location
   sku: {
     name: 'Standard_ZRS'
@@ -76,7 +79,7 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
         }
       }
     }
-    minimumTlsVersion: 'TLS1_2'
+    minimumTlsVersion: 'TLS1_2' // TODO: Can we make this 1.3?
     isHnsEnabled: false
     isSftpEnabled: false
     defaultToOAuthAuthentication: true
@@ -85,9 +88,12 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
+      ipRules: []
+      virtualNetworkRules: []
     }
     supportsHttpsTrafficOnly: true
   }
+
   resource blobService 'blobServices' = {
     name: 'default'
 
@@ -101,8 +107,8 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   }
 }
 
-// Enable App Service deployment Storage Account blob diagnostic settings
-resource appDeployStorageDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+@description('Enable App Service deployment Storage Account blob diagnostic settings')
+resource azureDiagnosticsBlob 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: appDeployStorage::blobService
   properties: {
@@ -133,190 +139,48 @@ resource appDeployStorageDiagSettings 'Microsoft.Insights/diagnosticSettings@202
         }
       }
     ]
-    logAnalyticsDestinationType: null
   }
 }
 
-@description('Assign your user the ability to manage prompt flow state files from blob storage. This is needed to execute the prompt flow from within in the Azure AI Foundry portal.')
+@description('Assign your user the ability to manage application deployment files in blob storage.')
 resource blobStorageContributorForUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: appDeployStorage::blobService::deployContainer
-  name: guid(appDeployStorage::blobService::deployContainer.id, yourPrincipalId, storageBlobDataContributorRole.id)
+  name: guid(appDeployStorage::blobService::deployContainer.id, debugUserPrincipalId, storageBlobDataContributorRole.id)
   properties: {
     roleDefinitionId: storageBlobDataContributorRole.id
     principalType: 'User'
-    principalId: yourPrincipalId // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here.
+    principalId: debugUserPrincipalId // Part of the deployment guide requires you to upload the web app to this storage container. Assigning that data plane permission here. Ideally your CD pipeline would have this permission instead.
   }
 }
 
-resource appDeployStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: appDeployStoragePrivateEndpointName
+resource webAppStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: 'pe-web-app-storage'
   location: location
   properties: {
     subnet: {
-      id: vnet::privateEndpointsSubnet.id
+      id: virtualNetwork::privateEndpointsSubnet.id
     }
     privateLinkServiceConnections: [
       {
-        name: appDeployStoragePrivateEndpointName
+        name: 'pe-web-app-storage'
         properties: {
-          groupIds: [
-            'blob'
-          ]
           privateLinkServiceId: appDeployStorage.id
-        }
-      }
-    ]
-  }
-}
-
-resource mlStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
-  name: mlStorageName
-  location: location
-  sku: {
-    name: 'Standard_ZRS'
-  }
-  kind: 'StorageV2'
-  properties: {
-    allowedCopyScope: 'AAD'
-    accessTier: 'Hot'
-    allowBlobPublicAccess: false
-    allowSharedKeyAccess: true
-    isSftpEnabled: false
-    isHnsEnabled: false
-    allowCrossTenantReplication: false
-    defaultToOAuthAuthentication: true
-    isLocalUserEnabled: false
-    encryption: {
-      keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false // In this scenario, this account for Azure AI Foundry doesn't require double encryption, but if your scenario does, please enable.
-      services: {
-        blob: {
-          enabled: true
-          keyType: 'Account'
-        }
-        file: {
-          enabled: true
-          keyType: 'Account'
-        }
-      }
-    }
-    minimumTlsVersion: 'TLS1_2'
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-    }
-    publicNetworkAccess: 'Disabled'
-    supportsHttpsTrafficOnly: true
-  }
-  resource Blob 'blobServices' existing = {
-    name: 'default'
-  }
-  resource File 'fileServices' existing = {
-    name: 'default'
-  }
-}
-
-// Enable Machine Learning Storage Account blob diagnostic settings
-resource mlStorageBlobDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
-  scope: mlStorage::Blob
-  properties: {
-    workspaceId: logWorkspace.id
-    logs: [
-      {
-        category: 'StorageRead'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-      {
-        category: 'StorageWrite'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-      {
-        category: 'StorageDelete'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-    ]
-    logAnalyticsDestinationType: null
-  }
-}
-
-// Enable Machine Learning Storage Account file diagnostic settings
-resource mlStorageFileDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'default'
-  scope: mlStorage::File
-  properties: {
-    workspaceId: logWorkspace.id
-    logs: [
-      {
-        category: 'StorageRead'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-      {
-        category: 'StorageWrite'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-      {
-        category: 'StorageDelete'
-        enabled: true
-        retentionPolicy: {
-          enabled: false
-          days: 0
-        }
-      }
-    ]
-    logAnalyticsDestinationType: null
-  }
-}
-
-@description('Azure Machine Learning Blob Storage Private Endpoint')
-resource mlBlobStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: mlBlobStoragePrivateEndpointName
-  location: location
-  properties: {
-    subnet: {
-      id: vnet::privateEndpointsSubnet.id
-    }
-    privateLinkServiceConnections: [
-      {
-        name: mlBlobStoragePrivateEndpointName
-        properties: {
           groupIds: [
             'blob'
           ]
-          privateLinkServiceId: mlStorage.id
         }
       }
     ]
   }
 
-  resource dnsZoneGroup 'privateDnsZoneGroups' = {
-    name: 'default'
+  resource appDeployStorageDnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'web-app-storage'
     properties: {
       privateDnsZoneConfigs: [
         {
-          name: blobStorageDnsZone.name
+          name: 'web-app-storage'
           properties: {
-            privateDnsZoneId: blobStorageDnsZone.id
+            privateDnsZoneId: blobStorageLinkedPrivateDnsZone.id
           }
         }
       ]
@@ -324,97 +188,7 @@ resource mlBlobStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-1
   }
 }
 
-@description('Azure Machine Learning File Storage Private Endpoint')
-resource mlFileStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: mlFileStoragePrivateEndpointName
-  location: location
-  properties: {
-    subnet: {
-      id: vnet::privateEndpointsSubnet.id
-    }
-    privateLinkServiceConnections: [
-      {
-        name: mlFileStoragePrivateEndpointName
-        properties: {
-          groupIds: [
-            'file'
-          ]
-          privateLinkServiceId: mlStorage.id
-        }
-      }
-    ]
-  }
-
-  resource dnsZoneGroup 'privateDnsZoneGroups' = {
-    name: 'default'
-    properties: {
-      privateDnsZoneConfigs: [
-        {
-          name: fileStorageDnsZone.name
-          properties: {
-            privateDnsZoneId: fileStorageDnsZone.id
-          }
-        }
-      ]
-    }
-  }
-}
-
-@description('Azure Storage - Blob private DNS zone.')
-resource blobStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.blob.${environment().suffixes.storage}'
-  location: 'global'
-  properties: {}
-
-  @description('Link private DNS zone to our workload virtual network')
-  resource vnetLink 'virtualNetworkLinks' = {
-    name: '${blobStorageDnsZone.name}-to-${vnet.name}'
-    location: 'global'
-    properties: {
-      registrationEnabled: false
-      virtualNetwork: {
-        id: vnet.id
-      }
-    }
-  }
-}
-
-@description('Azure Storage - File private DNS zone.')
-resource fileStorageDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: 'privatelink.file.${environment().suffixes.storage}'
-  location: 'global'
-  properties: {}
-
-  @description('Link private DNS zone to our workload virtual network')
-  resource vnetLink 'virtualNetworkLinks' = {
-    name: '${fileStorageDnsZone.name}-to-${vnet.name}'
-    location: 'global'
-    properties: {
-      registrationEnabled: false
-      virtualNetwork: {
-        id: vnet.id
-      }
-    }
-  }
-}
-
-resource appDeployStorageDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
-  name: 'default'
-  parent: appDeployStoragePrivateEndpoint
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: blobStorageDnsZone.name
-        properties: {
-          privateDnsZoneId: blobStorageDnsZone.id
-        }
-      }
-    ]
-  }
-}
+// ---- Outputs ----
 
 @description('The name of the appDeploy storage account.')
 output appDeployStorageName string = appDeployStorage.name
-
-@description('The name of the ML storage account.')
-output mlDeployStorageName string = mlStorage.name
