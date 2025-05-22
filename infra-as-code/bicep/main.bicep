@@ -137,7 +137,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
 
 // Deploy Azure Key Vault with private endpoint and private DNS zone
 @description('Deploy Azure Key Vault. In this architecture, it\'s used to store the certificate for the Application Gateway.')
-module keyVaultModule 'key-vault.bicep' = {
+module deployKeyVault 'key-vault.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
@@ -193,7 +193,7 @@ module aiStudioModule 'machinelearning.bicep' = {
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
-    keyVaultName: keyVaultModule.outputs.keyVaultName
+    keyVaultName: deployKeyVault.outputs.keyVaultName
     aiStudioStorageAccountName: 'NA'
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
@@ -212,8 +212,8 @@ module gatewayModule 'gateway.bicep' = {
     appName: webappModule.outputs.appName
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
     appGatewaySubnetName: deployVirtualNetwork.outputs.appGatewaySubnetName
-    keyVaultName: keyVaultModule.outputs.keyVaultName
-    gatewayCertSecretKey: keyVaultModule.outputs.gatewayCertSecretKey
+    keyVaultName: deployKeyVault.outputs.keyVaultName
+    gatewayCertSecretKey: deployKeyVault.outputs.gatewayCertSecretKey
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -228,7 +228,7 @@ module webappModule 'webapp.bicep' = {
     acrName: acrModule.outputs.acrName
     publishFileName: publishFileName
     openAIName: openaiModule.outputs.openAiResourceName
-    keyVaultName: keyVaultModule.outputs.keyVaultName
+    keyVaultName: deployKeyVault.outputs.keyVaultName
     storageName: deployWebAppStorage.outputs.appDeployStorageName
     vnetName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
