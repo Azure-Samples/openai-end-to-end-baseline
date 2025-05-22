@@ -4,7 +4,8 @@ targetScope = 'resourceGroup'
   Establish the private network for the workload.
 */
 
-@description('The resource group location')
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
 param location string = resourceGroup().location
 
 // Azure AI Agent Service currently has a limitation on subnet prefixes.

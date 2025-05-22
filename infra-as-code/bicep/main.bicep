@@ -1,6 +1,7 @@
 targetScope = 'resourceGroup'
 
-@description('The location in which all resources should be deployed.')
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
 param location string = resourceGroup().location
 
 @description('This is the base name for each Azure resource name (6-8 chars)')

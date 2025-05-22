@@ -1,6 +1,6 @@
 targetScope = 'resourceGroup'
 
-@description('The region in which this architecture is deployed.')
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
 @minLength(1)
 param location string = resourceGroup().location
 

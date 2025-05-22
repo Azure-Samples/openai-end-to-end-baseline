@@ -9,7 +9,8 @@ targetScope = 'resourceGroup'
 @maxLength(8)
 param baseName string
 
-@description('The resource group location')
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
 param location string = resourceGroup().location
 
 @description('Domain name to use for App Gateway')
