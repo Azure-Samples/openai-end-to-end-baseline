@@ -38,7 +38,7 @@ var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 // ---- New resources ----
 
 @description('This is the log sink for all Azure Diagnostics in the workload.')
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: 'log-${baseName}'
   location: location
   properties: {
@@ -66,7 +66,7 @@ module deployVirtualNetwork 'network.bicep' = {
 module deployAzureFirewall 'azure-firewall.bicep' = {
   params: {
     location: location
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     agentsEgressSubnetName: deployVirtualNetwork.outputs.agentsEgressSubnetName
     jumpBoxesSubnetName: deployVirtualNetwork.outputs.jumpBoxesSubnetName
@@ -78,7 +78,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     agentSubnetResourceId: deployVirtualNetwork.outputs.agentsEgressSubnetResourceId
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
     aiFoundryPortalUserPrincipalId: yourPrincipalId
@@ -93,7 +93,7 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
   scope: resourceGroup()
   params: {
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     debugUserPrincipalId: yourPrincipalId
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
   }
@@ -105,7 +105,7 @@ module deployJumpBox 'jump-box.bicep' = {
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     jumpBoxAdminName: 'vmadmin'
     jumpBoxAdminPassword: jumpBoxAdminPassword
@@ -121,7 +121,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     debugUserPrincipalId: yourPrincipalId
@@ -137,7 +137,7 @@ module deployKeyVault 'key-vault.bicep' = {
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     appGatewayListenerCertificate: appGatewayListenerCertificate
@@ -150,7 +150,7 @@ module deployApplicationInsights 'application-insights.bicep' = {
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
   }
 }
 
@@ -160,7 +160,7 @@ module deployApplicationGateway 'application-gateway.bicep' = {
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     customDomainName: customDomainName
     appName: deployWebApp.outputs.appName
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
@@ -170,23 +170,22 @@ module deployApplicationGateway 'application-gateway.bicep' = {
   }
 }
 
-// Deploy the web apps for the front end demo UI and the containerized prompt flow endpoint
+@description('Deploy the web app for the front end demo UI. The web application will call into the Azure AI Agent service.')
 module deployWebApp 'web-app.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
-    logAnalyticsWorkspaceName: logWorkspace.name
-    managedOnlineEndpointResourceId: 'not-available-not-available-not-available'
-    acrName: 'not-available'
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     publishFileName: publishFileName
-    openAIName: 'not-available'
-    keyVaultName: deployKeyVault.outputs.keyVaultName
     storageName: deployWebAppStorage.outputs.appDeployStorageName
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
   }
+  dependsOn: [
+    deployAzureFirewall
+  ]
 }
 
 // Optional Deployment for Customer Usage Attribution

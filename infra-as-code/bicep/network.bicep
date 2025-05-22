@@ -841,6 +841,23 @@ resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' =
   }
 }
 
+resource appServicePrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.azurewebsites.net'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'webapp'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
 // ---- Outputs ----
 
 @description('The name of the virtual network.')
