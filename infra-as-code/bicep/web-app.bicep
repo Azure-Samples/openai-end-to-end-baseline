@@ -20,13 +20,17 @@ param publishFileName string
 @minLength(1)
 param virtualNetworkName string
 
+@description('The name of the existing subnet in the virtual network that is where this web app will have its egress point.')
+@minLength(1)
 param appServicesSubnetName string
 
-@description('The name for the subnet that private endpoints in the workload should surface in.')
+@description('The name of the subnet that private endpoints in the workload should surface in.')
 @minLength(1)
 param privateEndpointsSubnetName string
 
-param storageName string
+@description('The name of the existing Azure Storage account that the Azure Web App will be pulling code deployments from.')
+@minLength(1)
+param webAppDeploymentStorageAccountName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
@@ -52,8 +56,8 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing 
   }
 }
 
-resource webAppStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
-  name: storageName
+resource webAppDeploymentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
+  name: webAppDeploymentStorageAccountName
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
@@ -86,7 +90,7 @@ resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
 
 @description('Grant the App Service managed identity storage data reader role permissions')
 resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: webAppStorageAccount
+  scope: webAppDeploymentStorageAccount
   name: guid(resourceGroup().id, appServiceManagedIdentity.name, blobDataReaderRole.id)
   properties: {
     roleDefinitionId: blobDataReaderRole.id
@@ -149,7 +153,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
   resource appsettings 'config' = {
     name: 'appsettings'
     properties: {
-      WEBSITE_RUN_FROM_PACKAGE: '${webAppStorageAccount.properties.primaryEndpoints.blob}deploy/${publishFileName}'
+      WEBSITE_RUN_FROM_PACKAGE: '${webAppDeploymentStorageAccount.properties.primaryEndpoints.blob}deploy/${publishFileName}'
       WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId

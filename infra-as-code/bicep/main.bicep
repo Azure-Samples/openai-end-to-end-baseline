@@ -179,10 +179,10 @@ module deployWebApp 'web-app.bicep' = {
     baseName: baseName
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     publishFileName: publishFileName
-    storageName: deployWebAppStorage.outputs.appDeployStorageName
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
+    webAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
   }
   dependsOn: [
     deployAzureFirewall
