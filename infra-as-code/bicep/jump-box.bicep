@@ -182,7 +182,27 @@ resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2023-
   }
 }
 
-@description('VM will only receive a private IP.')
+@description('Enable Azure Diagnostics for the the jump box\'s DCR.')
+resource azureDiagnosticsDcr 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: virtualMachineInsightsDcr
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'LogErrors'
+        categoryGroup: null
+        enabled: true
+        retentionPolicy: {
+          days: 0
+          enabled: false
+        }
+      }
+    ]
+  }
+}
+
+@description('The jump box virtual machine will only receive a private IP.')
 resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   name: 'nic-${jumpBoxName}'
   location: location
@@ -210,7 +230,7 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   }
 }
 
-@description('The Azure ML and Azure OpenAI portal experiences are only able to be accessed from the virtual network, this jump box gives you access to those UIs.')
+@description('The Azure AI Foundry portal is only able to be accessed from the virtual network, this jump box gives you access to that portal.')
 resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   name: 'vm-${jumpBoxName}'
   location: location

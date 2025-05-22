@@ -93,7 +93,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   resource model 'deployments' = {
     name: 'gpt-4o'
     sku: {
-      capacity: 18
+      capacity: 14
       name: 'GlobalStandard'
     }
     properties: {

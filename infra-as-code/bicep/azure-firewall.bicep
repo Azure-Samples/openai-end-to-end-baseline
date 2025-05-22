@@ -188,6 +188,9 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
         }
       ]
     }
+    dependsOn: [
+      networkRules
+    ]
   }
 }
 

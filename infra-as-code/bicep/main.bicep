@@ -130,6 +130,9 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
     existingCosmosDbAccountName: deployAIAgentServiceDependencies.outputs.cosmosDbAccountName
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
   }
+  dependsOn: [
+    deployJumpBox
+  ]
 }
 
 @description('Deploy an Azure Storage account that is used by the Azure Web App for the deployed application code.')
