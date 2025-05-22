@@ -71,7 +71,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
     enabledForTemplateDeployment: true // ARM can retrieve values
     accessPolicies: []                 // Using RBAC
     enabledForDiskEncryption: false
-    enablePurgeProtection: false
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
     createMode: 'default'              // Creating or updating the Key Vault (not recovering)
@@ -125,6 +124,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01'
     subnet: {
       id: virtualNetwork::privateEndpointsSubnet.id
     }
+    // customNetworkInterfaceName: 'nic-${keyVault.name}'  TODO: Test this and if it works, apply to all private endpoints
     privateLinkServiceConnections: [
       {
         name: 'key-vault'

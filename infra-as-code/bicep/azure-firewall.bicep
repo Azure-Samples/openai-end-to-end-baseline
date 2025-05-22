@@ -26,6 +26,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
   name: logAnalyticsWorkspaceName
 }
 
+@description('Existing virtual network.')
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: virtualNetworkName
 
@@ -95,7 +96,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
   resource networkRules 'ruleCollectionGroups' = {
     name: 'DefaultNetworkRuleCollectionGroup'
     properties: {
-      priority: 100
+      priority: 200
       ruleCollections: [
         {
           ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
@@ -109,8 +110,9 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
               ruleType: 'NetworkRule'
               name: 'allow-dependencies'
               ipProtocols: ['Any']
-              sourceAddresses: ['${virtualNetwork::agentsEgressSubnet.properties.addressPrefix}']
+              sourceAddresses: ['${virtualNetwork::jumpBoxesSubnet.properties.addressPrefix}']
               destinationAddresses: ['*']
+              destinationPorts: ['*']
             }
           ]
         }
