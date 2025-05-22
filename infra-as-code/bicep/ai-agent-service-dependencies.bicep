@@ -14,7 +14,6 @@ param baseName string
 @minLength(36)
 param debugUserPrincipalId string
 
-
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
 param logAnalyticsWorkspaceName string

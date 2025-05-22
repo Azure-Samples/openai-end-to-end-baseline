@@ -4,14 +4,18 @@ targetScope = 'resourceGroup'
   Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 */
 
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
+param location string = resourceGroup().location
+
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
 @maxLength(8)
 param baseName string
 
-@description('The region in which this architecture is deployed. Should match the region of the resource group.')
-@minLength(1)
-param location string = resourceGroup().location
+@description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
+param logAnalyticsWorkspaceName string
 
 @description('Domain name to use for App Gateway')
 param customDomainName string
@@ -32,10 +36,6 @@ param keyVaultName string
 @description('The name of the existing Key Vault secret that contains the SSL certificate for the Application Gateway.')
 #disable-next-line secure-secrets-in-params
 param gatewayCertSecretKey string
-
-@description('The name of the workload\'s existing Log Analytics workspace.')
-@minLength(4)
-param logAnalyticsWorkspaceName string
 
 //variables
 var appGatewayName = 'agw-${baseName}'

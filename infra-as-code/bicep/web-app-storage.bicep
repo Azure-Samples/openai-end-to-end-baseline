@@ -4,14 +4,18 @@ targetScope = 'resourceGroup'
   Deploy storage account used for the web app with private endpoint and private DNS zone
 */
 
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
+param location string = resourceGroup().location
+
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
 @maxLength(8)
 param baseName string
 
-@description('The region in which this architecture is deployed. Should match the region of the resource group.')
-@minLength(1)
-param location string = resourceGroup().location
+@description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
+param logAnalyticsWorkspaceName string
 
 @description('The name of the workload\'s virtual network in this resource group, the Azure Storage private endpoint will be deployed into a subnet in here.')
 @minLength(1)
@@ -20,10 +24,6 @@ param virtualNetworkName string
 @description('The name for the subnet that private endpoints in the workload should surface in.')
 @minLength(1)
 param privateEndpointsSubnetName string
-
-@description('The name of the workload\'s existing Log Analytics workspace.')
-@minLength(4)
-param logAnalyticsWorkspaceName string
 
 @description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')
 @maxLength(36)

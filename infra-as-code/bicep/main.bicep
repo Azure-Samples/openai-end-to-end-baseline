@@ -93,6 +93,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
 module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
   scope: resourceGroup()
   params: {
+    location: location
     baseName: baseName
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     debugUserPrincipalId: yourPrincipalId

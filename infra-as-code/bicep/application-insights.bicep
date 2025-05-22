@@ -1,13 +1,13 @@
 targetScope = 'resourceGroup'
 
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
+param location string = resourceGroup().location
+
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
 @maxLength(8)
 param baseName string
-
-@description('The region in which this architecture is deployed. Should match the region of the resource group.')
-@minLength(1)
-param location string = resourceGroup().location
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
