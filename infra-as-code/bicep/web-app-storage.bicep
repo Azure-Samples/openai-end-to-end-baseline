@@ -19,7 +19,7 @@ param virtualNetworkName string
 param privateEndpointsSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 @description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')
 @maxLength(36)
@@ -37,7 +37,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing 
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
-  name: logWorkspaceName
+  name: logAnalyticsWorkspaceName
 }
 
 resource blobStorageLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {

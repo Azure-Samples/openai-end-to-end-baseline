@@ -66,7 +66,7 @@ module deployVirtualNetwork 'network.bicep' = {
 module deployAzureFirewall 'azure-firewall.bicep' = {
   params: {
     location: location
-    logWorkspaceName: logWorkspace.name
+    logAnalyticsWorkspaceName: logWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     agentsEgressSubnetName: deployVirtualNetwork.outputs.agentsEgressSubnetName
     jumpBoxesSubnetName: deployVirtualNetwork.outputs.jumpBoxesSubnetName
@@ -88,7 +88,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
   ]
 }
 
-// Step 4: Deploy the Azure AI Agent dependencies
+@description('Deploys the Azure AI Agent dependencies, Azure Storage, Azure AI Search, and CosmosDB.')
 module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
   scope: resourceGroup()
   params: {
@@ -108,8 +108,8 @@ module deployJumpBox 'jump-box.bicep' = {
   params: {
     location: location
     baseName: baseName
+    logAnalyticsWorkspaceName: logWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
-    logWorkspaceName: logWorkspace.name
     jumpBoxAdminName: 'vmadmin'
     jumpBoxAdminPassword: jumpBoxAdminPassword
   }
@@ -118,29 +118,34 @@ module deployJumpBox 'jump-box.bicep' = {
   ]
 }
 
-// Deploy Azure Storage account used by the Azure App Service
+@description('Deploy an Azure Storage account that is used by the Azure Web App for the deployed application code.')
 module deployWebAppStorage 'web-app-storage.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
+    logAnalyticsWorkspaceName: logWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    logWorkspaceName: logWorkspace.name
     debugUserPrincipalId: yourPrincipalId
   }
+  dependsOn: [
+    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
+    deployAIAgentServiceDependencies // There is a storage account in the AI Agent dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
+  ]
 }
 
 // Deploy Azure Key Vault with private endpoint and private DNS zone
-module keyVaultModule 'keyvault.bicep' = {
+@description('Deploy Azure Key Vault. In this architecture, it\'s used to store the certificate for the Application Gateway.')
+module keyVaultModule 'key-vault.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
     baseName: baseName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
+    logAnalyticsWorkspaceName: logWorkspace.name
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     appGatewayListenerCertificate: appGatewayListenerCertificate
-    logWorkspaceName: logWorkspace.name
   }
 }
 

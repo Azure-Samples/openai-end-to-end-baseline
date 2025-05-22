@@ -13,7 +13,7 @@ param virtualNetworkName string
 
 @description('The name of the Log Analytics Workspace used as the workload\'s common log sink.')
 @minLength(4)
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 @description('Specifies the name of the administrator account on the Windows jump box. Cannot end in "."\n\nDisallowed values: "administrator", "admin", "user", "user1", "test", "user2", "test1", "user3", "admin1", "1", "123", "a", "actuser", "adm", "admin2", "aspnet", "backup", "console", "david", "guest", "john", "owner", "root", "server", "sql", "support", "support_388945a0", "sys", "test2", "test3", "user4", "user5".\n\nDefault: vmadmin')
 @minLength(4)
@@ -34,7 +34,7 @@ var jumpBoxName = 'jmp-${baseName}'
 // ---- Existing resources ----
 
 @description('Existing virtual network for the solution.')
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: virtualNetworkName
 
   resource jumpBoxSubnet 'subnets' existing = {
@@ -47,14 +47,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing 
 }
 
 @description('Existing Log Analyitics workspace, used as the common log sink for the workload.')
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
 // New resources
 
 @description('Required public IP for the Azure Bastion service, used for jump box access.')
-resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
+resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: 'pip-${bastionHostName}'
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)

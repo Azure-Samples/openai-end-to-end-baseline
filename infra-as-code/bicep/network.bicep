@@ -823,6 +823,24 @@ resource cosmosDbPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' =
   }
 }
 
+@description('Azure Key Vault private DNS zone')
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.vaultcore.azure.net' //Cannot use 'privatelink.${environment().suffixes.keyvaultDns}', per https://github.com/Azure/bicep/issues/9708
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'keyvault'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
 // ---- Outputs ----
 
 @description('The name of the virtual network.')

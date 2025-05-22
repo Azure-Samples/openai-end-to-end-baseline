@@ -15,33 +15,35 @@ param location string = resourceGroup().location
 param appGatewayListenerCertificate string
 
 // existing resource name params
-param vnetName string
+param virtualNetworkName string
 param privateEndpointsSubnetName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
-param logWorkspaceName string
-
-//variables
-var keyVaultName = 'kv-${baseName}'
-var keyVaultPrivateEndpointName = 'pep-${keyVaultName}'
-var keyVaultDnsGroupName = '${keyVaultPrivateEndpointName}/default'
-var keyVaultDnsZoneName = 'privatelink.vaultcore.azure.net' //Cannot use 'privatelink${environment().suffixes.keyvaultDns}', per https://github.com/Azure/bicep/issues/9708
+param logAnalyticsWorkspaceName string
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
-  name: vnetName
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing =  {
+  name: virtualNetworkName
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
+@description('Azure Key Vault private DNS zone')
+resource existingKeyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
+  name: 'privatelink.vaultcore.azure.net' // Cannot use 'privatelink.${environment().suffixes.keyvaultDns}', per https://github.com/Azure/bicep/issues/9708
+}
+
+// ---- New resources ----
+
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
-  name: keyVaultName
+  name: 'kv-${baseName}'
   location: location
   properties: {
     sku: {
@@ -55,15 +57,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
       virtualNetworkRules: []
     }
     publicNetworkAccess: 'Disabled'
-
     tenantId: subscription().tenantId
-
     enableRbacAuthorization: true      // Using RBAC
     enabledForDeployment: true         // VMs can retrieve certificates
     enabledForTemplateDeployment: true // ARM can retrieve values
     accessPolicies: []                 // Using RBAC
     enabledForDiskEncryption: false
-
+    enablePurgeProtection: false
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
     createMode: 'default'              // Creating or updating the Key Vault (not recovering)
@@ -74,12 +74,15 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' = {
     properties: {
       value: appGatewayListenerCertificate
       contentType: 'application/x-pkcs12'
+      attributes: {
+        enabled: true
+      }
     }
   }
 }
 
-//Key Vault diagnostic settings
-resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+@description('Enable Azure Diagnostics for Key Vault')
+resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: keyVault
   properties: {
@@ -102,64 +105,47 @@ resource keyVaultDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-
         }
       }
     ]
-    logAnalyticsDestinationType: null
   }
 }
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' = {
-  name: keyVaultPrivateEndpointName
+// Private endpoints
+
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: 'pe-key-vault'
   location: location
   properties: {
     subnet: {
-      id: vnet::privateEndpointsSubnet.id
+      id: virtualNetwork::privateEndpointsSubnet.id
     }
     privateLinkServiceConnections: [
       {
-        name: keyVaultPrivateEndpointName
+        name: 'key-vault'
         properties: {
+          privateLinkServiceId: keyVault.id
           groupIds: [
             'vault'
           ]
-          privateLinkServiceId: keyVault.id
         }
       }
     ]
   }
-}
 
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
-  name: keyVaultDnsZoneName
-  location: 'global'
-  properties: {}
-
-  resource keyVaultDnsZoneLink 'virtualNetworkLinks' = {
-    name: '${keyVaultDnsZoneName}-link'
-    location: 'global'
+  resource keyVaultDnsZoneGroup 'privateDnsZoneGroups' = {
+    name: 'key-vault'
     properties: {
-      registrationEnabled: false
-      virtualNetwork: {
-        id: vnet.id
-      }
+      privateDnsZoneConfigs: [
+        {
+          name: 'key-vault'
+          properties: {
+            privateDnsZoneId: existingKeyVaultPrivateDnsZone.id
+          }
+        }
+      ]
     }
   }
 }
 
-resource keyVaultDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
-  name: keyVaultDnsGroupName
-  properties: {
-    privateDnsZoneConfigs: [
-      {
-        name: keyVaultDnsZoneName
-        properties: {
-          privateDnsZoneId: keyVaultDnsZone.id
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    keyVaultPrivateEndpoint
-  ]
-}
+// ---- Outputs ----
 
 @description('The name of the Key Vault.')
 output keyVaultName string = keyVault.name

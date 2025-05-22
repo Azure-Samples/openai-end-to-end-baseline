@@ -9,7 +9,7 @@ param location string = resourceGroup().location
 param virtualNetworkName string
 
 @description('The name of the workload\'s existing Log Analytics workspace in this resource group.')
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 @description('The name of the subnet containing the Azure AI Agents. Must be in the same virtual network that is provided.')
 @minLength(8)
@@ -22,7 +22,7 @@ param jumpBoxesSubnetName string
 // ---- Existing resources ----
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
-  name: logWorkspaceName
+  name: logAnalyticsWorkspaceName
 }
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
