@@ -33,6 +33,10 @@ param privateEndpointsSubnetName string
 @minLength(3)
 param webAppDeploymentStorageAccountName string
 
+@description('The name of the existing Azure Application Insights instance that the Azure Web App will be using.')
+@minLength(1)
+param webApplicationInsightsResourceName string
+
 @description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
 param logAnalyticsWorkspaceName string
@@ -42,8 +46,8 @@ var appName = 'app-${baseName}'
 
 // ---- Existing resources ----
 
-resource appInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: 'appi-${baseName}'
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: webApplicationInsightsResourceName
 }
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
@@ -101,7 +105,7 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
-//App service plan
+@description('Linux, PremiumV4 App Service Plan to host the chat web application.')
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'asp-${appName}${uniqueString(subscription().subscriptionId)}'
   location: location
@@ -117,7 +121,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   }
 }
 
-@description('This is the web app that contains the UI application.')
+@description('This is the web app that contains the chat UI application.')
 resource webApp 'Microsoft.Web/sites@2024-04-01' = {
   name: appName
   location: location
@@ -154,18 +158,20 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
     blobDataReaderRoleAssignment
   ]
 
+  @description('Default configuration for the web app.')
   resource appsettings 'config' = {
     name: 'appsettings'
     properties: {
       WEBSITE_RUN_FROM_PACKAGE: '${webAppDeploymentStorageAccount.properties.primaryEndpoints.blob}deploy/${publishFileName}'
       WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
-      APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+      APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }
 
+  @description('Disable SCM publishing integration.')
   resource scm 'basicPublishingCredentialsPolicies' = {
     name: 'scm'
     properties: {
@@ -173,6 +179,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
     }
   }
 
+  @description('Disable FTP publishing integration.')
   resource ftp 'basicPublishingCredentialsPolicies' = {
     name: 'ftp'
     properties: {

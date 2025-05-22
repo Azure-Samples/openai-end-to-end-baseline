@@ -202,6 +202,7 @@ module deployWebApp 'web-app.bicep' = {
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
     webAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
+    webApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
   }
   dependsOn: [
     deployAzureFirewall
