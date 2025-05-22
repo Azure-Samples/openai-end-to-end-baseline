@@ -83,6 +83,23 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
     privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
     aiFoundryPortalUserPrincipalId: yourPrincipalId
   }
+  dependsOn: [
+    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
+  ]
+}
+
+// Step 4: Deploy the Azure AI Agent dependencies
+module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
+  scope: resourceGroup()
+  params: {
+    baseName: baseName
+    logAnalyticsWorkspaceName: logWorkspace.name
+    debugUserPrincipalId: yourPrincipalId
+    privateEndpointSubnetResourceId: deployVirtualNetwork.outputs.privateEndpointsSubnetResourceId
+  }
+  dependsOn: [
+    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
+  ]
 }
 
 @description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
@@ -96,6 +113,9 @@ module jumpBoxModule 'jumpbox.bicep' = {
     jumpBoxAdminName: 'vmadmin'
     jumpBoxAdminPassword: jumpBoxAdminPassword
   }
+  dependsOn: [
+    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
+  ]
 }
 
 // Deploy Azure Storage account with private endpoint and private DNS zone

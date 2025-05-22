@@ -55,7 +55,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
   name: logAnalyticsWorkspaceName
 }
 
-/*** NEW RESOURCES ***/
+// ---- New resources ----
 
 @description('Deploy Azure AI Foundry (account) with Azure AI Agent service capability.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
@@ -213,7 +213,7 @@ resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-prev
   }
 }
 
-/*** OUTPUTS ***/
+// ---- Outputs ----
 
 @description('The name of the Azure AI Foundry account.')
 output aiFoundryName string = aiFoundry.name
