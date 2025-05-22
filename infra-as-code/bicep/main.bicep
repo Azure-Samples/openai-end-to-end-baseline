@@ -116,6 +116,18 @@ module deployJumpBox 'jump-box.bicep' = {
   ]
 }
 
+@description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Azure AI Agent service.')
+module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
+  scope: resourceGroup()
+  params: {
+    location: location
+    existingAiFoundryName: deployAzureAIFoundry.outputs.aiFoundryName
+    existingAISearchAccountName: deployAIAgentServiceDependencies.outputs.aiSearchName
+    existingCosmosDbAccountName: deployAIAgentServiceDependencies.outputs.cosmosDbAccountName
+    existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
+  }
+}
+
 @description('Deploy an Azure Storage account that is used by the Azure Web App for the deployed application code.')
 module deployWebAppStorage 'web-app-storage.bicep' = {
   scope: resourceGroup()
