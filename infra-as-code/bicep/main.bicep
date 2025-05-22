@@ -35,7 +35,7 @@ param telemetryOptOut bool = false
 // Customer Usage Attribution Id
 var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 
-/*** NEW RESOURCES ***/
+// ---- New resources ----
 
 @description('This is the log sink for all Azure Diagnostics in the workload.')
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
@@ -154,24 +154,6 @@ module deployApplicationInsights 'application-insights.bicep' = {
   }
 }
 
-// Deploy Azure AI Foundry with private networking
-module aiStudioModule 'machinelearning.bicep' = {
-  scope: resourceGroup()
-  params: {
-    location: location
-    baseName: baseName
-    vnetName: deployVirtualNetwork.outputs.virtualNetworkName
-    privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    applicationInsightsName: deployApplicationInsights.outputs.applicationInsightsName
-    keyVaultName: deployKeyVault.outputs.keyVaultName
-    aiStudioStorageAccountName: 'not-available'
-    containerRegistryName: 'cr${baseName}'
-    logWorkspaceName: logWorkspace.name
-    openAiResourceName: 'not-available'
-    yourPrincipalId: yourPrincipalId
-  }
-}
-
 //Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 module gatewayModule 'gateway.bicep' = {
   scope: resourceGroup()
@@ -194,7 +176,7 @@ module webappModule 'webapp.bicep' = {
   params: {
     location: location
     baseName: baseName
-    managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
+    managedOnlineEndpointResourceId: 'not-available'
     acrName: 'not-available'
     publishFileName: publishFileName
     openAIName: 'not-available'
