@@ -137,6 +137,7 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
     existingCosmosDbAccountName: deployAIAgentServiceDependencies.outputs.cosmosDbAccountName
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
     existingBingAccountName: deployBingAccount.outputs.bingAccountName
+    existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
   }
   dependsOn: [
     deployJumpBox
@@ -174,7 +175,7 @@ module deployKeyVault 'key-vault.bicep' = {
   }
 }
 
-@description('Deploy Application Insights. Used from the Azure Web App to monitor the deployed application.')
+@description('Deploy Application Insights. Used by the Azure Web App to monitor the deployed application and connected to the Azure AI Foundry project.')
 module deployApplicationInsights 'application-insights.bicep' = {
   scope: resourceGroup()
   params: {

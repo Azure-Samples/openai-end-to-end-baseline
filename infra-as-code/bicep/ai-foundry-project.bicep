@@ -24,6 +24,10 @@ param existingAISearchAccountName string
 @minLength(1)
 param existingBingAccountName string
 
+@description('The existing Application Insights instance to log token usage in this project.')
+@minLength(1)
+param existingWebApplicationInsightsResourceName string
+
 /*** EXISTING RESOURCES ***/
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
@@ -126,6 +130,10 @@ resource bingAccount 'Microsoft.Bing/accounts@2025-05-01-preview' existing = {
   name: existingBingAccountName
 }
 
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
+  name: existingWebApplicationInsightsResourceName
+}
+
 /*** NEW RESOURCES ***/
 
 @description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
@@ -158,10 +166,30 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
         credentials: {
           key: bingAccount.listKeys().key1
         }
+        isSharedToAll: false
       }
       dependsOn: [
         aiAgentService  // Deploy after the Azure AI Agent Service is provisioned, not a dependency.
       ]
+    }
+
+    @description('Connect this project to application insights for visualization of token usage.')
+    resource applicationInsightsConnection 'connections' = {
+      name:'appInsights-connection'
+      properties: {
+        authType: 'ApiKey'
+        category: 'AppInsights'
+        credentials: {
+          key: applicationInsights.properties.ConnectionString
+        }
+        isSharedToAll: false
+        target: applicationInsights.id
+        metadata: {
+          ApiType: 'Azure'
+          ResourceId: applicationInsights.id
+          location: applicationInsights.location
+        }
+      }
     }
 
     @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent Service.')
