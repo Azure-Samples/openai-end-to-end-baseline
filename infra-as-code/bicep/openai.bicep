@@ -18,6 +18,8 @@ var openaiName = 'oai-${baseName}'
 var openaiPrivateEndpointName = 'pep-${openaiName}'
 var openaiDnsGroupName = '${openaiPrivateEndpointName}/default'
 var openaiDnsZoneName = 'privatelink.openai.azure.com'
+var servicesaiDnsZoneName = 'privatelink.services.ai.azure.com'
+var cognitiveservicesDnsZoneName = 'privatelink.cognitiveservices.azure.com'
 
 // ---- Existing resources ----
 resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
@@ -140,9 +142,9 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
     }
   }
 
-  @description('Add a gpt-4o turbo deployment.')
+  @description('Add a gpt-4o deployment.')
   resource gpt4o 'deployments' = {
-    name: 'gpt-4o-mini'
+    name: 'gpt-4o'
     sku: {
       name: 'GlobalStandard'
       capacity: 50
@@ -150,8 +152,8 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
     properties: {
       model: {
         format: 'OpenAI'
-        name: 'gpt-4o-mini'
-        version: '2024-07-18' // If your selected region doesn't support this version, please change it.
+        name: 'gpt-4o'
+        version: '2024-05-13' // If your selected region doesn't support this version, please change it.
                               // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-4o-mini' && kind == 'OpenAI'].model.version)" -o tsv
       }
       raiPolicyName: openAiAccount::blockingFilter.name
@@ -246,6 +248,41 @@ resource openaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   }
 }
 
+resource servicesaiDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: servicesaiDnsZoneName
+  location: 'global'
+  properties: {}
+
+  resource servicesaiDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${servicesaiDnsZoneName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
+    }
+  }
+}
+
+resource cognitiveservicesDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: cognitiveservicesDnsZoneName
+  location: 'global'
+  properties: {}
+
+  resource cognitiveservicesDnsZoneLink 'virtualNetworkLinks' = {
+    name: '${cognitiveservicesDnsZoneName}-link'
+    location: 'global'
+    properties: {
+      registrationEnabled: false
+      virtualNetwork: {
+        id: vnet.id
+      }
+    }
+  }
+}
+
+
 resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2022-11-01' = {
   name: openaiDnsGroupName
   properties: {
@@ -254,6 +291,18 @@ resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGr
         name: openaiDnsZoneName
         properties: {
           privateDnsZoneId: openaiDnsZone.id
+        }
+      }
+      {
+        name: servicesaiDnsZoneName
+        properties: {
+          privateDnsZoneId: servicesaiDnsZone.id
+        }
+      }
+      {
+        name: cognitiveservicesDnsZoneName
+        properties: {
+          privateDnsZoneId: cognitiveservicesDnsZone.id
         }
       }
     ]

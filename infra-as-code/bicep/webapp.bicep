@@ -37,6 +37,9 @@ param logWorkspaceName string
 param aiProjectConnectionString string
 @description('The Azure AI Agent Services deployment model name.')
 param defaultModelName string
+@description('The id of the Azure AI Foundry project connection to the Bing Search account.')
+param bingSearchConnectionId string
+
 
 // variables
 var appName = 'app-${baseName}'
@@ -139,7 +142,7 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   }
 }
 
-// Grant the App Service managed identity azure ai developer  role permissions
+// Grant the App Service managed identity azure ai developer role permissions
 resource azAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: chatProj
   name: guid(resourceGroup().id, appServiceManagedIdentity.name, machineLearningAzAiDeveloperRole.id)
@@ -217,6 +220,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       chatOutputName: 'answer'
       aiProjectConnectionString: aiProjectConnectionString
       defaultModel: defaultModelName
+      bingSearchConnectionId: bingSearchConnectionId
     }
   }
 }

@@ -154,6 +154,15 @@ resource cognitiveServicesOpenAiUserForUserRoleAssignment 'Microsoft.Authorizati
 }
 
 // ---- Azure AI Foundry resources ----
+#disable-next-line BCP081
+resource agentsBingSearch 'Microsoft.Bing/accounts@2025-05-01-preview' = {
+  name: 'bingsearch-${baseName}'
+  location: 'global'
+  kind: 'Bing.Grounding'
+  sku: {
+    name: 'G1'
+  }
+}
 
 @description('A hub provides the hosting environment for this AI workload. It provides security, governance controls, and shared configurations.')
 resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
@@ -184,6 +193,12 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
         wikipedia: {
           type: 'FQDN'
           destination: 'en.wikipedia.org'
+          category: 'UserDefined'
+          status: 'Active'
+        }
+        ApiBing: {
+          type: 'FQDN'
+          destination: agentsBingSearch.properties.endpoint
           category: 'UserDefined'
           status: 'Active'
         }
@@ -274,6 +289,25 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
       target: agentsVectorStore.properties.endpoint
     }
   }
+
+  resource bingGroundingConnection 'connections' = {
+    name: 'bingGrounding'
+    properties: {
+      category: 'ApiKey'
+      credentials: {
+        key: agentsBingSearch.listKeys().key1
+      }
+      isSharedToAll: true
+      metadata: {
+        type: 'bing_grounding'
+        ApiType: 'Azure'
+        ResourceId: agentsBingSearch.id
+        Location: agentsBingSearch.location
+      }
+      target: agentsBingSearch.properties.endpoint
+      authType: 'ApiKey'
+    }
+  }
 }
 
 @description('Azure Diagnostics: Azure AI Foundry hub')
@@ -331,6 +365,10 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2025-01-01-pr
         location: agentsThreadStorageCosmosDb.location
       }
     }
+  }
+
+  resource bingGroundingConnection 'connections' existing = {
+    name: 'bingGrounding'
   }
 
   resource endpoint 'onlineEndpoints' = {
@@ -712,3 +750,7 @@ output aoaiConnectionName string = aiHub::aoaiConnection.name
 output aaisConnectionName string = aiHub::aaisConnection.name
 @description('The name of the Azure AI Foundry project connection to Azure CosmosDb.')
 output cdbConnectionName string = chatProject::cdbConnection.name
+@description('The name of the Azure AI Foundry project connection to the Bing Search account.')
+output bingConnectionName string = aiHub::bingGroundingConnection.name
+@description('The id of the Azure AI Foundry project connection to the Bing Search account.')
+output bingConnectionId string = chatProject::bingGroundingConnection.id
