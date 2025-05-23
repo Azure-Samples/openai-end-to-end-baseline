@@ -17,7 +17,7 @@ param location string = resourceGroup().location
 @minLength(4)
 param logAnalyticsWorkspaceName string
 
-@description('The name of the web deploy file. The file should reside in a deploy container in the storage account. E.g. chatui.zip.')
+@description('The name of the web deploy file. The file should reside in a deploy container in the Azure Storage account. E.g. chatui.zip.')
 @minLength(5)
 param publishFileName string
 

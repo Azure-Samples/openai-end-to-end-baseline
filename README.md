@@ -79,7 +79,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
   - The subscription selected must have the following quota available in the region you choose.
 
     - Model: TODO
-    - Storage Accounts: 2 instances
+    - Azure Storage accounts: 2 instances
     - App Service Plans: P1v3 (AZ), 3 instances
     - Azure DDoS protection plan: 1
     - Standard, static Public IP Addresses: 3
@@ -213,7 +213,7 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
    :bug: Occasionally, you might receive the following error:
 
-   > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
+   > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source Azure Storage account.
 
    If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
 
@@ -259,7 +259,7 @@ In a production environment, you use a CI/CD pipeline to:
 
 - Build your web application
 - Create the project zip package
-- Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
+- Upload the zip file to your Storage account from compute that is in or connected to the workload's virtual network.
 
 For this deployment guide, you'll continue using your jump box (or VPN-connected workstation) to simulate part of that process.
 

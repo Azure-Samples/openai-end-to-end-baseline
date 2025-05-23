@@ -18,7 +18,7 @@ param customDomainName string = 'contoso.com'
 @minLength(1)
 param appGatewayListenerCertificate string
 
-@description('The name of the web deploy file. The file should reside in a deploy container in the storage account. Defaults to chatui.zip')
+@description('The name of the web deploy file. The file should reside in a deploy container in the Azure Storage account. Defaults to chatui.zip')
 @minLength(5)
 param publishFileName string = 'chatui.zip'
 
@@ -153,7 +153,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
     debugUserPrincipalId: yourPrincipalId
   }
   dependsOn: [
-    deployAIAgentServiceDependencies // There is a storage account in the AI Agent dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
+    deployAIAgentServiceDependencies // There is a Storage account in the AI Agent dependencies module, both will be updating the same private DNS zone, want to run them in series to avoid conflict errors.
   ]
 }
 

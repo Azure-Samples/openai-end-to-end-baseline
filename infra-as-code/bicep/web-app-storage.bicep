@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
 /*
-  Deploy storage account used for the web app with private endpoint and private DNS zone
+  Deploy an Azure Storage account used for the web app with private endpoint and private DNS zone
 */
 
 @description('The region in which this architecture is deployed. Should match the region of the resource group.')
@@ -112,7 +112,7 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   }
 }
 
-@description('Enable App Service deployment Storage Account blob diagnostic settings')
+@description('Enable App Service deployment Azure Storage Account blob diagnostic settings')
 resource azureDiagnosticsBlob 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: appDeployStorage::blobService
@@ -196,5 +196,5 @@ resource webAppStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-0
 
 // ---- Outputs ----
 
-@description('The name of the appDeploy storage account.')
+@description('The name of the appDeploy Azure Storage account.')
 output appDeployStorageName string = appDeployStorage.name
