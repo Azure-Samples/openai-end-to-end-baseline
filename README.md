@@ -1,18 +1,12 @@
 # Azure OpenAI end-to-end baseline reference implementation
 
-This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This repository supports the [Baseline OpenAI end-to-end chat reference architecture](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn and showcases a secure environment for authoring a chat flow and two options for deploying the flow:
+This reference implementation illustrates an approach for authoring and running a chat application in a single region with Azure AI Agent service as the orchestrator and Azure OpenAI models. This repository supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn and showcases a secure environment for authoring a chat workload.
 
-- An Azure Machine Learning managed online endpoint in a managed virtual network.
+The implementation will have you deploy an agent that uses Bing for grounding data in an [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project. You'll be exposed to common generative AI chat application characteristics such as:
 
-  - If your application requires high availability and you favor using a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
-- A network-isolated, zone-redundant, highly available deployment in Azure App Service.
-
-The implementation will have you build and test a [prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
-
-- Creating prompts
+- Creating agent prompts
 - Querying data stores for grounding data
-- Python code
-- Calling language models (such as GPT models)
+- Calling language models (such as GPT models) from your agent
 
 This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
@@ -63,15 +57,14 @@ Follow these instructions to deploy this example to your Azure subscription, try
   - The subscription must have the following resource providers [registered](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider).
 
     - `Microsoft.AlertsManagement`
+    - `Microsoft.Bing`
     - `Microsoft.CognitiveServices`
-    - `Microsoft.Compute`
-    - `Microsoft.ContainerRegistry`
     - `Microsoft.KeyVault`
     - `Microsoft.Insights`
-    - `Microsoft.MachineLearningServices`
     - `Microsoft.ManagedIdentity`
     - `Microsoft.Network`
     - `Microsoft.OperationalInsights`
+    - `Microsoft.Search`
     - `Microsoft.Storage`
     - `Microsoft.Web`
 
@@ -178,18 +171,9 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
-1. Apply workaround for Azure AI Foundry not deploying its managed network.
+### 2. Deploy an agent in the Azure AI Agent service
 
-   Azure AI Foundry tends to delay deploying its managed network, which causes problems when trying to access Azure AI Foundry's portal experience in the next step. Your final IaC implementation must account for this.
-
-   :clock8: *This might take about 15 minutes.*
-
-   ```bash
-   az extension add --name ml
-   az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP
-   ```
-
-### 2. Deploy a prompt flow from the Azure AI Foundry portal
+TODO: Write these instructions
 
 To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from the network.
 
@@ -238,7 +222,9 @@ To test this scenario, you'll be deploying a pre-built prompt flow. The prompt f
 
 1. Click **Save** on the whole flow.
 
-### 3. Test the prompt flow from the Azure AI Foundry portal
+### 3. Test the agent from the Azure AI Foundry portal in the playground
+
+TODO: Write these instructions
 
 Here you'll test your flow by invoking it directly from the Azure AI Foundry portal. The flow still requires you to bring compute to execute it from. The compute you'll use when in the portal is the default *Serverless* offering, which is only used for portal-based prompt flow experiences. The interactions against Azure OpenAI are performed by your identity; the bicep template has already granted your user data plane access. The Serverless compute is run from the managed virtual network and is beholden to the egress network rules defined.
 
@@ -254,101 +240,9 @@ Here you'll test your flow by invoking it directly from the Azure AI Foundry por
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Deploy the prompt flow to an Azure Machine Learning managed online endpoint
+### 4. Publish the chat front-end web app
 
-Here you'll take your tested flow and deploy it to a managed online endpoint using Azure AI Foundry.
-
-1. Click the **Deploy** button in the UI.
-
-1. Choose **Existing** endpoint and select the one called *ept-chat-BASE_NAME*.
-
-1. Set the following Basic settings and click **Next**.
-
-   - **Deployment name**: ept-chat-deployment
-   - **Virtual machine**: Choose a small virtual machine size from which you have quota. 'Standard_D2as_v4' is plenty for this sample.
-   - **Instance count**: 3. *This is the recommended minimum count.*
-   - **Inferencing data collection**: Enabled
-
-1. Set the following Advanced settings and click **Next**.
-
-   - **Deployment tags**: You can leave blank.
-   - **Environment**: Use environment of current flow definition.
-   - **Application Insights diagnostics**: Enabled
-
-1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the prompt flow and click **Next**.
-
-1. Click the **Create** button.
-
-   There is a notice on the final screen that says:
-
-   > Following connection(s) are using Microsoft Entra ID based authentication. You need to manually grant the endpoint identity access to the related resource of these connection(s).
-   > - aoai
-
-   This has already been taken care of by your IaC deployment. The managed online endpoint identity already has this permission to Azure OpenAI, so there is no action for you to take.
-
-1. :clock9: Wait for the deployment to finish creating.
-
-   The deployment can take over 15 minutes to create. To check on the process, navigate to the deployments screen using the **Models + endpoints** link in the left navigation. If you are asked about unsaved changes, just click **Confirm**.
-
-   Eventually 'ept-chat-deployment' will be on this list and the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
-
-   *Do not advance until this deployment is complete.*
-
-### 5. Test the Azure Machine Learning online endpoint from the network
-
-As a quick checkpoint of progress, you should test to make sure your Azure Machine Learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
-
-1. Install some tooling on the jump box.
-
-   Since your jump box is acting as a developer workstation and build agent, you'll need some tooling installed. Install the Azure CLI and Miniconda. The instructions that follow can be run from new Terminal session to install both.
-
-   ```powershell
-   winget install -e --id=Microsoft.AzureCLI
-   winget install -e --id=Anaconda.Miniconda3
-   ```
-
-   Restart your terminal to get `az` included in your path and install the ML Azure CLI extension.
-
-   ```powershell
-   az extension add --name ml
-   ```
-
-1. Close your terminal.
-
-1. Open an **Anaconda PowerShell Prompt** instance from the Start Menu.
-
-   You'll need a PowerShell prompt with a Python environnment available eventually in these instructions. It's best to open it now to only need to set environment variables once.
-
-1. Log in through the Azure CLI so the terminal has access to your subscription.
-
-   If prompted, choose **No, sign in to this app only**.
-
-1. Carry over some context from your workstation.
-
-   ```powershell
-   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
-   ```
-
-   ```powershell
-   $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
-   ```
-
-   ```powershell
-   $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
-   ```
-
-1. Execute an HTTP request to the online endpoint.
-
-   Feel free to adjust for your own question.
-
-   ```powershell
-   New-Item "request.json" -ItemType File -Value '{"question":"Who were the top three medal winning countries in the 2024 Paris Olympics?"}'
-   az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g $RESOURCE_GROUP -r request.json
-   ```
-
-1. A grounded response to your question should appear in the output. This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
-
-### 6. Publish the chat front-end web app
+TODO: Write these instructions
 
 Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
@@ -380,7 +274,9 @@ For this deployment guide, you'll continue using your jump box (or VPN-connected
    az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
    ```
 
-### 7. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
+### 5. Try it out! Test the deployed application that calls into the Azure AI Agent service
+
+TODO: Write these instructions
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
 
@@ -405,123 +301,7 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-1. Try it out!
-
    Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included context from Wikipedia such as recent data or events.
-
-### 8. Rehost the prompt flow in Azure App Service
-
-This is a second option for deploying the prompt flow code. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint.
-
-You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. Using the jump box again simulates a build agent in the network. To perform these build and deploy tasks, you'll need to install some developer tools on the jump box.
-
-| :computer: | Unless otherwise noted, the following steps are all performed from the jump box or from your VPN-connected workstation. |
-| :--------: | :------------------------- |
-
-1. From your *existing* **Anaconda PowerShell Prompt** instance, start a conda session and install the promptflow tools (pf CLI).
-
-   ```powershell
-   conda create -y --name pf python=3.12
-   conda activate pf
-
-   pip install promptflow[azure] promptflow-tools bs4
-   ```
-
-1. Open the Prompt flow UI again in your Azure AI Foundry project.
-
-1. Expand the **Files** tab in the upper-right pane of the UI.
-
-1. Click on the download icon to download the flow as a zip file.
-
-1. Unzip the prompt flow zip file you downloaded.
-
-   *Ensure this file name is set to the directory name you used when first cloning this prompt flow.*
-
-   ```powershell
-   cd Downloads
-   Expand-Archive chat_wiki.zip
-   cd chat_wiki
-   ```
-
-1. Add packages to requirements.txt, which ensures they are installed in your container.
-
-   ```powershell
-   Add-Content requirements.txt -Value @'
-   promptflow[azure]
-   promptflow-tools
-   python-dotenv
-   bs4
-   '@
-   ```
-
-1. Create a file for the Azure OpenAI connection named **aoai.yaml** and register it.
-
-   ```powershell
-   New-Item aoai.yaml -ItemType File -Value @'
-   $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
-   name: aoai
-   type: azure_open_ai
-   api_base: "${env:OPENAICONNECTION_API_BASE}"
-   api_type: "azure"
-   api_version: "2024-02-01"
-   auth_mode: "meid_token"
-   '@
-
-   pf connection create -f aoai.yaml
-   ```
-
-   > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_BASE```.
-
-1. Bundle the prompt flow to support creating a container image.
-
-   ```bash
-   pf flow build --source ./ --output dist --format docker
-   ```
-
-   The following code will create a directory named 'dist' with a Dockerfile and all the required flow code files.
-
-1. Build the container image and push it to your Azure Container Registry.
-
-   ```powershell
-   cd dist
-
-   $NAME_OF_ACR="cr${BASE_NAME}"
-   $ACR_CONTAINER_NAME="aoai"
-   $IMAGE_NAME="wikichatflow"
-   $IMAGE_TAG="1.0"
-   $FULL_IMAGE_NAME="${ACR_CONTAINER_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-
-   az acr build --agent-pool imgbuild -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
-   ```
-
-1. Set the container image on the Web App that will be hosting the prompt flow.
-
-   ```powershell
-   $PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
-   $ACR_IMAGE_NAME="${NAME_OF_ACR}.azurecr.io/${FULL_IMAGE_NAME}"
-
-   az webapp config container set -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP -i $ACR_IMAGE_NAME -r "https://${NAME_OF_ACR}.azurecr.io"
-   az webapp deployment container config -e true -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP
-   ```
-
-1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed prompt flow endpoint hosted in App Service instead of the managed online endpoint.
-
-   ```powershell
-   $UI_APP_SERVICE_NAME="app-$BASE_NAME"
-   $ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
-
-   az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
-   az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
-   ```
-
-## :checkered_flag: Try it out. Test the final deployment
-
-| :computer: | Unless otherwise noted, the remaining steps are performed from your original workstation, not from the jump box. |
-| :--------: | :------------------------- |
-
-Browse to the site (e.g. <https://www.contoso.com>) once again. Once there, ask your solution a question. Like before, your question should involve something that would only be known if the RAG process included context from Wikipedia such as recent data or events.
-
-In this final configuration, your chat UI is interacting with the prompt flow code hosted in another Web App in your Azure App Service instance. Your Azure Machine Learning online endpoint is not used, and Wikipedia and Azure OpenAI are being called right from your prompt flow Web App.
 
 ## :broom: Clean up resources
 
