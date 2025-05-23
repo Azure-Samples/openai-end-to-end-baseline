@@ -207,12 +207,10 @@ module deployWebApp 'web-app.bicep' = {
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     appServicesSubnetName: deployVirtualNetwork.outputs.appServicesSubnetName
     privateEndpointsSubnetName: deployVirtualNetwork.outputs.privateEndpointsSubnetName
-    webAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
-    webApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
+    existingWebAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
+    existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
+    existingAzureAiFoundryResourceName: deployAzureAIFoundry.outputs.aiFoundryName
   }
-  dependsOn: [
-    deployAzureFirewall
-  ]
 }
 
 // Optional Deployment for Customer Usage Attribution

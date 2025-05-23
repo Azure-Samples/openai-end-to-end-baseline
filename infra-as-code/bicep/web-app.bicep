@@ -13,6 +13,10 @@ param baseName string
 @minLength(1)
 param location string = resourceGroup().location
 
+@description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
+param logAnalyticsWorkspaceName string
+
 @description('The name of the web deploy file. The file should reside in a deploy container in the storage account. E.g. chatui.zip.')
 @minLength(5)
 param publishFileName string
@@ -31,23 +35,24 @@ param privateEndpointsSubnetName string
 
 @description('The name of the existing Azure Storage account that the Azure Web App will be pulling code deployments from.')
 @minLength(3)
-param webAppDeploymentStorageAccountName string
+param existingWebAppDeploymentStorageAccountName string
 
 @description('The name of the existing Azure Application Insights instance that the Azure Web App will be using.')
 @minLength(1)
-param webApplicationInsightsResourceName string
+param existingWebApplicationInsightsResourceName string
 
-@description('The name of the workload\'s existing Log Analytics workspace.')
-@minLength(4)
-param logAnalyticsWorkspaceName string
+@description('The name of the existing Azure AI Foundry instance that the the Azure Web App code will be calling for Azure AI Agent Service agents.')
+@minLength(2)
+param existingAzureAiFoundryResourceName string
 
 // variables
 var appName = 'app-${baseName}'
 
 // ---- Existing resources ----
 
+@description('Existing Application Insights instance. Logs from the web app will be sent here.')
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
-  name: webApplicationInsightsResourceName
+  name: existingWebApplicationInsightsResourceName
 }
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
@@ -61,8 +66,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing 
   }
 }
 
+@description('Existing Azure Storage account. This is where the web app code is deployed from.')
 resource webAppDeploymentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
-  name: webAppDeploymentStorageAccountName
+  name: existingWebAppDeploymentStorageAccountName
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
@@ -75,15 +81,19 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
   scope: subscription()
 }
 
-// TODO: Once the code is updated, figure out the correct role to apply to the managed identity.
-@description('Built-in Role: [Cognitive Services OpenAI User](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#cognitive-services-openai-user)')
-resource cognitiveServicesOpenAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+@description('Built-in Role: [Azure AI User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
+resource azureAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
   scope: subscription()
 }
 
 resource appServiceExistingPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   name: 'privatelink.azurewebsites.net'
+}
+
+@description('Existing Azure AI Foundry account. This account is where the agents hosted in Azure AI Agent Service will be deployed. The web app code calls to these agents.')
+resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
+  name: existingAzureAiFoundryResourceName
 }
 
 // ---- New resources ----
@@ -97,9 +107,20 @@ resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
 @description('Grant the App Service managed identity storage data reader role permissions')
 resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: webAppDeploymentStorageAccount
-  name: guid(resourceGroup().id, appServiceManagedIdentity.name, blobDataReaderRole.id)
+  name: guid(webAppDeploymentStorageAccount.id, appServiceManagedIdentity.id, blobDataReaderRole.id)
   properties: {
     roleDefinitionId: blobDataReaderRole.id
+    principalType: 'ServicePrincipal'
+    principalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+
+@description('Grant the App Service managed identity Azure AI user role permission so it can call into the Azure AI Foundry-hosted agent.')
+resource azureAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiFoundry
+  name: guid(aiFoundry.id, appServiceManagedIdentity.id, azureAiUserRole.id)
+  properties: {
+    roleDefinitionId: azureAiUserRole.id
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
