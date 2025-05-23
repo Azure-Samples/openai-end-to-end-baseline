@@ -35,19 +35,20 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' exis
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
   name: openaiName
   location: location
-  kind: 'OpenAI'
+  kind: 'AIServices'
+  sku: {
+    name: 'S0'
+  }
   properties: {
     customSubDomainName: 'oai${baseName}'
     publicNetworkAccess: 'Disabled'
     networkAcls: {
+      bypass: 'AzureServices'
       defaultAction: 'Deny'
     }
     disableLocalAuth: true
     restrictOutboundNetworkAccess: true
     allowedFqdnList: []
-  }
-  sku: {
-    name: 'S0'
   }
 
   @description('Fairly aggressive filter that attempts to block prompts and completions that are likely unprofessional. Tune to your specific requirements.')
@@ -139,19 +140,19 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
     }
   }
 
-  @description('Add a gpt-3.5 turbo deployment.')
-  resource gpt35 'deployments' = {
-    name: 'gpt35'
+  @description('Add a gpt-4o deployment.')
+  resource gpt4o 'deployments' = {
+    name: 'gpt-4o'
     sku: {
-      name: 'Standard'
-      capacity: 25
+      name: 'GlobalStandard'
+      capacity: 50
     }
     properties: {
       model: {
         format: 'OpenAI'
-        name: 'gpt-35-turbo'
-        version: '0125' // If your selected region doesn't support this version, please change it.
-                        // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-35-turbo' && kind == 'OpenAI'].model.version)" -o tsv
+        name: 'gpt-4o'
+        version: '2024-05-13' // If your selected region doesn't support this version, please change it.
+                              // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-4o-mini' && kind == 'OpenAI'].model.version)" -o tsv
       }
       raiPolicyName: openAiAccount::blockingFilter.name
       versionUpgradeOption: 'NoAutoUpgrade' // Always pin your dependencies, be intentional about updates.
@@ -224,7 +225,7 @@ resource openaiPrivateEndpoint 'Microsoft.Network/privateEndpoints@2022-11-01' =
   }
   dependsOn: [
     openAiAccount::blockingFilter
-    openAiAccount::gpt35
+    openAiAccount::gpt4o
   ]
 }
 
@@ -265,3 +266,5 @@ resource openaiDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGr
 // ---- Outputs ----
 
 output openAiResourceName string = openAiAccount.name
+@description('The Azure AI Agent Services deployment model name.')
+output defaultModelName string = openAiAccount::gpt4o.properties.model.name

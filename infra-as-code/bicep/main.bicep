@@ -107,7 +107,7 @@ module acrModule 'acr.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
-    buildAgentSubnetName: networkModule.outputs.agentSubnetName
+    buildAgentSubnetName: networkModule.outputs.buildAgentSubnetName
     logWorkspaceName: logWorkspace.name
   }
 }
@@ -142,15 +142,36 @@ module aiStudioModule 'machinelearning.bicep' = {
     baseName: baseName
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
+    agentsSubnetName: networkModule.outputs.agentsSubnetName
     applicationInsightsName: appInsightsModule.outputs.applicationInsightsName
     keyVaultName: keyVaultModule.outputs.keyVaultName
     aiStudioStorageAccountName: storageModule.outputs.mlDeployStorageName
+    agentsVectorStoreName: storageModule.outputs.agentsVectorStoreName
+    agentsThreadStorageCosmosDbName: storageModule.outputs.agentsThreadStorageCosmosDbName
     containerRegistryName: 'cr${baseName}'
     logWorkspaceName: logWorkspace.name
     openAiResourceName: openaiModule.outputs.openAiResourceName
     yourPrincipalId: yourPrincipalId
   }
 }
+
+// Deploy Azure AI Foundry project agents role assingments
+module aiStudioCapabilityHosts 'machinelearning-capabilityHosts.bicep' = {
+  name: 'aiStudioCapabilityHostsDeploy'
+  params: {
+    vnetName: networkModule.outputs.vnetNName
+    agentsSubnetName: networkModule.outputs.agentsSubnetName
+    aiHubName: aiStudioModule.outputs.aiHubName
+    chatProjectName: aiStudioModule.outputs.chatProjectName
+    aoaiConnectionName: aiStudioModule.outputs.aoaiConnectionName
+    aaisConnectionName: aiStudioModule.outputs.aaisConnectionName
+    cdbConnectionName: aiStudioModule.outputs.cdbConnectionName
+    agentsVectorStoreName: storageModule.outputs.agentsVectorStoreName
+    agentsThreadStorageCosmosDbName: storageModule.outputs.agentsThreadStorageCosmosDbName
+    chatProjectWorkspaceId:aiStudioModule.outputs.chatProjectNameWorkspaceId
+  }
+}
+
 
 //Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 module gatewayModule 'gateway.bicep' = {
@@ -184,6 +205,9 @@ module webappModule 'webapp.bicep' = {
     appServicesSubnetName: networkModule.outputs.appServicesSubnetName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+    aiProjectConnectionString: aiStudioModule.outputs.aiProjectConnectionString
+    aiProjectEndpoint: aiStudioModule.outputs.aiProjectEndpoint
+    defaultModelName: openaiModule.outputs.defaultModelName
   }
 }
 

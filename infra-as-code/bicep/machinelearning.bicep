@@ -16,10 +16,19 @@ param vnetName string
 @description('The name of the existing subnet within the identified vnet that will contains all private endpoints for this workload.')
 param privateEndpointsSubnetName string
 
+@description('The name of the existing subnet within the identified vnet that will contains all the agents hosted for this workload.')
+param agentsSubnetName string
+
 param applicationInsightsName string
 param containerRegistryName string
 param keyVaultName string
 param aiStudioStorageAccountName string
+
+@description('The name of the (BYO) AI Search index resource that act as the vector store.')
+param agentsVectorStoreName string
+
+@description('The name of the (BYO) Azure Cosmos DB for NoSQL account that act as the thread storage. This Cosmos Db store all the messages and conversation history.')
+param agentsThreadStorageCosmosDbName string
 
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
@@ -39,6 +48,10 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
 
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
+  }
+
+  resource agentsSubnet 'subnets' existing = {
+    name: agentsSubnetName
   }
 }
 
@@ -60,6 +73,17 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
 
 resource aiStudioStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
   name: aiStudioStorageAccountName
+}
+
+@description('The vector store Azure AI search resource.')
+resource agentsVectorStore 'Microsoft.Search/searchServices@2025-02-01-preview' existing = {
+  name: agentsVectorStoreName
+}
+
+@description('The thread storage Cosmos DB account. Agent will save chat sessions in there.')
+#disable-next-line BCP081
+resource agentsThreadStorageCosmosDb 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
+  name: agentsThreadStorageCosmosDbName
 }
 
 resource openAiAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
@@ -131,8 +155,17 @@ resource cognitiveServicesOpenAiUserForUserRoleAssignment 'Microsoft.Authorizati
 
 // ---- Azure AI Foundry resources ----
 
+resource agentsBingSearch 'Microsoft.Bing/accounts@2020-06-10' = {
+  name: 'bingsearch-${baseName}'
+  location: 'global'
+  kind: 'Bing.Grounding'
+  sku: {
+    name: 'G1'
+  }
+}
+
 @description('A hub provides the hosting environment for this AI workload. It provides security, governance controls, and shared configurations.')
-resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview' = {
+resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
   name: 'aihub-${baseName}'
   location: location
   kind: 'Hub'
@@ -163,11 +196,37 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
           category: 'UserDefined'
           status: 'Active'
         }
+        ApiBing: {
+          type: 'FQDN'
+          destination: 'api.bing.microsoft.com'
+          category: 'UserDefined'
+          status: 'Active'
+        }
         OpenAI: {
           type: 'PrivateEndpoint'
           destination: {
             serviceResourceId: openAiAccount.id
             subresourceTarget: 'account'
+            sparkEnabled: false
+            sparkStatus: 'Inactive'
+          }
+          status: 'Active'
+        }
+        VectorStore: {
+          type: 'PrivateEndpoint'
+          destination: {
+            serviceResourceId: agentsVectorStore.id
+            subresourceTarget: 'searchService'
+            sparkEnabled: false
+            sparkStatus: 'Inactive'
+          }
+          status: 'Active'
+        }
+        ThreadStorage: {
+          type: 'PrivateEndpoint'
+          destination: {
+            serviceResourceId: agentsThreadStorageCosmosDb.id
+            subresourceTarget: 'SQL'
             sparkEnabled: false
             sparkStatus: 'Inactive'
           }
@@ -201,7 +260,7 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
     name: 'aoai'
     properties: {
       authType: 'AAD'
-      category: 'AzureOpenAI'
+      category: 'AIServices'
       isSharedToAll: true
       useWorkspaceManagedIdentity: true
       peRequirement: 'Required'
@@ -211,6 +270,41 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2024-07-01-preview'
         ResourceId: openAiAccount.id
       }
       target: openAiAccount.properties.endpoint
+    }
+  }
+
+  resource aaisConnection 'connections' = {
+    name: 'aais'
+    properties: {
+      authType: 'AAD'
+      category: 'CognitiveSearch'
+      isSharedToAll: true
+      useWorkspaceManagedIdentity: true
+      peRequirement: 'Required'
+      sharedUserList: []
+      metadata: {
+        ApiType: 'Azure'
+        ResourceId: agentsVectorStore.id
+      }
+      target: agentsVectorStore.properties.endpoint
+    }
+  }
+
+  resource bingConnection 'connections' = {
+    name: 'bingGrounding'
+    properties: {
+      category: 'ApiKey'
+      credentials: {
+        key: agentsBingSearch.listKeys().key1
+      }
+      isSharedToAll: true
+      metadata: {
+        type: 'bing_grounding'
+        ApiType: 'Azure'
+        ResourceId: agentsBingSearch.id
+      }
+      target: 'https://api.bing.microsoft.com/'
+      authType: 'ApiKey'
     }
   }
 }
@@ -235,7 +329,7 @@ resource aiHubDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-pre
 }
 
 @description('This is a container for the chat project.')
-resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' = {
+resource chatProject 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
   name: 'aiproj-chat'
   location: location
   kind: 'Project'
@@ -258,6 +352,20 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     hubResourceId: aiHub.id
   }
 
+  resource cdbConnection 'connections' = {
+    name: agentsThreadStorageCosmosDb.name
+    properties: {
+      category: 'CosmosDB'
+      target: 'https://${agentsThreadStorageCosmosDb.name}.documents.azure.com:443/'
+      authType: 'AAD'
+      metadata: {
+        ApiType: 'Azure'
+        ResourceId: agentsThreadStorageCosmosDb.id
+        location: agentsThreadStorageCosmosDb.location
+      }
+    }
+  }
+
   resource endpoint 'onlineEndpoints' = {
     name: 'ept-chat-${baseName}'
     location: location
@@ -274,6 +382,17 @@ resource chatProject 'Microsoft.MachineLearningServices/workspaces@2024-04-01' =
     }
 
     // Note: If you reapply this Bicep after an AI Foundry managed compute deployment has happened in this endpoint, the traffic routing reverts to 0% to all existing deployments. You'll need to set that back to 100% to your desired deployment.
+  }
+}
+
+@description('Assign the AI Foundry project the ability to invoke assistant endpoints in Azure AI Agent Services. This is needed to inference from an agent on behalf of the user.')
+resource projectAzAIUserForAgentsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: openAiAccount
+  name: guid(openAiAccount.id, chatProject.id, cognitiveServicesOpenAiUserRole.id)
+  properties: {
+    roleDefinitionId: cognitiveServicesOpenAiUserRole.id
+    principalType: 'ServicePrincipal'
+    principalId: chatProject.identity.principalId
   }
 }
 
@@ -608,3 +727,24 @@ resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' =
 }
 
 output managedOnlineEndpointResourceId string = chatProject::endpoint.id
+
+@description('The Azure Foundry AI project connection string.')
+output aiProjectConnectionString string = '${first(split(replace(chatProject.properties.discoveryUrl, 'https://', ''),'/'))};${subscription().subscriptionId};${resourceGroup().name};${chatProject.name}'
+@description('The Azure Foundry AI project endpoint.')
+output aiProjectEndpoint string = 'https://${aiHub.name}.services.ai.azure.com/api/projects/${chatProject.name}'
+
+@description('The Azure Foundry AI project workspace id.')
+output chatProjectNameWorkspaceId string = chatProject.properties.workspaceId
+
+@description('The name of the Azure AI Foundry hub.')
+output aiHubName string = aiHub.name
+
+@description('The name of the Azure AI Foundry project.')
+output chatProjectName string = chatProject.name
+
+@description('The name of the Azure AI Foundry project connection to Azure AI Services.')
+output aoaiConnectionName string = aiHub::aoaiConnection.name
+@description('The name of the Azure AI Foundry project connection to Azure AI Search.')
+output aaisConnectionName string = aiHub::aaisConnection.name
+@description('The name of the Azure AI Foundry project connection to Azure CosmosDb.')
+output cdbConnectionName string = chatProject::cdbConnection.name

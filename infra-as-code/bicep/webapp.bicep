@@ -33,6 +33,12 @@ param privateEndpointsSubnetName string
 param storageName string
 param keyVaultName string
 param logWorkspaceName string
+@description('The Azure Foundry AI project connection string.')
+param aiProjectConnectionString string
+@description('The Azure Foundry AI project endpoint.')
+param aiProjectEndpoint string
+@description('The Azure AI Agent Services deployment model name.')
+param defaultModelName string
 
 // variables
 var appName = 'app-${baseName}'
@@ -100,6 +106,12 @@ resource cognitiveServicesOpenAiUserRole 'Microsoft.Authorization/roleDefinition
   scope: subscription()
 }
 
+@description('Built-in Role: [Azure AI Developer](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/ai-machine-learning#azure-ai-developer)')
+resource machineLearningAzAiDeveloperRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '64702f94-c441-49e6-a78b-ef80e0188fee'
+  scope: subscription()
+}
+
 // ---- Web App resources ----
 
 // Managed Identity for App Service
@@ -124,6 +136,17 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
   name: guid(resourceGroup().id, appServiceManagedIdentity.name, blobDataReaderRole.id)
   properties: {
     roleDefinitionId: blobDataReaderRole.id
+    principalType: 'ServicePrincipal'
+    principalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+
+// Grant the App Service managed identity azure ai developer  role permissions
+resource azAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: chatProj
+  name: guid(resourceGroup().id, appServiceManagedIdentity.name, machineLearningAzAiDeveloperRole.id)
+  properties: {
+    roleDefinitionId: machineLearningAzAiDeveloperRole.id
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
@@ -171,7 +194,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       http20Enabled: true
       publicNetworkAccess: 'Disabled'
       alwaysOn: true
-      linuxFxVersion: 'DOTNETCORE|7.0'
+      linuxFxVersion: 'DOTNETCORE|8.0'
       netFrameworkVersion: null
       windowsFxVersion: null
     }
@@ -188,15 +211,18 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       WEBSITE_RUN_FROM_PACKAGE_BLOB_MI_RESOURCE_ID: appServiceManagedIdentity.id
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
+      AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
       chatApiKey: chatApiKey
       chatApiEndpoint: chatProj::onlineEndpoint.properties.scoringUri
       chatInputName: 'question'
       chatOutputName: 'answer'
+      aiProjectConnectionString: aiProjectConnectionString
+      aiProjectEndpoint: aiProjectEndpoint
+      defaultModel: defaultModelName
     }
   }
 }
-
 
 // Web App diagnostic settings
 resource webAppDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
