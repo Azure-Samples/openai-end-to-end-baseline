@@ -120,6 +120,11 @@ module deployJumpBox 'jump-box.bicep' = {
   ]
 }
 
+@description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Agent service.')
+module deployBingAccount 'bing-grounding.bicep' = {
+  scope: resourceGroup()
+}
+
 @description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Azure AI Agent service.')
 module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
   scope: resourceGroup()
@@ -129,6 +134,7 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
     existingAISearchAccountName: deployAIAgentServiceDependencies.outputs.aiSearchName
     existingCosmosDbAccountName: deployAIAgentServiceDependencies.outputs.cosmosDbAccountName
     existingStorageAccountName: deployAIAgentServiceDependencies.outputs.storageAccountName
+    existingBingAccountName: deployBingAccount.outputs.bingAccountName
   }
   dependsOn: [
     deployJumpBox

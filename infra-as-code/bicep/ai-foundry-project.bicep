@@ -20,6 +20,10 @@ param existingStorageAccountName string
 @minLength(1)
 param existingAISearchAccountName string
 
+@description('The existing Bing grounding data account that is available to Azure AI Agent agents in this project.')
+@minLength(1)
+param existingBingAccountName string
+
 /*** EXISTING RESOURCES ***/
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the CosmosDB collections.')
@@ -117,6 +121,11 @@ resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-0
   scope: subscription()
 }
 
+#disable-next-line BCP081
+resource bingAccount 'Microsoft.Bing/accounts@2025-05-01-preview' existing = {
+  name: existingBingAccountName
+}
+
 /*** NEW RESOURCES ***/
 
 @description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
@@ -132,6 +141,27 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
     properties: {
       description: 'Chat using internet data'
       displayName: 'ChatWithInternetData'
+    }
+
+    @description('Create project connection to Bing grounding data. Useful for future agents that get created.')
+    resource bingGroundingConnection 'connections' = {
+      name: existingBingAccountName
+      properties: {
+        authType: 'ApiKey'
+        target: bingAccount.properties.endpoint
+        category: 'ApiKey'
+        metadata: {
+          ApiType: 'Azure'
+          ResourceId: bingAccount.id
+          location: bingAccount.location
+        }
+        credentials: {
+          key: bingAccount.listKeys().keys[0].value
+        }
+      }
+      dependsOn: [
+        aiAgentService  // Deploy after the Azure AI Agent Service is provisioned, not a dependency.
+      ]
     }
 
     @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent Service.')
