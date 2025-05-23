@@ -35,6 +35,8 @@ param keyVaultName string
 param logWorkspaceName string
 @description('The Azure Foundry AI project connection string.')
 param aiProjectConnectionString string
+@description('The Azure Foundry AI project endpoint.')
+param aiProjectEndpoint string
 @description('The Azure AI Agent Services deployment model name.')
 param defaultModelName string
 @description('The id of the Azure AI Foundry project connection to the Bing Search account.')
@@ -113,6 +115,13 @@ resource machineLearningAzAiDeveloperRole 'Microsoft.Authorization/roleDefinitio
   scope: subscription()
 }
 
+@description('Built-in Role: [Azure AI Developer](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/)')
+//  data action `Microsoft.CognitiveServices/accounts/AIServices/agents/write` to perform `POST /api/projects/{projectName}/assistants` operation
+resource cognitiveServicesDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: '19c28022-e58e-450d-a464-0b2a53034789'
+  scope: subscription()
+}
+
 // ---- Web App resources ----
 
 // Managed Identity for App Service
@@ -148,6 +157,17 @@ resource azAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@20
   name: guid(resourceGroup().id, appServiceManagedIdentity.name, machineLearningAzAiDeveloperRole.id)
   properties: {
     roleDefinitionId: machineLearningAzAiDeveloperRole.id
+    principalType: 'ServicePrincipal'
+    principalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+
+@description('Assign the App Service User Indentity with the ability to invoke assistant endpoints in Azure AI Agent Services.')
+resource appServiceCognitiveServicesDataContributorForAgentsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: azureOpenAI
+  name: guid(azureOpenAI.id, appServiceManagedIdentity.id, cognitiveServicesDataContributorRole.id)
+  properties: {
+    roleDefinitionId: cognitiveServicesDataContributorRole.id
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
@@ -219,6 +239,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       chatInputName: 'question'
       chatOutputName: 'answer'
       aiProjectConnectionString: aiProjectConnectionString
+      aiProjectEndpoint: aiProjectEndpoint
       defaultModel: defaultModelName
       bingSearchConnectionId: bingSearchConnectionId
     }
