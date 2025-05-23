@@ -312,21 +312,30 @@ This section will help you to validate that the workload is exposed correctly an
 
 ## :broom: Clean up resources
 
-Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection and Azure AI Foundry's managed network's firewall. Promptly delete resources when you are done using them.
+Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection, CosmosDB, and the Azure Firewall. Promptly delete resources when you are done using them.
 
-Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name or DNS entry; and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
 | :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
-| :--------: | :------------------------- |
+| :-------: | :------------------------- |
 
 ```bash
 # These deletes and purges take about 30 minutes to run.
+
+# This command will delete most of the resources, but will error out. That's expected.
 az group delete -n $RESOURCE_GROUP -y
 
-# Purge the soft delete resources
+# Continue, even if the previous command errored. Purge the soft delete resources.
 az keyvault purge -n kv-${BASE_NAME} -l $LOCATION
-az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n oai-${BASE_NAME}
+az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n aif${BASE_NAME}
 ```
+
+> [!TIP]
+> The `vnet-workload` and associated networking resources are typically blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent Service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
+>
+> The lingering resources do not have a cost associated with them existing in your subscription.
+>
+> Reexeucte the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
 
 ## Contributions
 
