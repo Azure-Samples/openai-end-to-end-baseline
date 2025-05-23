@@ -91,8 +91,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - The [Azure CLI installed](https://learn.microsoft.com/cli/azure/install-azure-cli)
 
-  > [!IMPORTANT]
-  > If you're executing this from Windows Subsystem for Linux (WSL), be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` must show `/usr/bin/az`.
+  > :bulb: If you're executing this from Windows Subsystem for Linux (WSL), be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` must show `/usr/bin/az`.
 
 - The [OpenSSL CLI](https://docs.openssl.org/3.5/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
 
@@ -126,8 +125,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Generate a client-facing, self-signed TLS certificate.
 
-     > [!WARNING]
-     > Do not use the certificate created by this script for production deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your chat application traffic, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
+     > :warning: Do not use the certificate created by this script for production deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your chat application traffic, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
 
      Create the certificate that will be presented to web clients by Azure Application Gateway for your domain.
 
@@ -138,8 +136,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Base64 encode the client-facing certificate.
 
-     > [!TIP]
-     > No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for storage in Key Vault.
+     :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for storage in Key Vault.
 
      ```bash
      APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV=$(cat appgw.pfx | base64 | tr -d '\n')
