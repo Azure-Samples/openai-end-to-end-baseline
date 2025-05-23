@@ -103,6 +103,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
         name: 'gpt-4o'
         version: '2024-08-06'
       }
+      versionUpgradeOption: 'NoAutoUpgrade'
     }
   }
 }

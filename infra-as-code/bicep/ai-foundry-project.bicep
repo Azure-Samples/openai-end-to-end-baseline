@@ -156,7 +156,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
           location: bingAccount.location
         }
         credentials: {
-          key: bingAccount.listKeys().keys[0].value
+          key: bingAccount.listKeys().key1
         }
       }
       dependsOn: [

@@ -77,6 +77,24 @@ module deployAzureFirewall 'azure-firewall.bicep' = {
   }
 }
 
+@description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
+module deployJumpBox 'jump-box.bicep' = {
+  scope: resourceGroup()
+  params: {
+    location: location
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
+    jumpBoxSubnetName: deployVirtualNetwork.outputs.jumpBoxSubnetName
+    jumpBoxAdminName: 'vmadmin'
+    jumpBoxAdminPassword: jumpBoxAdminPassword
+  }
+  dependsOn: [
+    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
+  ]
+}
+
+// Deploy the Azure AI Foundry account and Azure AI Agent service components.
+
 @description('Deploy Azure AI Foundry with Azure AI Agent capability. No projects yet deployed.')
 module deployAzureAIFoundry 'ai-foundry.bicep' = {
   params: {
@@ -104,22 +122,6 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
   }
 }
 
-@description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
-module deployJumpBox 'jump-box.bicep' = {
-  scope: resourceGroup()
-  params: {
-    location: location
-    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
-    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
-    jumpBoxSubnetName: deployVirtualNetwork.outputs.jumpBoxSubnetName
-    jumpBoxAdminName: 'vmadmin'
-    jumpBoxAdminPassword: jumpBoxAdminPassword
-  }
-  dependsOn: [
-    deployAzureFirewall  // Makes sure that egress traffic is controlled before workload resources start being deployed
-  ]
-}
-
 @description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Agent service.')
 module deployBingAccount 'bing-grounding.bicep' = {
   scope: resourceGroup()
@@ -140,6 +142,8 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
     deployJumpBox
   ]
 }
+
+// Deploy the Azure Web App resources for the chat UI.
 
 @description('Deploy an Azure Storage account that is used by the Azure Web App for the deployed application code.')
 module deployWebAppStorage 'web-app-storage.bicep' = {
@@ -180,22 +184,6 @@ module deployApplicationInsights 'application-insights.bicep' = {
   }
 }
 
-@description('Deploy an Azure Application Gateway with WAF and a custom domain name + TLS cert.')
-module deployApplicationGateway 'application-gateway.bicep' = {
-  scope: resourceGroup()
-  params: {
-    location: location
-    baseName: baseName
-    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
-    customDomainName: customDomainName
-    appName: deployWebApp.outputs.appName
-    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
-    applicationGatewaySubnetName: deployVirtualNetwork.outputs.applicationGatewaySubnetName
-    keyVaultName: deployKeyVault.outputs.keyVaultName
-    gatewayCertSecretKey: deployKeyVault.outputs.gatewayCertSecretKey
-  }
-}
-
 @description('Deploy the web app for the front end demo UI. The web application will call into the Azure AI Agent service.')
 module deployWebApp 'web-app.bicep' = {
   scope: resourceGroup()
@@ -210,6 +198,22 @@ module deployWebApp 'web-app.bicep' = {
     existingWebAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
     existingAzureAiFoundryResourceName: deployAzureAIFoundry.outputs.aiFoundryName
+  }
+}
+
+@description('Deploy an Azure Application Gateway with WAF and a custom domain name + TLS cert.')
+module deployApplicationGateway 'application-gateway.bicep' = {
+  scope: resourceGroup()
+  params: {
+    location: location
+    baseName: baseName
+    logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
+    customDomainName: customDomainName
+    appName: deployWebApp.outputs.appName
+    virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
+    applicationGatewaySubnetName: deployVirtualNetwork.outputs.applicationGatewaySubnetName
+    keyVaultName: deployKeyVault.outputs.keyVaultName
+    gatewayCertSecretKey: deployKeyVault.outputs.gatewayCertSecretKey
   }
 }
 

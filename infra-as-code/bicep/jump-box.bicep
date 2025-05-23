@@ -78,7 +78,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
 }
 
 @description('Deploys Azure Bastion for secure access to the jump box.')
-resource bastion 'Microsoft.Network/bastionHosts@2024-01-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2024-05-01' = {
   name: bastionHostName
   location: location
   sku: {
