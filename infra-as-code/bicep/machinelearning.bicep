@@ -155,6 +155,15 @@ resource cognitiveServicesOpenAiUserForUserRoleAssignment 'Microsoft.Authorizati
 
 // ---- Azure AI Foundry resources ----
 
+resource agentsBingSearch 'Microsoft.Bing/accounts@2020-06-10' = {
+  name: 'bingsearch-${baseName}'
+  location: 'global'
+  kind: 'Bing.Grounding'
+  sku: {
+    name: 'G1'
+  }
+}
+
 @description('A hub provides the hosting environment for this AI workload. It provides security, governance controls, and shared configurations.')
 resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' = {
   name: 'aihub-${baseName}'
@@ -184,6 +193,12 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
         wikipedia: {
           type: 'FQDN'
           destination: 'en.wikipedia.org'
+          category: 'UserDefined'
+          status: 'Active'
+        }
+        ApiBing: {
+          type: 'FQDN'
+          destination: 'api.bing.microsoft.com'
           category: 'UserDefined'
           status: 'Active'
         }
@@ -272,6 +287,24 @@ resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview'
         ResourceId: agentsVectorStore.id
       }
       target: agentsVectorStore.properties.endpoint
+    }
+  }
+
+  resource bingConnection 'connections' = {
+    name: 'bingGrounding'
+    properties: {
+      category: 'ApiKey'
+      credentials: {
+        key: agentsBingSearch.listKeys().key1
+      }
+      isSharedToAll: true
+      metadata: {
+        type: 'bing_grounding'
+        ApiType: 'Azure'
+        ResourceId: agentsBingSearch.id
+      }
+      target: 'https://api.bing.microsoft.com/'
+      authType: 'ApiKey'
     }
   }
 }

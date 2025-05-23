@@ -140,9 +140,9 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
     }
   }
 
-  @description('Add a gpt-4o turbo deployment.')
+  @description('Add a gpt-4o deployment.')
   resource gpt4o 'deployments' = {
-    name: 'gpt-4o-mini'
+    name: 'gpt-4o'
     sku: {
       name: 'GlobalStandard'
       capacity: 50
@@ -150,8 +150,8 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview'
     properties: {
       model: {
         format: 'OpenAI'
-        name: 'gpt-4o-mini'
-        version: '2024-07-18' // If your selected region doesn't support this version, please change it.
+        name: 'gpt-4o'
+        version: '2024-05-13' // If your selected region doesn't support this version, please change it.
                               // az cognitiveservices model list -l $LOCATION --query "sort([?model.name == 'gpt-4o-mini' && kind == 'OpenAI'].model.version)" -o tsv
       }
       raiPolicyName: openAiAccount::blockingFilter.name
