@@ -1,30 +1,32 @@
-# Azure OpenAI end-to-end baseline reference implementation
+# Azure OpenAI and AI Agent Service chat baseline reference implementation
 
-This reference implementation illustrates an approach for authoring and running a chat application in a single region with Azure AI Agent service as the orchestrator and Azure OpenAI models. This repository supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn and showcases a secure environment for authoring a chat workload.
+This reference implementation illustrates an approach running a chat application and an AI orchstration layer in a single region. It uses Azure AI Agent service as the orchestrator and Azure OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
 
-The implementation will have you deploy an agent that uses Bing for grounding data in an [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project. You'll be exposed to common generative AI chat application characteristics such as:
+Follow this implementation to deploy an agent in [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
-- Creating agent prompts
+- Creating agents and agent prompts
 - Querying data stores for grounding data
+- Chat memory database
+- Orchestration logic
 - Calling language models (such as GPT models) from your agent
 
 This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
 - Network isolation
-- Security
-- Reliability
+- Bring-your-own Azure AI Agent service depdendencies (for security and BC/DR control)
+- Added availability zone reliability
 
 ## Architecture
 
 The implementation covers the following scenarios:
 
-1. Authoring a flow - Authoring a flow using prompt flow in Azure AI Foundry
+- [Setting up Azure AI Foundry to host agents](#setting-up-azure-ai-foundry-to-host-agents)
+- [Deploying an agent into Azure AI Agent Service](#deploying-an-agent-into-azure-ai-agent-service)
+- [Invoking the agent from .NET code hosted in an Azure Web App](#invoking-the-agent-from-net-code-hosted-in-an-azure-web-app)
 
-1. Deploying a flow to managed compute behind an Azure Machine Learning endpoint - The deployment of the executable flow created in the Azure AI Foundry portal to managed online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
+### Setting up Azure AI Foundry to host agents
 
-1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
-
-### Authoring a flow
+TODO: Write this
 
 ![Diagram of the authoring architecture using Azure AI Foundry. It demonstrates key architecture components and flow when using AI Foundry portal as an authoring environment. ](docs/media/openai-end-to-end-baseline-authoring.png)
 
@@ -32,13 +34,17 @@ The authoring architecture diagram illustrates how flow authors [connect to an A
 
 The diagram further illustrates how AI Foundry is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI service and Azure AI Search.
 
-### Deploying a flow to Azure Machine Learning managed online endpoint
+### Deploying an agent into Azure AI Agent Service
+
+TODO: Write this
 
 ![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI Foundry environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Foundry.](docs/media/openai-end-to-end-baseline-aml-compute.png)
 
 The Azure AI Foundry deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Foundry project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow connects to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
 
-### Deploying a flow to Azure App Service (alternative)
+### Invoking the agent from .NET code hosted in an Azure Web App
+
+TODO: Write this
 
 ![Diagram of the deploying a flow to Azure App Service. This drawing emphasizes how AI Foundry compute and endpoints are bypassed, and Azure App Service and its virtual network become responsible for connecting to the private endpoints for dependencies.](docs/media/openai-end-to-end-baseline-app-services.png)
 
@@ -68,14 +74,15 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - `Microsoft.Storage`
     - `Microsoft.Web`
 
-  - The subscription selected must have the following quota available in the location you'll select to deploy this implementation.
+  - The subscription selected must have the following quota available in the region you choose.
 
-    - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
+    - Model: TODO
     - Storage Accounts: 2 instances
     - App Service Plans: P1v3 (AZ), 3 instances
     - Azure DDoS protection plan: 1
-    - Standard, static Public IP Addresses: 2
-    - Standard DASv4 Family Cluster Dedicated vCPUs for machine learning: 8
+    - Standard, static Public IP Addresses: 3
+    - Azure AI Search: TODO
+    - Azure CosmosDB: TODO
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -84,13 +91,14 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - The [Azure CLI installed](https://learn.microsoft.com/cli/azure/install-azure-cli)
 
-  If you're executing this from WSL, be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` should show `/usr/bin/az`.
+  > [!IMPORTANT]
+  > If you're executing this from Windows Subsystem for Linux (WSL), be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` must show `/usr/bin/az`.
 
-- The [OpenSSL CLI](https://docs.openssl.org/3.3/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
+- The [OpenSSL CLI](https://docs.openssl.org/3.5/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
 
 ### 1. :rocket: Deploy the infrastructure
 
-The following steps are required to deploy the infrastructure from the command line.
+The following steps are required to deploy the infrastructure from the command line using the bicep files from this repository.
 
 1. In your shell, clone this repo and navigate to the root directory of this repository.
 
@@ -108,7 +116,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Obtain the App gateway certificate
 
-   Azure Application Gateway includes support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstration purposes.
+   Azure Application Gateway includes support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic going to the web application.
 
    - Set a variable for the domain used in the rest of this deployment.
 
@@ -118,7 +126,8 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Generate a client-facing, self-signed TLS certificate.
 
-     :warning: Do not use the certificate created by this script for actual deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your App Service solution, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
+     > [!WARNING]
+     > Do not use the certificate created by this script for production deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your chat application traffic, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
 
      Create the certificate that will be presented to web clients by Azure Application Gateway for your domain.
 
@@ -129,7 +138,8 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Base64 encode the client-facing certificate.
 
-     :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for proper storage in Key Vault later.
+     > [!TIP]
+     > No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for storage in Key Vault.
 
      ```bash
      APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV=$(cat appgw.pfx | base64 | tr -d '\n')
