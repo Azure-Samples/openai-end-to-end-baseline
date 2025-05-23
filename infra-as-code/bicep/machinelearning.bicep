@@ -727,8 +727,11 @@ resource notebookPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' =
 }
 
 output managedOnlineEndpointResourceId string = chatProject::endpoint.id
+
 @description('The Azure Foundry AI project connection string.')
 output aiProjectConnectionString string = '${first(split(replace(chatProject.properties.discoveryUrl, 'https://', ''),'/'))};${subscription().subscriptionId};${resourceGroup().name};${chatProject.name}'
+@description('The Azure Foundry AI project endpoint.')
+output aiProjectEndpoint string = 'https://${aiHub.name}.services.ai.azure.com/api/projects/${chatProject.name}'
 
 @description('The Azure Foundry AI project workspace id.')
 output chatProjectNameWorkspaceId string = chatProject.properties.workspaceId

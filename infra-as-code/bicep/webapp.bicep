@@ -35,6 +35,8 @@ param keyVaultName string
 param logWorkspaceName string
 @description('The Azure Foundry AI project connection string.')
 param aiProjectConnectionString string
+@description('The Azure Foundry AI project endpoint.')
+param aiProjectEndpoint string
 @description('The Azure AI Agent Services deployment model name.')
 param defaultModelName string
 
@@ -216,6 +218,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       chatInputName: 'question'
       chatOutputName: 'answer'
       aiProjectConnectionString: aiProjectConnectionString
+      aiProjectEndpoint: aiProjectEndpoint
       defaultModel: defaultModelName
     }
   }

@@ -5,7 +5,7 @@ namespace chatui.Configuration;
 public class ChatApiOptions
 {
     [Required]
-    public string AIProjectConnectionString { get; init; } = default!;
+    public string AIProjectEndpoint { get; init; } = default!;
 
     [Required]
     public string DefaultModel { get; init; } = default!;

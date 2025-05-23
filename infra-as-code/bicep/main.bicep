@@ -206,6 +206,7 @@ module webappModule 'webapp.bicep' = {
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
     aiProjectConnectionString: aiStudioModule.outputs.aiProjectConnectionString
+    aiProjectEndpoint: aiStudioModule.outputs.aiProjectEndpoint
     defaultModelName: openaiModule.outputs.defaultModelName
   }
 }
