@@ -29,7 +29,7 @@ resource cosmosDbLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06
 }
 
 // Cosmos DB Account Reader Role
-resource cosmosDbAccountReaderRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+resource cosmosDbAccountReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'fbdf93bf-df7d-467e-a4d2-9458aa1360c8'
   scope: subscription()
 }
@@ -51,26 +51,43 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
     disableLocalAuth: true
     enableAutomaticFailover: false
     enableMultipleWriteLocations: false
+    minimalTlsVersion: 'Tls12'
     publicNetworkAccess: 'Disabled'
     enableFreeTier: false
+    ipRules: []
+    virtualNetworkRules: []
+    networkAclBypass: 'None'
+    networkAclBypassResourceIds: []
+    diagnosticLogSettings: {
+      enableFullTextQuery: 'False'
+    }
+    enableBurstCapacity: false
     locations: [
       {
         locationName: location
         failoverPriority: 0
-        isZoneRedundant: false
+        isZoneRedundant: true
       }
     ]
     databaseAccountOfferType: 'Standard'
+    backupPolicy: {
+      type: 'Continuous'
+      continuousModeProperties: {
+        tier: 'Continuous7Days'   // You have seven days of continuous backup to address point-in-time restore needs.
+      }
+    }
   }
 
-  resource writer 'sqlRoleDefinitions' existing = {
+  @description('Built-in Cosmos DB Data Contributor role that can be assigned to Entra identities to grant data access on a Cosmos DB database.')
+  resource dataContributorRole 'sqlRoleDefinitions' existing = {
     name: '00000000-0000-0000-0000-000000000002'
   }
 
+  @description('Assign your own user to access the enterprise_memory database contents for troubleshooting purposes. Not required for normal usage.')
   resource userToCosmos 'sqlRoleAssignments' = {
-    name: guid(debugUserPrincipalId, writer.id, cosmosDbAccount.id)
+    name: guid(debugUserPrincipalId, dataContributorRole.id, cosmosDbAccount.id)
     properties: {
-      roleDefinitionId: cosmosDbAccount::writer.id
+      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
       principalId: debugUserPrincipalId
       scope: cosmosDbAccount.id
     }
@@ -170,7 +187,7 @@ resource cosmosDbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01'
 
 // Role assignments
 
-resource assignDebugUserToCosmosAccountReader 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource assignDebugUserToCosmosAccountReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(debugUserPrincipalId, cosmosDbAccountReaderRole.id, cosmosDbAccount.id)
   scope: cosmosDbAccount
   properties: {

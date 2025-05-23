@@ -22,6 +22,8 @@ param existingAISearchAccountName string
 
 /*** EXISTING RESOURCES ***/
 
+@description('The internal ID of the project is used in the Azure Storage blob containers and in the CosmosDB collections.')
+#disable-next-line BCP053
 var workspaceId = aiFoundry::project.properties.internalId
 var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId, 8, 4)}-${substring(workspaceId, 12, 4)}-${substring(workspaceId, 16, 4)}-${substring(workspaceId, 20, 12)}'
 
@@ -29,17 +31,20 @@ var scopeUserContainerId = '/subscriptions/${subscription().subscriptionId}/reso
 var scopeSystemContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-system-thread-message-store'
 var scopeEntityContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-agent-entity-store'
 
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' existing = {
+@description('Existing CosmosDB account. Will be assigning Data Contributor role to the Azure AI Foundry project\'s identity.')
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
   name: existingCosmosDbAccountName
 
-  resource writer 'sqlRoleDefinitions' existing = {
+  @description('Built-in Cosmos DB Data Contributor role that can be assigned to Entra identities to grant data access on a Cosmos DB database.')
+  resource dataContributorRole 'sqlRoleDefinitions' existing = {
     name: '00000000-0000-0000-0000-000000000002'
   }
 
+  @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
   resource projectUserThreadContainerWriter 'sqlRoleAssignments' = {
-    name: guid(aiFoundry::project.id, cosmosDbAccount::writer.id, 'enterprise_memory', 'user')
+    name: guid(aiFoundry::project.id, cosmosDbAccount::dataContributorRole.id, 'enterprise_memory', 'user')
     properties: {
-      roleDefinitionId: cosmosDbAccount::writer.id
+      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
       principalId: aiFoundry::project.identity.principalId
       scope: scopeUserContainerId
     }
@@ -48,28 +53,30 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' exis
     ]
   }
 
+  @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
   resource projectSystemThreadContainerWriter 'sqlRoleAssignments' = {
-    name: guid(aiFoundry::project.id, cosmosDbAccount::writer.id, 'enterprise_memory', 'system')
+    name: guid(aiFoundry::project.id, cosmosDbAccount::dataContributorRole.id, 'enterprise_memory', 'system')
     properties: {
-      roleDefinitionId: cosmosDbAccount::writer.id
+      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
       principalId: aiFoundry::project.identity.principalId
       scope: scopeSystemContainerId
     }
     dependsOn: [
-      cosmosDbAccount::projectUserThreadContainerWriter
+      cosmosDbAccount::projectUserThreadContainerWriter // Single thread applying these permissions.
       aiFoundry::project::aiAgentService
     ]
   }
 
+  @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
   resource projectEntityContainerWriter 'sqlRoleAssignments' = {
-    name: guid(aiFoundry::project.id, cosmosDbAccount::writer.id, 'enterprise_memory', 'entities')
+    name: guid(aiFoundry::project.id, cosmosDbAccount::dataContributorRole.id, 'enterprise_memory', 'entities')
     properties: {
-      roleDefinitionId: cosmosDbAccount::writer.id
+      roleDefinitionId: cosmosDbAccount::dataContributorRole.id
       principalId: aiFoundry::project.identity.principalId
       scope: scopeEntityContainerId
     }
     dependsOn: [
-      cosmosDbAccount::projectSystemThreadContainerWriter
+      cosmosDbAccount::projectSystemThreadContainerWriter // Single thread applying these permissions.
       aiFoundry::project::aiAgentService
     ]
   }
@@ -94,7 +101,7 @@ resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefi
 }
 
 // Storage Blob Data Contributor
-resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   scope: subscription()
 }
@@ -112,12 +119,9 @@ resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-0
 
 /*** NEW RESOURCES ***/
 
+@description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing  = {
   name: existingAiFoundryName
-
-  resource model 'deployments' existing = {
-    name: 'gpt-4o'
-  }
 
   resource project 'projects' = {
     name: 'projchat'
@@ -126,11 +130,11 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       type: 'SystemAssigned'
     }
     properties: {
-      description: 'Project description'
-      displayName: 'ProjectDisplayName'
+      description: 'Chat using internet data'
+      displayName: 'ChatWithInternetData'
     }
 
-    // Create project connection to CosmosDB (thread storage), dependency for Azure AI Agent Service
+    @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent Service.')
     resource threadStorageConnection 'connections' = {
       name: cosmosDbAccount.name
       properties: {
@@ -148,7 +152,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    // Create project connection to Azure Storage Account, dependency for Azure AI Agent Service
+    @description('Create project connection to the Azure Storage account; dependency for Azure AI Agent Service.')
     resource storageConnection 'connections' = {
       name: agentStorageAccount.name
       properties: {
@@ -168,7 +172,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    // Create project connection to Azure AI Search, dependency for Azure AI Agent Service
+    @description('Create project connection to Azure AI Search; dependency for Azure AI Agent Service.')
     resource aiSearchConnection 'connections' = {
       name: azureAISearchService.name
       properties: {
@@ -188,6 +192,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
+    @description('Create the Azure AI Agent Service.')
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
       properties: {

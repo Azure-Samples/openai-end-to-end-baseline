@@ -46,7 +46,7 @@ resource azureOpenAiLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024
 }
 
 @description('Existing: Built-in Cognitive Services User role.')
-resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'a97b65f3-24c7-4388-baec-2e87135dc908'
   scope: subscription()
 }
@@ -109,7 +109,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
 // Role assignments
 
 @description('Assign yourself to have access to the Azure AI Foundry portal.')
-resource cognitiveServicesUser 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource cognitiveServicesUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(aiFoundry.id, cognitiveServicesUserRole.id, aiFoundryPortalUserPrincipalId)
   scope: aiFoundry
   properties: {

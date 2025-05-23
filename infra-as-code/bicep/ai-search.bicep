@@ -66,7 +66,7 @@ resource azureAiSearchService 'Microsoft.Search/searchServices@2025-02-01-previe
 // Role assignments
 
 @description('Assign your user the Azure AI Search Index Data Contributor role to support troubleshooting post deployment. Not needed for normal operation.')
-resource debugUserAISearchIndexDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource debugUserAISearchIndexDataContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(debugUserPrincipalId, azureAISearchIndexDataContributorRole.id, azureAiSearchService.id)
   scope: azureAiSearchService
   properties: {
