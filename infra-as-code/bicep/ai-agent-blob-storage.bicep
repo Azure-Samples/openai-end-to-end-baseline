@@ -106,6 +106,7 @@ resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' 
     subnet: {
       id: privateEndpointSubnetResourceId
     }
+    customNetworkInterfaceName: 'nic-ai-agent-storage'
     privateLinkServiceConnections: [
       {
         name: 'ai-agent-storage'

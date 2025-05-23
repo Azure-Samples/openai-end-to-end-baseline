@@ -8,7 +8,7 @@ param location string = resourceGroup().location
 @minLength(2)
 param existingAiFoundryName string
 
-@description('The existing CosmosDB account that is going to be used as the Azure AI Agent thread storage database (dependency).')
+@description('The existing Azure Cosmos DB account that is going to be used as the Azure AI Agent thread storage database (dependency).')
 @minLength(3)
 param existingCosmosDbAccountName string
 
@@ -26,7 +26,7 @@ param existingBingAccountName string
 
 /*** EXISTING RESOURCES ***/
 
-@description('The internal ID of the project is used in the Azure Storage blob containers and in the CosmosDB collections.')
+@description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
 #disable-next-line BCP053
 var workspaceId = aiFoundry::project.properties.internalId
 var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId, 8, 4)}-${substring(workspaceId, 12, 4)}-${substring(workspaceId, 16, 4)}-${substring(workspaceId, 20, 12)}'
@@ -35,7 +35,7 @@ var scopeUserContainerId = '/subscriptions/${subscription().subscriptionId}/reso
 var scopeSystemContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-system-thread-message-store'
 var scopeEntityContainerId = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory/colls/${workspaceIdAsGuid}-agent-entity-store'
 
-@description('Existing CosmosDB account. Will be assigning Data Contributor role to the Azure AI Foundry project\'s identity.')
+@description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Azure AI Foundry project\'s identity.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' existing = {
   name: existingCosmosDbAccountName
 

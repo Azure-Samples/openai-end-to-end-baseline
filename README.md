@@ -65,6 +65,8 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - `Microsoft.AlertsManagement`
     - `Microsoft.Bing`
     - `Microsoft.CognitiveServices`
+    - `Microsoft.Compute`
+    - `Microsoft.DocumentDB`
     - `Microsoft.KeyVault`
     - `Microsoft.Insights`
     - `Microsoft.ManagedIdentity`
@@ -82,7 +84,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - Azure DDoS protection plan: 1
     - Standard, static Public IP Addresses: 3
     - Azure AI Search: TODO
-    - Azure CosmosDB: TODO
+    - Azure Cosmos DB: TODO
 
 - Your deployment user must have the following permissions at the subscription scope.
 

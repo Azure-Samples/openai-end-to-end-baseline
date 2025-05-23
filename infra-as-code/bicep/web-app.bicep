@@ -243,6 +243,7 @@ resource appServicePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-0
     subnet: {
       id: virtualNetwork::privateEndpointsSubnet.id
     }
+    customNetworkInterfaceName: 'nic-front-end-web-app'
     privateLinkServiceConnections: [
       {
         name: 'front-end-web-app'

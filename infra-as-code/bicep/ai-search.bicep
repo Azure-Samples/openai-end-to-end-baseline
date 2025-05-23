@@ -106,6 +106,7 @@ resource aiSearchPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01'
     subnet: {
       id: privateEndpointSubnetResourceId
     }
+    customNetworkInterfaceName: 'nic-ai-agent-search'
     privateLinkServiceConnections: [
       {
         name: 'ai-agent-search'

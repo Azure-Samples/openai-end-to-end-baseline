@@ -36,8 +36,8 @@ module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
   }
 }
 
-@description('Deploy Azure CosmosDB account for the Azure AI Agent Service (dependency). This is used for storing agent definitions and threads.')
-module deployCosmosDbThreadStorageAccount 'cosmosdb.bicep' = {
+@description('Deploy Azure Cosmos DB account for the Azure AI Agent Service (dependency). This is used for storing agent definitions and threads.')
+module deployCosmosDbThreadStorageAccount 'cosmos-db.bicep' = {
   scope: resourceGroup()
   params: {
     location: location

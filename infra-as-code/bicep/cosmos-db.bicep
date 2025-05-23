@@ -40,6 +40,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 // ---- New resources ----
 
+@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Azure AI Agent Service. It\'s used to store threads and agent definitions.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: 'cdb-ai-agent-threads-${baseName}'
   location: location
@@ -66,7 +67,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
       {
         locationName: location
         failoverPriority: 0
-        isZoneRedundant: true
+        isZoneRedundant: false // TODO: Set to true before merging
       }
     ]
     databaseAccountOfferType: 'Standard'
@@ -97,6 +98,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
   }
 }
 
+@description('Capture platform logs for the Cosmos DB account.')
 resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: cosmosDbAccount
@@ -150,12 +152,13 @@ resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-prev
 // Private endpoints
 
 resource cosmosDbPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
-  name: 'pe-ai-agent-cosmosdb'
+  name: 'pe-ai-agent-threads'
   location: resourceGroup().location
   properties: {
     subnet: {
       id: privateEndpointSubnetResourceId
     }
+    customNetworkInterfaceName: 'nic-ai-agent-threads'
     privateLinkServiceConnections: [
       {
         name: 'ai-agent-cosmosdb'

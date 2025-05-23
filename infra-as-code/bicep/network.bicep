@@ -806,7 +806,7 @@ resource blobStoragePrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01
   }
 }
 
-@description('CosmosDB private DNS zone')
+@description('Cosmos DB private DNS zone')
 resource cosmosDbPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: 'privatelink.documents.azure.com'
   location: 'global'

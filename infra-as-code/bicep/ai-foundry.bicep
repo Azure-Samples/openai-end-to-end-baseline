@@ -71,7 +71,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   }
   properties: {
     customSubDomainName: aiFoundryName
-    allowProjectManagement: true // Azure AI Foundry hub
+    allowProjectManagement: true // Azure AI Foundry account
     disableLocalAuth: true
     networkAcls: {
       bypass: 'None'
@@ -80,6 +80,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
       virtualNetworkRules: []
     }
     publicNetworkAccess: 'Disabled'
+    #disable-next-line BCP036
     networkInjections: [
       {
         scenario: 'agent'
@@ -123,12 +124,13 @@ resource cognitiveServicesUser 'Microsoft.Authorization/roleAssignments@2022-04-
 
 @description('Connect the Azure AI Foundry account\'s endpoints to your existing private DNS zones.')
 resource aiFoundryPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
-  name: 'pe-aifoundry'
+  name: 'pe-ai-foundry'
   location: location
   properties: {
     subnet: {
       id: privateEndpointSubnetResourceId
     }
+    customNetworkInterfaceName: 'nic-ai-foundry'
     privateLinkServiceConnections: [
       {
         name: 'aifoundry'

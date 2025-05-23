@@ -124,7 +124,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01'
     subnet: {
       id: virtualNetwork::privateEndpointsSubnet.id
     }
-    // customNetworkInterfaceName: 'nic-${keyVault.name}'  TODO: Test this and if it works, apply to all private endpoints
+    customNetworkInterfaceName: 'nic-${keyVault.name}'
     privateLinkServiceConnections: [
       {
         name: 'key-vault'

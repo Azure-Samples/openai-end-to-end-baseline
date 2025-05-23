@@ -165,6 +165,7 @@ resource webAppStoragePrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-0
     subnet: {
       id: virtualNetwork::privateEndpointsSubnet.id
     }
+    customNetworkInterfaceName: 'nic-web-app-storage'
     privateLinkServiceConnections: [
       {
         name: 'pe-web-app-storage'

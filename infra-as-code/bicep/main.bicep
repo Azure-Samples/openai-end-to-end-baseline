@@ -92,7 +92,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
   ]
 }
 
-@description('Deploys the Azure AI Agent dependencies, Azure Storage, Azure AI Search, and CosmosDB.')
+@description('Deploys the Azure AI Agent dependencies, Azure Storage, Azure AI Search, and Cosmos DB.')
 module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
   scope: resourceGroup()
   params: {
