@@ -15,9 +15,9 @@ param publishFileName string
 
 // existing resource name params
 
-@description('The resource ID of the existing managed online endpoint. Used to retrieve the scoring URI.')
-@minLength(40)
-param managedOnlineEndpointResourceId string
+// @description('The resource ID of the existing managed online endpoint. Used to retrieve the scoring URI.')
+// @minLength(40)
+// param managedOnlineEndpointResourceId string
 
 @description('The name of the existing ACR instance that will be used to contain the web app container image.')
 @minLength(6)
@@ -33,8 +33,8 @@ param privateEndpointsSubnetName string
 param storageName string
 param keyVaultName string
 param logWorkspaceName string
-@description('The Azure Foundry AI project connection string.')
-param aiProjectConnectionString string
+// @description('The Azure Foundry AI project connection string.')
+// param aiProjectConnectionString string
 @description('The Azure Foundry AI project endpoint.')
 param aiProjectEndpoint string
 @description('The Azure AI Agent Services deployment model name.')
@@ -65,13 +65,13 @@ resource azureOpenAI 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' e
   name: openAIName
 }
 
-resource chatProj 'Microsoft.MachineLearningServices/workspaces@2024-04-01' existing = {
-  name: split(managedOnlineEndpointResourceId, '/')[8]
+// resource chatProj 'Microsoft.MachineLearningServices/workspaces@2024-04-01' existing = {
+//   name: split(managedOnlineEndpointResourceId, '/')[8]
 
-  resource onlineEndpoint 'onlineEndpoints' existing = {
-    name: split(managedOnlineEndpointResourceId, '/')[10]
-  }
-}
+  // resource onlineEndpoint 'onlineEndpoints' existing = {
+  //   name: split(managedOnlineEndpointResourceId, '/')[10]
+  // }
+// }
 
 resource storage 'Microsoft.Storage/storageAccounts@2024-01-01' existing = {
   name: storageName
@@ -152,15 +152,15 @@ resource blobDataReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
 }
 
 // Grant the App Service managed identity azure ai developer role permissions
-resource azAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: chatProj
-  name: guid(resourceGroup().id, appServiceManagedIdentity.name, machineLearningAzAiDeveloperRole.id)
-  properties: {
-    roleDefinitionId: machineLearningAzAiDeveloperRole.id
-    principalType: 'ServicePrincipal'
-    principalId: appServiceManagedIdentity.properties.principalId
-  }
-}
+// resource azAiDeveloperRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+//   scope: chatProj
+//   name: guid(resourceGroup().id, appServiceManagedIdentity.name, machineLearningAzAiDeveloperRole.id)
+//   properties: {
+//     roleDefinitionId: machineLearningAzAiDeveloperRole.id
+//     principalType: 'ServicePrincipal'
+//     principalId: appServiceManagedIdentity.properties.principalId
+//   }
+// }
 
 @description('Assign the App Service User Indentity with the ability to invoke assistant endpoints in Azure AI Agent Services.')
 resource appServiceCognitiveServicesDataContributorForAgentsRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -235,10 +235,10 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~2'
       chatApiKey: chatApiKey
-      chatApiEndpoint: chatProj::onlineEndpoint.properties.scoringUri
+      // chatApiEndpoint: chatProj::onlineEndpoint.properties.scoringUri
       chatInputName: 'question'
       chatOutputName: 'answer'
-      aiProjectConnectionString: aiProjectConnectionString
+      // aiProjectConnectionString: aiProjectConnectionString
       aiProjectEndpoint: aiProjectEndpoint
       defaultModel: defaultModelName
       bingSearchConnectionId: bingSearchConnectionId

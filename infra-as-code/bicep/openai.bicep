@@ -13,6 +13,9 @@ param privateEndpointsSubnetName string
 @description('The name of the workload\'s existing Log Analytics workspace.')
 param logWorkspaceName string
 
+@description('The name of the existing subnet within the identified vnet that will contains all the agents hosted for this workload.')
+param agentsSubnetName string
+
 //variables
 var openaiName = 'oai-${baseName}'
 var openaiPrivateEndpointName = 'pep-${openaiName}'
@@ -28,29 +31,46 @@ resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing = {
   resource privateEndpointsSubnet 'subnets' existing = {
     name: privateEndpointsSubnetName
   }
+
+  resource agentsSubnet 'subnets' existing = {
+    name: agentsSubnetName
+  }
 }
 
 resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
   name: logWorkspaceName
 }
 
-resource openAiAccount 'Microsoft.CognitiveServices/accounts@2024-06-01-preview' = {
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   name: openaiName
   location: location
   kind: 'AIServices'
   sku: {
     name: 'S0'
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     customSubDomainName: 'oai${baseName}'
-    publicNetworkAccess: 'Disabled'
+    allowProjectManagement: true
+    disableLocalAuth: true
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
+      virtualNetworkRules: []
+      ipRules: []
     }
-    disableLocalAuth: true
-    restrictOutboundNetworkAccess: true
-    allowedFqdnList: []
+    publicNetworkAccess: 'Disabled'
+    restrictOutboundNetworkAccess: false
+    #disable-next-line BCP036
+    networkInjections: [
+      {
+        scenario: 'agent'
+        subnetArmId: vnet::agentsSubnet.id
+        useMicrosoftManagedNetwork: false
+      }
+    ]
   }
 
   @description('Fairly aggressive filter that attempts to block prompts and completions that are likely unprofessional. Tune to your specific requirements.')

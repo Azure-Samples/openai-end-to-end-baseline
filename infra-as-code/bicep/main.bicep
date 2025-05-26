@@ -131,6 +131,7 @@ module openaiModule 'openai.bicep' = {
     vnetName: networkModule.outputs.vnetNName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
+    agentsSubnetName: networkModule.outputs.agentsSubnetName
   }
 }
 
@@ -161,8 +162,10 @@ module aiStudioCapabilityHosts 'machinelearning-capabilityHosts.bicep' = {
   params: {
     vnetName: networkModule.outputs.vnetNName
     agentsSubnetName: networkModule.outputs.agentsSubnetName
-    aiHubName: aiStudioModule.outputs.aiHubName
+    // aiHubName: aiStudioModule.outputs.aiHubName
+    openAiResourceName: openaiModule.outputs.openAiResourceName
     chatProjectName: aiStudioModule.outputs.chatProjectName
+    stoConnectionName: aiStudioModule.outputs.stoConnectionName
     aoaiConnectionName: aiStudioModule.outputs.aoaiConnectionName
     aaisConnectionName: aiStudioModule.outputs.aaisConnectionName
     cdbConnectionName: aiStudioModule.outputs.cdbConnectionName
@@ -195,7 +198,7 @@ module webappModule 'webapp.bicep' = {
   params: {
     location: location
     baseName: baseName
-    managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
+    // managedOnlineEndpointResourceId: aiStudioModule.outputs.managedOnlineEndpointResourceId
     acrName: acrModule.outputs.acrName
     publishFileName: publishFileName
     openAIName: openaiModule.outputs.openAiResourceName
@@ -205,7 +208,7 @@ module webappModule 'webapp.bicep' = {
     appServicesSubnetName: networkModule.outputs.appServicesSubnetName
     privateEndpointsSubnetName: networkModule.outputs.privateEndpointsSubnetName
     logWorkspaceName: logWorkspace.name
-    aiProjectConnectionString: aiStudioModule.outputs.aiProjectConnectionString
+    // aiProjectConnectionString: aiStudioModule.outputs.aiProjectConnectionString
     aiProjectEndpoint: aiStudioModule.outputs.aiProjectEndpoint
     bingSearchConnectionId: aiStudioModule.outputs.bingConnectionId
     defaultModelName: openaiModule.outputs.defaultModelName

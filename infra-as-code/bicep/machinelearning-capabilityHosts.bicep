@@ -8,14 +8,20 @@ param vnetName string
 @description('The name of the existing subnet within the identified vnet that will contains all the agents hosted for this workload.')
 param agentsSubnetName string
 
+// @description('The name of the Azure AI Foundry hub.')
+// param aiHubName string
+
 @description('The name of the Azure AI Foundry hub.')
-param aiHubName string
+param openAiResourceName string
 
 @description('The name of the Azure AI Foundry project.')
 param chatProjectName string
 
 @description('The workspace id of the Azure AI Foundry project.')
 param chatProjectWorkspaceId string
+
+@description('The name of the Azure AI Foundry project connection to Azure Storage Account.')
+param stoConnectionName string
 
 @description('The name of the Azure AI Foundry project connection to Azure AI Services.')
 param aoaiConnectionName string
@@ -96,12 +102,13 @@ resource cosmosDBOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-0
 // ---- Azure AI Foundry existing resources ----
 
 @description('This is Azure AI Foundry hub.')
-resource aiHub 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' existing = {
-  name: aiHubName
+resource openAiAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
+  name: openAiResourceName
 }
 
 @description('This is Azure AI Foundry chat project.')
-resource chatProject 'Microsoft.MachineLearningServices/workspaces@2025-01-01-preview' existing = {
+resource chatProject 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview' existing = {
+  parent: openAiAccount
   name: chatProjectName
 }
 
@@ -142,27 +149,27 @@ resource projectCosmosDBOperatorForAgentsRoleAssignment 'Microsoft.Authorization
 
 // ---- Capability Hosts ----
 
-resource hubAgentsCapabilityHost 'Microsoft.MachineLearningServices/workspaces/capabilityHosts@2025-01-01-preview' = {
-  parent: aiHub
-  name: 'HubAgents'
-  properties: {
-    capabilityHostKind: 'Agents'
-    customerSubnet: vnet::agentsSubnet.id
-  }
-}
+// resource hubAgentsCapabilityHost 'Microsoft.MachineLearningServices/workspaces/capabilityHosts@2025-01-01-preview' = {
+//   parent: aiHub
+//   name: 'HubAgents'
+//   properties: {
+//     capabilityHostKind: 'Agents'
+//     customerSubnet: vnet::agentsSubnet.id
+//   }
+// }
 
-resource chatProjectCapabilityHost 'Microsoft.MachineLearningServices/workspaces/capabilityHosts@2025-01-01-preview' = {
+resource chatProjectCapabilityHost 'Microsoft.CognitiveServices/accounts/projects/capabilityHosts@2025-04-01-preview' = {
   parent: chatProject
   name: 'ProjectAgents'
   properties: {
     capabilityHostKind: 'Agents'
-    aiServicesConnections: [aoaiConnectionName]
-    vectorStoreConnections: [aaisConnectionName]
-    storageConnections: ['${chatProject.name}/workspaceblobstore']
-    threadStorageConnections: [cdbConnectionName]
+    aiServicesConnections: ['${aoaiConnectionName}']
+    vectorStoreConnections: ['${aaisConnectionName}']
+    storageConnections: ['${stoConnectionName}']
+    threadStorageConnections: ['${cdbConnectionName}']
   }
   dependsOn: [
-    hubAgentsCapabilityHost
+    // hubAgentsCapabilityHost
     projectSearchIndexDataContributorForAgentsRoleAssignment
     projectSearchServiceContributorForAgentsRoleAssignment
     projectCosmosDBOperatorForAgentsRoleAssignment
