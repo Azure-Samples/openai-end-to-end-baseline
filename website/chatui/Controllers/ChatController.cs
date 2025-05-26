@@ -11,10 +11,12 @@ namespace chatui.Controllers;
 
 public class ChatController(
     AgentsClient client,
+    BingGroundingToolDefinition bingGroundingTool,
     IOptionsMonitor<ChatApiOptions> options,
     ILogger<ChatController> logger) : ControllerBase
 {
     private readonly AgentsClient _client = client;
+    private readonly BingGroundingToolDefinition _bingGroundingTool = bingGroundingTool;
     private readonly IOptionsMonitor<ChatApiOptions> _options = options;
     private readonly ILogger<ChatController> _logger = logger;
 
@@ -30,7 +32,7 @@ public class ChatController(
                 model: _config.DefaultModel,
                 name: "Chatbot Agent",
                 instructions: "You are a helpful Chatbot agent.",
-                tools: [])).Value;
+                tools: [_bingGroundingTool])).Value;
 
         var thread = (await _client.CreateThreadAsync()).Value;
 
