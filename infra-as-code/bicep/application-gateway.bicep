@@ -167,7 +167,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
         'TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384'
         'TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256'
       ]
-      minProtocolVersion: 'TLSv1_2'
+      minProtocolVersion: 'TLSv1_3' // TODO: Testing 'TLSv1_2'
     }
 
     gatewayIPConfigurations: [

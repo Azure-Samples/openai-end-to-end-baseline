@@ -91,7 +91,7 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     isLocalUserEnabled: false
     publicNetworkAccess: 'Disabled'
     networkAcls: {
-      bypass: 'AzureServices'
+      bypass: 'None' // 'AzureServices' // TODO: Can we make this 'None'?
       defaultAction: 'Deny'
       ipRules: []
       virtualNetworkRules: []
