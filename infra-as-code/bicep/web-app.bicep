@@ -188,6 +188,8 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
+      aiAgentEndpoint: '${aiFoundry.properties.endpoints['AI Foundry AI']}api/projects/projchat'
+      aiAgentId: 'TBD'
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }
