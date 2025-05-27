@@ -52,7 +52,7 @@ resource openAiAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview'
     type: 'SystemAssigned'
   }
   properties: {
-    customSubDomainName: 'oai${baseName}'
+    customSubDomainName: openaiName //'oai${baseName}' changing the subdomain is not supported
     allowProjectManagement: true
     disableLocalAuth: true
     networkAcls: {
