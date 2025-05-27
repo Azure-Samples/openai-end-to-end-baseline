@@ -108,7 +108,7 @@ The following steps are required to deploy the infrastructure from the command l
    cd openai-end-to-end-baseline
    ```
 
-1. Log in and set your target subscription.
+1. Log in and select your target subscription.
 
    ```bash
    az login

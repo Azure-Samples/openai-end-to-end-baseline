@@ -151,47 +151,6 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       displayName: 'ChatWithInternetData'
     }
 
-    @description('Create project connection to Bing grounding data. Useful for future agents that get created.')
-    resource bingGroundingConnection 'connections' = {
-      name: existingBingAccountName
-      properties: {
-        authType: 'ApiKey'
-        target: bingAccount.properties.endpoint
-        category: 'ApiKey'
-        metadata: {
-          ApiType: 'Azure'
-          ResourceId: bingAccount.id
-          location: bingAccount.location
-        }
-        credentials: {
-          key: bingAccount.listKeys().key1
-        }
-        isSharedToAll: false
-      }
-      dependsOn: [
-        aiAgentService  // Deploy after the Azure AI Agent Service is provisioned, not a dependency.
-      ]
-    }
-
-    @description('Connect this project to application insights for visualization of token usage.')
-    resource applicationInsightsConnection 'connections' = {
-      name:'appInsights-connection'
-      properties: {
-        authType: 'ApiKey'
-        category: 'AppInsights'
-        credentials: {
-          key: applicationInsights.properties.ConnectionString
-        }
-        isSharedToAll: false
-        target: applicationInsights.id
-        metadata: {
-          ApiType: 'Azure'
-          ResourceId: applicationInsights.id
-          location: applicationInsights.location
-        }
-      }
-    }
-
     @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent Service.')
     resource threadStorageConnection 'connections' = {
       name: cosmosDbAccount.name
@@ -250,6 +209,29 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
+    @description('Connect this project to application insights for visualization of token usage.')
+    resource applicationInsightsConnection 'connections' = {
+      name:'appInsights-connection'
+      properties: {
+        authType: 'ApiKey'
+        category: 'AppInsights'
+        credentials: {
+          key: applicationInsights.properties.ConnectionString
+        }
+        isSharedToAll: false
+        target: applicationInsights.id
+        metadata: {
+          ApiType: 'Azure'
+          ResourceId: applicationInsights.id
+          location: applicationInsights.location
+        }
+      }
+      dependsOn: [
+        aiSearchConnection // Single thread these connections, else conflict errors tend to happen
+      ]
+    }
+
+    
     @description('Create the Azure AI Agent Service.')
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
@@ -259,6 +241,31 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
         storageConnections: ['${storageConnection.name}']
         threadStorageConnections: ['${threadStorageConnection.name}']
       }
+      dependsOn: [
+        applicationInsightsConnection  // Single thread changes to the project, else conflict errors tend to happen
+      ]
+    }
+
+    @description('Create project connection to Bing grounding data. Useful for future agents that get created.')
+    resource bingGroundingConnection 'connections' = {
+      name: existingBingAccountName
+      properties: {
+        authType: 'ApiKey'
+        target: bingAccount.properties.endpoint
+        category: 'ApiKey'
+        metadata: {
+          ApiType: 'Azure'
+          ResourceId: bingAccount.id
+          location: bingAccount.location
+        }
+        credentials: {
+          key: bingAccount.listKeys().key1
+        }
+        isSharedToAll: false
+      }
+      dependsOn: [
+        aiAgentService  // Deploy after the Azure AI Agent Service is provisioned, not a dependency.
+      ]
     }
   }
 }
@@ -316,22 +323,3 @@ resource projectAISearchIndexDataContributorAssignment 'Microsoft.Authorization/
     principalType: 'ServicePrincipal'
   }
 }
-
-// Deployment script that just waits for 1 minute to ensure the agent host is ready
-/*
-resource deploymentScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
-  name: 'wait-for-agent-host'
-  location: location
-  kind: 'AzureCLI'
-  properties: {
-    azCliVersion: '2.52.0'
-    scriptContent: 'sleep 60'
-    retentionInterval: 'PT1H'
-  }
-
-  dependsOn: [
-    aiFoundry::project::threadStorageConnection
-    aiFoundry::project::storageConnection
-    aiFoundry::project::aiSearchConnection
-  ]
-}*/

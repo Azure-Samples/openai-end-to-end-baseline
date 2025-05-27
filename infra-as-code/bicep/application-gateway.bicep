@@ -118,20 +118,26 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
   location: location
   properties: {
     policySettings: {
+      requestBodyCheck: true
+      requestBodyEnforcement: true
+      maxRequestBodySizeInKb: 128
+      requestBodyInspectLimitInKB: 128
       fileUploadLimitInMb: 10
+      fileUploadEnforcement: true
+      jsChallengeCookieExpirationInMins: 30
       state: 'Enabled'
       mode: 'Prevention'
     }
     managedRules: {
       managedRuleSets: [
         {
-          ruleSetType: 'OWASP'
-          ruleSetVersion: '3.2'
+          ruleSetType: 'Microsoft_DefaultRuleSet'
+          ruleSetVersion: '2.1'
           ruleGroupOverrides: []
         }
         {
           ruleSetType: 'Microsoft_BotManagerRuleSet'
-          ruleSetVersion: '1.0'
+          ruleSetVersion: '1.1'
           ruleGroupOverrides: []
         }
       ]
@@ -217,7 +223,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
     firewallPolicy: {
       id: wafPolicy.id
     }
-    enableHttp2: false
+    enableHttp2: true
     sslCertificates: [
       {
         name: '${appGatewayName}-ssl-certificate'
