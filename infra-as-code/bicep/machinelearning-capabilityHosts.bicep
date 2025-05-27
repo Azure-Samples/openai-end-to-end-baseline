@@ -149,15 +149,6 @@ resource projectCosmosDBOperatorForAgentsRoleAssignment 'Microsoft.Authorization
 
 // ---- Capability Hosts ----
 
-// resource hubAgentsCapabilityHost 'Microsoft.MachineLearningServices/workspaces/capabilityHosts@2025-01-01-preview' = {
-//   parent: aiHub
-//   name: 'HubAgents'
-//   properties: {
-//     capabilityHostKind: 'Agents'
-//     customerSubnet: vnet::agentsSubnet.id
-//   }
-// }
-
 resource chatProjectCapabilityHost 'Microsoft.CognitiveServices/accounts/projects/capabilityHosts@2025-04-01-preview' = {
   parent: chatProject
   name: 'ProjectAgents'
