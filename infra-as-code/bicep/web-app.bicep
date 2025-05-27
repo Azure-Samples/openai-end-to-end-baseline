@@ -137,7 +137,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
     capacity: 3
   }
   properties: {
-    // TODO zoneRedundant: true
+    zoneRedundant: false // TODO true
     reserved: true
   }
 }

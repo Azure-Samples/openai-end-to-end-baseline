@@ -182,24 +182,30 @@ The following steps are required to deploy the infrastructure from the command l
 
 ### 2. Deploy an agent in the Azure AI Agent service
 
-TODO: Write these instructions
+To test this scenario, you'll be deploying a configured AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Azure AI Foundry. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from within the network.
 
-To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from the network.
+The AI agent definition would likely be deployed from your application's pipeline running from a build agent in your workload's network or it could be deployed via singleton code in your web application. In this deployment, you'll create the agent from the jump box, which most closely simulates pipeline-based creation.
 
-1. Connect to the virtual network via [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp) or through a force-tunneled VPN or virtual network peering that you manually configure.
+1. Connect to the virtual network via the deployed [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp). Alternatively, you can connect through a force-tunneled VPN or virtual network peering that you manually configure apart from these instructions.
 
-   The username for the Windows jump box deployed in this solution is `vmadmin`.
+   The username for the Windows jump box deployed in this solution is `vmadmin`. You provided the password during the deployment.
 
    | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
-1. Open the Azure portal to your subscription and navigate to the Azure AI project named **aiproj-chat** in your resource group.
+1. Open the Azure portal to your subscription.
 
-   You'll need to sign in if this is the first time you are connecting through the jump box.
+   You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Acces policies on your account, if this is the first time you are connecting through the jump box.
 
-1. Open the Azure AI Foundry portal by clicking the **Launch studio** button.
+1. Navigate to the Azure AI Foundry project named **projchat** in your resource group and open the Azure AI Foundry portal by clicking the **Go to Azure AI Foundry portal** button.
 
-   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all your AI Foundry hubs and projects by going to <https://ai.azure.com>.
+   This will take you directly into the 'Chat project'. In the future, you can find all your AI Foundry accounts and projects by going to <https://ai.azure.com>.
+
+   This deployment guide doesn't require you to perform any clicking in the Azure portal or the Azure AI Foundry portal. You launched the portal simply to test network connectivity from within the your virtual network.
+
+1. Install the Azure CLI in your jump box.
+
+   You'll be using this to deploy the agent.
 
 1. Click on **Prompt flow** in the left navigation.
 
@@ -333,11 +339,11 @@ az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n aif${BASE_
 ```
 
 > [!TIP]
-> The `vnet-workload` and associated networking resources are typically blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent Service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
+> The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent Service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
 >
 > The lingering resources do not have a cost associated with them existing in your subscription.
 >
-> Reexeucte the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
+> If the resource group didn't fully delete, reexeucte the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
 
 ## Contributions
 
