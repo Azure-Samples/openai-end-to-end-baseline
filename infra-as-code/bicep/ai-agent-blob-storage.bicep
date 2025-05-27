@@ -55,7 +55,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     defaultToOAuthAuthentication: true
     allowCrossTenantReplication: false
     publicNetworkAccess: 'Disabled'
-    minimumTlsVersion: 'TLS1_3' //  'TLS1_2'  // TODO: Can we make this 1.3?
+    minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
     isHnsEnabled: false
     isSftpEnabled: false
