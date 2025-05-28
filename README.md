@@ -67,8 +67,8 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - `Microsoft.CognitiveServices`
     - `Microsoft.Compute`
     - `Microsoft.DocumentDB`
-    - `Microsoft.KeyVault`
     - `Microsoft.Insights`
+    - `Microsoft.KeyVault`
     - `Microsoft.ManagedIdentity`
     - `Microsoft.Network`
     - `Microsoft.OperationalInsights`
@@ -76,15 +76,19 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - `Microsoft.Storage`
     - `Microsoft.Web`
 
-  - The subscription selected must have the following quota available in the region you choose.
+  - The subscription must have the following quota available in the region you choose.
 
-    - Model: TODO
-    - Azure Storage accounts: 2 instances
+    - Azure OpenAI: GPT-4o model deployment with 20,000 tokens per minute (TPM) capacity
+    - Azure Storage accounts: 1 Standard_GZRS instance and 1 Standard_ZRS instance
     - App Service Plans: P1v3 (AZ), 3 instances
-    - Azure DDoS protection plan: 1
-    - Standard, static Public IP Addresses: 3
-    - Azure AI Search: TODO
-    - Azure Cosmos DB: TODO
+    - Azure DDoS protection plan: 1 instance
+    - Standard, static Public IP Addresses**: 4 instances
+    - Azure AI Search: 1 Standard tier instance
+    - Azure Cosmos DB: 1 account
+    - Virtual machines: 1 Standard_D2s_v3 instance
+    - Application Gateway: 1 WAF_v2 tier instance
+    - Azure Firewall: 1 Basic tier instance
+    - Bing Search: 1 G1 tier account
 
 - Your deployment user must have the following permissions at the subscription scope.
 
