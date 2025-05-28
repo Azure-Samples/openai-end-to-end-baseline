@@ -8,7 +8,7 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
-// Azure AI Agent Service currently has a limitation on subnet prefixes.
+// Azure AI Agent service currently has a limitation on subnet prefixes.
 // 10.x was not supported, as such 192.168.x.x was used.
 var virtualNetworkAddressPrefix = '192.168.0.0/16'
 var appGatewaySubnetPrefix = '192.168.1.0/24'

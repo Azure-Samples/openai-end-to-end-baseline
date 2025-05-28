@@ -1,4 +1,4 @@
-# Contributing to the Azure OpenAI and AI Agent Service chat baseline reference implementation
+# Contributing to the Azure OpenAI and AI Agent service chat baseline reference implementation
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

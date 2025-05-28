@@ -1,6 +1,6 @@
-# Azure OpenAI and AI Agent Service chat baseline reference implementation
+# Azure OpenAI and AI Agent service chat baseline reference implementation
 
-This reference implementation illustrates an approach running a chat application and an AI orchstration layer in a single region. It uses Azure AI Agent service as the orchestrator and Azure OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
+This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Azure AI Agent service as the orchestrator and Azure OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
 
 Follow this implementation to deploy an agent in [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
@@ -13,7 +13,7 @@ Follow this implementation to deploy an agent in [Azure AI Foundry](https://lear
 This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
 - Network isolation
-- Bring-your-own Azure AI Agent service depdendencies (for security and BC/DR control)
+- Bring-your-own Azure AI Agent service dependencies (for security and BC/DR control)
 - Added availability zone reliability
 
 ## Architecture
@@ -21,7 +21,7 @@ This implementation builds off the [basic implementation](https://github.com/Azu
 The implementation covers the following scenarios:
 
 - [Setting up Azure AI Foundry to host agents](#setting-up-azure-ai-foundry-to-host-agents)
-- [Deploying an agent into Azure AI Agent Service](#deploying-an-agent-into-azure-ai-agent-service)
+- [Deploying an agent into Azure AI Agent service](#deploying-an-agent-into-azure-ai-agent-service)
 - [Invoking the agent from .NET code hosted in an Azure Web App](#invoking-the-agent-from-net-code-hosted-in-an-azure-web-app)
 
 ### Setting up Azure AI Foundry to host agents
@@ -34,7 +34,7 @@ The authoring architecture diagram illustrates how flow authors [connect to an A
 
 The diagram further illustrates how AI Foundry is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI service and Azure AI Search.
 
-### Deploying an agent into Azure AI Agent Service
+### Deploying an agent into Azure AI Agent service
 
 TODO: Write this
 
@@ -209,7 +209,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    $LOCATION="eastus2"
    ```
 
-1. Generate some varibles to set context within your jump box.
+1. Generate some variables to set context within your jump box.
 
    *The following variables align with the defaults in this deployment. Update them if you customized anything.*
 
@@ -252,7 +252,7 @@ Here you'll test your orchestration agent by invoking it directly from the Azure
 
 1. Open the Azure portal to your subscription.
 
-   You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Acces policies on your account, if this is the first time you are connecting through the jump box.
+   You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Access policies on your account, if this is the first time you are connecting through the jump box.
 
 1. Navigate to the Azure AI Foundry project named **projchat** in your resource group and open the Azure AI Foundry portal by clicking the **Go to Azure AI Foundry portal** button.
 
@@ -295,7 +295,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Update the app configuration to use the agent you deployed.
 
    ```powershell
-   // TODO -- Fill this out once the code is no longer creating the agent.
+   # TODO -- Fill this out once the code is no longer creating the agent.
    ```
 
 1. Restart the web app to launch the site.
@@ -352,11 +352,11 @@ az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n aif${BASE_
 ```
 
 > [!TIP]
-> The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent Service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
+> The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
 >
 > The lingering resources do not have a cost associated with them existing in your subscription.
 >
-> If the resource group didn't fully delete, reexeucte the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
+> If the resource group didn't fully delete, re-execute the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
 
 ## Contributions
 

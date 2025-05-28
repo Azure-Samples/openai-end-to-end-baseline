@@ -40,7 +40,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 // ---- New resources ----
 
-@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Azure AI Agent Service. It\'s used to store threads and agent definitions.')
+@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Azure AI Agent service. It\'s used to store threads and agent definitions.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: 'cdb-ai-agent-threads-${baseName}'
   location: location

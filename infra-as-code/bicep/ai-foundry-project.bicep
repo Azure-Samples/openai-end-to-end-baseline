@@ -151,7 +151,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       displayName: 'ChatWithInternetData'
     }
 
-    @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent Service.')
+    @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent service.')
     resource threadStorageConnection 'connections' = {
       name: cosmosDbAccount.name
       properties: {
@@ -169,7 +169,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    @description('Create project connection to the Azure Storage account; dependency for Azure AI Agent Service.')
+    @description('Create project connection to the Azure Storage account; dependency for Azure AI Agent service.')
     resource storageConnection 'connections' = {
       name: agentStorageAccount.name
       properties: {
@@ -189,7 +189,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    @description('Create project connection to Azure AI Search; dependency for Azure AI Agent Service.')
+    @description('Create project connection to Azure AI Search; dependency for Azure AI Agent service.')
     resource aiSearchConnection 'connections' = {
       name: azureAISearchService.name
       properties: {
@@ -232,7 +232,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
     }
 
     
-    @description('Create the Azure AI Agent Service.')
+    @description('Create the Azure AI Agent service.')
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
       properties: {
@@ -265,7 +265,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
         isSharedToAll: false
       }
       dependsOn: [
-        aiAgentService  // Deploy after the Azure AI Agent Service is provisioned, not a dependency.
+        aiAgentService  // Deploy after the Azure AI Agent service is provisioned, not a dependency.
       ]
     }
   }
