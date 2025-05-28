@@ -165,7 +165,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
-   :clock8: *This might take about 25 minutes.*
+   :clock8: *This might take about 35 minutes.*
 
    ```bash
    RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
@@ -182,7 +182,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 ### 2. Deploy an agent in the Azure AI Agent service
 
-To test this scenario, you'll be deploying a configured AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Azure AI Foundry. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from within the network.
+To test this scenario, you'll be deploying an AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Azure AI Foundry. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from within the network.
 
 The AI agent definition would likely be deployed from your application's pipeline running from a build agent in your workload's network or it could be deployed via singleton code in your web application. In this deployment, you'll create the agent from the jump box, which most closely simulates pipeline-based creation.
 
@@ -195,8 +195,6 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 1. [Install the Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli-windows) in your jump box.
 
-   You'll be using this to deploy the agent and web application, simulating your deployment pipeline running in a build agent.
-
 1. Open a new PowerShell terminal. Log in and select your target subscription.
 
    ```powershell
@@ -207,13 +205,13 @@ The AI agent definition would likely be deployed from your application's pipelin
 1. Set the base name and location to the same value it was when you deployed the resources.
 
    ```powershell
-   $BASE_NAME="<exact same value>"
+   $BASE_NAME="<exact same value used before>"
    $LOCATION="eastus2"
    ```
 
 1. Generate some varibles to set context within your jump box.
 
-   Update as needed if you customized this deployment.
+   *The following variables align with the defaults in this deployment. Update them if you customized anything.*
 
    ```powershell
    $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
@@ -231,13 +229,18 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 1. Deploy the agent.
 
-   Agents can be created via the Azure AI Foundry portal, the SDK, or the API. Ideally agents should be a source controlled and versioned asset. You then deploy agents in a coordinated way with the rest of your workload's code.
+   Agents can be created via the Azure AI Foundry portal, the SDK, or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code.
 
-   This simulates deploying an AI agent through your pipeline from a network-connected build agent.
+   This step simulates deploying an AI agent through your pipeline from a network-connected build agent.
 
    ```powershell
+   # Use the agent definition on disk
    Invoke-WebRequest -Uri "https://github.com/Azure-Samples/openai-end-to-end-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
+
+   # Update to match your environment
    ${c:chat-with-bing-output.json} = ${c:chat-with-bing.json} -replace 'MODEL_CONNECTION_NAME', $MODEL_CONNECTION_NAME -replace 'BING_CONNECTION_ID', $BING_CONNECTION_ID
+
+   # Deploy the agent
    az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
    ```
 
@@ -253,15 +256,15 @@ Here you'll test your orchestration agent by invoking it directly from the Azure
 
 1. Navigate to the Azure AI Foundry project named **projchat** in your resource group and open the Azure AI Foundry portal by clicking the **Go to Azure AI Foundry portal** button.
 
-   This will take you directly into the 'Chat project'. In the future, you can find all your AI Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
+   This will take you directly into the 'Chat project'. Alternatively, you can find all your AI Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
 
-1. Click **Agents**.
+1. Click **Agents** in the side navigation.
 
 1. Select the agent named 'Baseline Chatbot Agent'.
 
-1. Click **Try in playground**.
+1. Click the **Try in playground** button.
 
-1. Enter a question that would require grounding data through recent internet content, such as a notable current event or the weather today in your location.
+1. Enter a question that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
 
 1. A grounded response to your question should appear on the UI.
 
@@ -283,11 +286,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    Invoke-WebRequest -Uri https://github.com/Azure-Samples/openai-end-to-end-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
    ```
 
-   If you are using a VPN-connected workstation, download the same zip to your workstation.
-
 1. Upload the web application to Azure Storage, where the web app will load the code from.
-
-   Your blob storage account can only be accessed from within your workload's network
 
    ```powershell
    az storage blob upload -f chatui.zip --account-name "stwebapp${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
