@@ -176,7 +176,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
     siteConfig: {
       ftpsState: 'Disabled'
       vnetRouteAllEnabled: true
-      http20Enabled: true
+      http20Enabled: false
       publicNetworkAccess: 'Disabled'
       alwaysOn: true
       linuxFxVersion: 'DOTNETCORE|8.0'

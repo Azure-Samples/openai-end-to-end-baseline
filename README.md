@@ -193,73 +193,52 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
+1. [Install the Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli-windows) in your jump box.
+
+   You'll be using this to deploy the agent and web application, simulating your deployment pipeline running in a build agent.
+
+1. Log in and select your target subscription.
+
+   ```bash
+   az login
+   az account set --subscription xxxxx
+   ```
+
+1. Set the base name to the same value it was when you deployed the resources.
+
+   ```bash
+   $BASE_NAME="<exact same value>"
+   ```
+
+1. Deploy the agent.
+
+   TODO
+
+### 3. Test the agent from the Azure AI Foundry portal in the playground
+
+Here you'll test your orchestration agent by invoking it directly from the Azure AI Foundry portal's playground experience. This also helps you validate that your AI Foundry portal access is established correctly from your jump box.
+
 1. Open the Azure portal to your subscription.
 
    You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Acces policies on your account, if this is the first time you are connecting through the jump box.
 
 1. Navigate to the Azure AI Foundry project named **projchat** in your resource group and open the Azure AI Foundry portal by clicking the **Go to Azure AI Foundry portal** button.
 
-   This will take you directly into the 'Chat project'. In the future, you can find all your AI Foundry accounts and projects by going to <https://ai.azure.com>.
+   This will take you directly into the 'Chat project'. In the future, you can find all your AI Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
 
-   This deployment guide doesn't require you to perform any clicking in the Azure portal or the Azure AI Foundry portal. You launched the portal simply to test network connectivity from within the your virtual network.
+1. Click **Agents**.
 
-1. Install the Azure CLI in your jump box.
+1. Select the agent named 'TBD'.
 
-   You'll be using this to deploy the agent.
+1. TODO
 
-1. Click on **Prompt flow** in the left navigation.
-
-1. On the **Flows** tab, click **+ Create**.
-
-1. Under **Explore gallery**, find "Chat with Wikipedia" and click **Clone**.
-
-1. Set the Folder name to `chat_wiki` and click **Clone**.
-
-   This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
-
-   :bug: Occasionally, you might receive the following error:
-
-   > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source Azure Storage account.
-
-   If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
-
-1. Connect the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
-
-   - For **Connection**, select 'aoai' from the dropdown menu. This is your deployed Azure OpenAI instance.
-   - For **deployment_name**, select 'gpt35' from the dropdown menu. This is the model you've deployed in that Azure OpenAI instance.
-   - For **response_format**, select '{"type":"text"}' from the dropdown menu
-
-1. Also connect the `augmented_chat` prompt flow step to your Azure OpenAI model deployment.
-
-   - For **Connection**, select the same 'aoai' from the dropdown menu.
-   - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
-   - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
-
-1. Click **Save** on the whole flow.
-
-### 3. Test the agent from the Azure AI Foundry portal in the playground
-
-TODO: Write these instructions
-
-Here you'll test your flow by invoking it directly from the Azure AI Foundry portal. The flow still requires you to bring compute to execute it from. The compute you'll use when in the portal is the default *Serverless* offering, which is only used for portal-based prompt flow experiences. The interactions against Azure OpenAI are performed by your identity; the bicep template has already granted your user data plane access. The Serverless compute is run from the managed virtual network and is beholden to the egress network rules defined.
-
-1. Click **Start compute session**.
-
-1. :clock8: Wait for that button to change to *Compute session running*. This might take about ten minutes.
-
-   *Do not advance until the serverless compute session is running.*
-
-1. Click the enabled **Chat** button on the UI.
-
-1. Enter a question that would require grounding data through recent Wikipedia content, such as a notable current event.
+1. Enter a question that would require grounding data through recent internet content, such as a notable current event or the weather today.
 
 1. A grounded response to your question should appear on the UI.
 
 ### 4. Publish the chat front-end web app
 
-TODO: Write these instructions
-
-Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
 In a production environment, you use a CI/CD pipeline to:
 
@@ -267,7 +246,7 @@ In a production environment, you use a CI/CD pipeline to:
 - Create the project zip package
 - Upload the zip file to your Storage account from compute that is in or connected to the workload's virtual network.
 
-For this deployment guide, you'll continue using your jump box (or VPN-connected workstation) to simulate part of that process.
+For this deployment guide, you'll continue using your jump box to simulate part of that process.
 
 1. Using the same Powershell terminal session from previous steps, download the web UI.
 
@@ -279,19 +258,21 @@ For this deployment guide, you'll continue using your jump box (or VPN-connected
 
 1. Upload the web application to Azure Storage, where the web app will load the code from.
 
+   Your blob storage account can only be accessed from within your workload's network
+
    ```powershell
-   az storage blob upload -f chatui.zip --account-name "st${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
+   az storage blob upload -f chatui.zip --account-name "stwebapp${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
-1. Restart the web app to launch the site. *(This can be done from your workstation or the jump box.)*
+1. Restart the web app to launch the site.
+
+   *This can be done from your workstation or the jump box if you first set the $RESOURCE_GROUP variable.*
 
    ```powershell
    az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
    ```
 
 ### 5. Try it out! Test the deployed application that calls into the Azure AI Agent service
-
-TODO: Write these instructions
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
 
@@ -316,7 +297,7 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-   Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included context from Wikipedia such as recent data or events.
+   Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included context from Bing such as recent weather or events.
 
 ## :broom: Clean up resources
 
