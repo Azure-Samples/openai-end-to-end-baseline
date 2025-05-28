@@ -197,26 +197,55 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    You'll be using this to deploy the agent and web application, simulating your deployment pipeline running in a build agent.
 
-1. Log in and select your target subscription.
+1. Open a new PowerShell terminal. Log in and select your target subscription.
 
-   ```bash
+   ```powershell
    az login
    az account set --subscription xxxxx
    ```
 
-1. Set the base name to the same value it was when you deployed the resources.
+1. Set the base name and location to the same value it was when you deployed the resources.
 
-   ```bash
+   ```powershell
    $BASE_NAME="<exact same value>"
+   $LOCATION="eastus2"
+   ```
+
+1. Generate some varibles to set context within your jump box.
+
+   Update as needed if you customized this deployment.
+
+   ```powershell
+   $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
+   $AI_FOUNDRY_NAME="aif${BASE_NAME}"
+   $BING_CONNECTION_NAME="bingaiagent"
+   $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/projchat/connections/${BING_CONNECTION_NAME}"
+   $MODEL_CONNECTION_NAME="gpt-4o"
+   $AI_FOUNDRY_PROJECT_NAME="projchat"
+   $AI_FOUNDRY_AGENT_CREATE_URL="https://${AI_FOUNDRY_NAME}.services.ai.azure.com/api/projects/${AI_FOUNDRY_PROJECT_NAME}/assistants?api-version=2025-05-15-preview"
+
+   echo $BING_CONNECTION_ID
+   echo $MODEL_CONNECTION_NAME
+   echo $AI_FOUNDRY_AGENT_CREATE_URL
    ```
 
 1. Deploy the agent.
 
-   TODO
+   Agents can be created via the Azure AI Foundry portal, the SDK, or the API. Ideally agents should be a source controlled and versioned asset. You then deploy agents in a coordinated way with the rest of your workload's code.
 
-### 3. Test the agent from the Azure AI Foundry portal in the playground
+   This simulates deploying an AI agent through your pipeline from a network-connected build agent.
 
-Here you'll test your orchestration agent by invoking it directly from the Azure AI Foundry portal's playground experience. This also helps you validate that your AI Foundry portal access is established correctly from your jump box.
+   ```powershell
+   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/openai-end-to-end-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
+   ${c:chat-with-bing-output.json} = ${c:chat-with-bing.json} -replace 'MODEL_CONNECTION_NAME', $MODEL_CONNECTION_NAME -replace 'BING_CONNECTION_ID', $BING_CONNECTION_ID
+   az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
+   ```
+
+### 3. Test the agent from the Azure AI Foundry portal in the playground. *Optional.*
+
+Here you'll test your orchestration agent by invoking it directly from the Azure AI Foundry portal's playground experience. The Azure AI Foundry portal is only accessible from your private network, so you'll do this from your jump box.
+
+*This step testing step is completely optional.*
 
 1. Open the Azure portal to your subscription.
 
@@ -228,11 +257,11 @@ Here you'll test your orchestration agent by invoking it directly from the Azure
 
 1. Click **Agents**.
 
-1. Select the agent named 'TBD'.
+1. Select the agent named 'Baseline Chatbot Agent'.
 
-1. TODO
+1. Click **Try in playground**.
 
-1. Enter a question that would require grounding data through recent internet content, such as a notable current event or the weather today.
+1. Enter a question that would require grounding data through recent internet content, such as a notable current event or the weather today in your location.
 
 1. A grounded response to your question should appear on the UI.
 
@@ -248,7 +277,7 @@ In a production environment, you use a CI/CD pipeline to:
 
 For this deployment guide, you'll continue using your jump box to simulate part of that process.
 
-1. Using the same Powershell terminal session from previous steps, download the web UI.
+1. Using the same PowerShell terminal session from previous steps, download the web UI.
 
    ```powershell
    Invoke-WebRequest -Uri https://github.com/Azure-Samples/openai-end-to-end-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
@@ -265,8 +294,6 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    ```
 
 1. Restart the web app to launch the site.
-
-   *This can be done from your workstation or the jump box if you first set the $RESOURCE_GROUP variable.*
 
    ```powershell
    az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
