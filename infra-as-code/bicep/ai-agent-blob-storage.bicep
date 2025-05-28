@@ -71,7 +71,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
       }
     }
     networkAcls: {
-      bypass: 'AzureServices'  // TODO: Can we make this 'None'?
+      bypass: 'AzureServices'
       defaultAction: 'Deny'
       virtualNetworkRules: []
       ipRules: []

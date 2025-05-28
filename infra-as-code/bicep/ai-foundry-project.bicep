@@ -248,12 +248,13 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
 
     @description('Create project connection to Bing grounding data. Useful for future agents that get created.')
     resource bingGroundingConnection 'connections' = {
-      name: existingBingAccountName
+      name: replace(existingBingAccountName, '-', '')
       properties: {
         authType: 'ApiKey'
         target: bingAccount.properties.endpoint
-        category: 'ApiKey'
+        category: 'GroundingWithBingSearch'
         metadata: {
+          type: 'bing_grounding'
           ApiType: 'Azure'
           ResourceId: bingAccount.id
           location: bingAccount.location

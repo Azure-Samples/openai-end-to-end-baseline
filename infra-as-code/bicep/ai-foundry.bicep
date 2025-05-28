@@ -90,11 +90,11 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
     ]
   }
 
-  @description('Deploy a model. TODO: document more.')
+  @description('Models are managed at the account level. Deploy the GPT model that will be used for the Azure AI Agent logic.')
   resource model 'deployments' = {
     name: 'gpt-4o'
     sku: {
-      capacity: 14
+      capacity: 20
       name: 'GlobalStandard'
     }
     properties: {
@@ -103,7 +103,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
         name: 'gpt-4o'
         version: '2024-08-06'
       }
-      versionUpgradeOption: 'NoAutoUpgrade'
+      versionUpgradeOption: 'NoAutoUpgrade' // Production deployments should not auto-upgrade models.  Testing compatibility is important.
     }
   }
 }

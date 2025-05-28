@@ -87,7 +87,14 @@ resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01'
 
 @description('Built-in Role: [Azure AI User](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
 resource azureAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
+  name: '53ca6127-db72-4b80-b1b0-d745d6d5456d'
+  scope: subscription()
+}
+
+// TODO: Should only be needed while the Web App is creating the agent. Remove once that code is removed.
+@description('Built-in Role: [Azure AI Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
+resource azureAiProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'eadc314b-1a2d-4efa-be10-5d325db5065e'
   scope: subscription()
 }
 
@@ -130,13 +137,24 @@ resource azureAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
+@description('Grant the App Service managed identity Azure AI manager role permission so it create the Azure AI Foundry-hosted agent. Temporary until the web app code is updated to not require this role.')
+resource azureAiManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiFoundry
+  name: guid(aiFoundry.id, appServiceManagedIdentity.id, azureAiProjectManagerRole.id)
+  properties: {
+    roleDefinitionId: azureAiProjectManagerRole.id
+    principalType: 'ServicePrincipal'
+    principalId: appServiceManagedIdentity.properties.principalId
+  }
+}
+
 @description('Linux, PremiumV4 App Service Plan to host the chat web application.')
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'asp-${appName}${uniqueString(subscription().subscriptionId)}'
   location: location
   kind: 'linux'
   sku: {
-    name: 'S1' //TODO 'P1V4'
+    name: 'S1' // TODO: 'P1V4'
     //tier: 'PremiumV4'  // az appservice list-locations --linux-workers-enabled --sku P1V4
     capacity: 3
   }
@@ -198,9 +216,10 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
-      aiAgentEndpoint: '${aiFoundry.properties.endpoints['AI Foundry API']}api/projects/projchat'
-      bingSearchConnectionId: bingSearchConnectionId
-      aiAgentId: 'TBD'
+      AIProjectEndpoint: '${aiFoundry.properties.endpoints['AI Foundry API']}api/projects/projchat'
+      BingSearchConnectionId: bingSearchConnectionId // TODO: Should be able to be removed once agent creation is out of this code.
+      DefaultModel: 'gpt-4o' // TODO: Should be able to be removed once agent creation is out of this code.
+      AIAgentId: 'TBD' // TODO: Use this once agent creation is out of this code.
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }
