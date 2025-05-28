@@ -199,6 +199,7 @@ module deployWebApp 'web-app.bicep' = {
     existingWebAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
     existingAzureAiFoundryResourceName: deployAzureAIFoundry.outputs.aiFoundryName
+    bingSearchConnectionId: deployAzureAiFoundryProject.outputs.bingSearchConnectionId
   }
 }
 

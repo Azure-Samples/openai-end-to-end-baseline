@@ -235,6 +235,10 @@ resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
       id: azureFirewallPolicy.id
     }
   }
+  dependsOn: [
+    azureFirewallPolicy::applicationRules
+    azureFirewallPolicy::networkRules
+  ]
 }
 
 resource egressRouteTable 'Microsoft.Network/routeTables@2024-05-01' existing = {

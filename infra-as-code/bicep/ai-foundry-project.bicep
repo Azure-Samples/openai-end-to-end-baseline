@@ -28,7 +28,7 @@ param existingBingAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-/*** EXISTING RESOURCES ***/
+// ---- Existing resources ----
 
 @description('The internal ID of the project is used in the Azure Storage blob containers and in the Cosmos DB collections.')
 #disable-next-line BCP053
@@ -134,7 +134,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
   name: existingWebApplicationInsightsResourceName
 }
 
-/*** NEW RESOURCES ***/
+// ---- New resources ----
 
 @description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing  = {
@@ -323,3 +323,7 @@ resource projectAISearchIndexDataContributorAssignment 'Microsoft.Authorization/
     principalType: 'ServicePrincipal'
   }
 }
+
+// ---- Outputs ----
+
+output bingSearchConnectionId string = aiFoundry::project::bingGroundingConnection.id

@@ -45,6 +45,10 @@ param existingWebApplicationInsightsResourceName string
 @minLength(2)
 param existingAzureAiFoundryResourceName string
 
+@description('The name of the existing Azure AI Foundry project connection for Bing grounding searches.')
+@minLength(2)
+param bingSearchConnectionId string
+
 // variables
 var appName = 'app-${baseName}'
 
@@ -195,6 +199,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
       aiAgentEndpoint: '${aiFoundry.properties.endpoints['AI Foundry API']}api/projects/projchat'
+      bingSearchConnectionId: bingSearchConnectionId
       aiAgentId: 'TBD'
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
