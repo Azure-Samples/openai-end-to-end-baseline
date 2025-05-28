@@ -332,6 +332,22 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = 
     }
   }
 
+  @description('Install Azure CLI on the jump box.')
+  resource azureCliExtension 'extensions' = {
+    name: 'installAzureCLI'
+    location: location
+    properties: {
+      autoUpgradeMinorVersion: true
+      enableAutomaticUpgrade: false
+      publisher: 'Microsoft.Compute'
+      type: 'CustomScriptExtension'
+      typeHandlerVersion: '1.10'
+      settings: {
+        commandToExecute: 'powershell -ExecutionPolicy Unrestricted -Command "Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList \'/I AzureCLI.msi /quiet\'"'
+      }
+    }
+  }
+
   @description('Enable Azure Monitor Agent for observability though VM Insights.')
   resource amaExtension 'extensions' = {
     name: 'AzureMonitorWindowsAgent'

@@ -60,7 +60,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - An [Azure subscription](https://azure.microsoft.com/free/)
 
-  - The subscription must have the following resource providers [registered](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider).
+  - The subscription must have all of the resource providers used in this deployment [registered](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider).
 
     - `Microsoft.AlertsManagement`
     - `Microsoft.Bing`
@@ -197,9 +197,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
-1. [Install the Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli-windows) in your jump box.
-
-1. Open a new PowerShell terminal. Log in and select your target subscription.
+1. Open a PowerShell terminal. Log in and select your target subscription.
 
    ```powershell
    az login
