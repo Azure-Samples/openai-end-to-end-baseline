@@ -292,6 +292,12 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az storage blob upload -f chatui.zip --account-name "stwebapp${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
+1. Update the app configuration to use the agent you deployed.
+
+   ```powershell
+   // TODO -- Fill this out once the code is no longer creating the agent.
+   ```
+
 1. Restart the web app to launch the site.
 
    ```powershell
