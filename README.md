@@ -78,17 +78,15 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
   - The subscription must have the following quota available in the region you choose.
 
-    - Azure OpenAI: GPT-4o model deployment with 20,000 tokens per minute (TPM) capacity
-    - Azure Storage accounts: 1 Standard_GZRS instance and 1 Standard_ZRS instance
+    - Application Gateways: 1 WAF_v2 tier instance
     - App Service Plans: P1v3 (AZ), 3 instances
-    - Azure DDoS protection plan: 1 instance
-    - Standard, static Public IP Addresses**: 4 instances
-    - Azure AI Search: 1 Standard tier instance
+    - Azure AI Search (S - Standard): 1
     - Azure Cosmos DB: 1 account
-    - Virtual machines: 1 Standard_D2s_v3 instance
-    - Application Gateway: 1 WAF_v2 tier instance
-    - Azure Firewall: 1 Basic tier instance
-    - Bing Search: 1 G1 tier account
+    - Azure OpenAI: GPT-4o model deployment with 20,000 tokens per minute (TPM) capacity
+    - DDoS Protection Plans: 1
+    - Public IPv4 Addresses - Standard: 4
+    - Standard DSv3 Family vCPU: 2
+    - Storage Accounts: 2    
 
 - Your deployment user must have the following permissions at the subscription scope.
 
