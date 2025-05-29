@@ -52,8 +52,8 @@ resource azureAiSearchService 'Microsoft.Search/searchServices@2025-02-01-previe
     disableLocalAuth: true
     authOptions: null
     hostingMode: 'default'
-    partitionCount: 1
-    replicaCount: 1
+    partitionCount: 1 // Production readiness change: This can be updated based on the expected data volume and query load.
+    replicaCount: 3   // 3 replicas are required for 99.9% availability for read/write operations
     semanticSearch: 'disabled'
     publicNetworkAccess: 'disabled'
     networkRuleSet: {

@@ -26,31 +26,19 @@ The implementation covers the following scenarios:
 
 ### Setting up Azure AI Foundry to host agents
 
-TODO: Write this
-
-![Diagram of the authoring architecture using Azure AI Foundry. It demonstrates key architecture components and flow when using AI Foundry portal as an authoring environment. ](docs/media/openai-end-to-end-baseline-authoring.png)
-
-The authoring architecture diagram illustrates how flow authors [connect to an Azure AI Foundry through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine. Connectivity to the virtual network is more commonly done in enterprises using private connectivity options like ExpressRoute or virtual network peering.
-
-The diagram further illustrates how AI Foundry is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI service and Azure AI Search.
+Azure AI Foundry hosts Azure AI Agent service as a capability. Azure AI Agent service's REST APIs are exposed as a AI Foundry private endpoint within the network, and the agents' all egress through a delegated subnet which is routed through Azure Firewall for any internet traffic. This architecture deploys the Azure AI Agent service with its depedencies hosted within your own Azure subscription. As such, this architecture includes an Azure Storage account, Azure AI Search instance, and an Azure Cosmos DB account specifically for the Azure AI Agent service to manage.
 
 ### Deploying an agent into Azure AI Agent service
 
-TODO: Write this
+Agents can be created via the Azure AI Foundry portal, [Azure AI Agents SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent), or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). The creation and invocation of agents are a data plane operation. Since the data plane to Azure AI Foundry is private, all three of those are restricted to being executed from within a private network connected to the private endpoint of Azure AI Foundry.
 
-![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI Foundry environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Foundry.](docs/media/openai-end-to-end-baseline-aml-compute.png)
+Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to similate a deployment pipeline which could have created the agent.
 
-The Azure AI Foundry deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Foundry project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow connects to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
+If using the Azure AI Foundry portal is desired, then that web browser experience must be performed from a VM within the network or from a workstation that has VPN access to the private network and can properly resolve private DNS records.
 
 ### Invoking the agent from .NET code hosted in an Azure Web App
 
-TODO: Write this
-
-![Diagram of the deploying a flow to Azure App Service. This drawing emphasizes how AI Foundry compute and endpoints are bypassed, and Azure App Service and its virtual network become responsible for connecting to the private endpoints for dependencies.](docs/media/openai-end-to-end-baseline-app-services.png)
-
-The Azure App Service deployment architecture diagram illustrates how the same prompt flow is containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure AI Foundry managed online endpoint.
-
-The flow is still authored in a network-isolated Azure AI Foundry project. To deploy an App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints by the App Service.
+A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Azure AI Agents SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent) to connect to the workload's agent. The endpoint for the agent is exposed exclusively through the Azure AI Foundry private endpoint.
 
 ## Deployment guide
 
@@ -82,7 +70,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - App Service Plans: P1v3 (AZ), 3 instances
     - Azure AI Search (S - Standard): 1
     - Azure Cosmos DB: 1 account
-    - Azure OpenAI: GPT-4o model deployment with 20,000 tokens per minute (TPM) capacity
+    - Azure OpenAI: GPT-4o model deployment with 50k tokens per minute (TPM) capacity
     - DDoS Protection Plans: 1
     - Public IPv4 Addresses - Standard: 4
     - Standard DSv3 Family vCPU: 2
@@ -216,9 +204,9 @@ The AI agent definition would likely be deployed from your application's pipelin
    $RESOURCE_GROUP="rg-chat-baseline-${BASE_NAME}"
    $AI_FOUNDRY_NAME="aif${BASE_NAME}"
    $BING_CONNECTION_NAME="bingaiagent"
-   $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/projchat/connections/${BING_CONNECTION_NAME}"
-   $MODEL_CONNECTION_NAME="gpt-4o"
    $AI_FOUNDRY_PROJECT_NAME="projchat"
+   $MODEL_CONNECTION_NAME="agent-model"
+   $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${$AI_FOUNDRY_PROJECT_NAME}$/connections/${BING_CONNECTION_NAME}"
    $AI_FOUNDRY_AGENT_CREATE_URL="https://${AI_FOUNDRY_NAME}.services.ai.azure.com/api/projects/${AI_FOUNDRY_PROJECT_NAME}/assistants?api-version=2025-05-15-preview"
 
    echo $BING_CONNECTION_ID
@@ -228,9 +216,7 @@ The AI agent definition would likely be deployed from your application's pipelin
 
 1. Deploy the agent.
 
-   Agents can be created via the Azure AI Foundry portal, the SDK, or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code.
-
-   This step simulates deploying an AI agent through your pipeline from a network-connected build agent.
+   *This step simulates deploying an AI agent through your pipeline from a network-connected build agent.*
 
    ```powershell
    # Use the agent definition on disk

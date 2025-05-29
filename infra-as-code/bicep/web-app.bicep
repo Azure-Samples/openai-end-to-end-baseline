@@ -105,6 +105,10 @@ resource appServiceExistingPrivateDnsZone 'Microsoft.Network/privateDnsZones@202
 @description('Existing Azure AI Foundry account. This account is where the agents hosted in Azure AI Agent service will be deployed. The web app code calls to these agents.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
   name: existingAzureAiFoundryResourceName
+
+  resource project 'projects' existing = {
+    name: 'projchat'
+  }
 }
 
 // ---- New resources ----
@@ -154,12 +158,11 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   location: location
   kind: 'linux'
   sku: {
-    name: 'S1' // TODO: 'P1V4'
-    //tier: 'PremiumV4'  // az appservice list-locations --linux-workers-enabled --sku P1V4
+    name: 'P1V3'  // az appservice list-locations --linux-workers-enabled --sku P1V4
     capacity: 3
   }
   properties: {
-    zoneRedundant: false // TODO true
+    zoneRedundant: true
     reserved: true
   }
 }
@@ -215,10 +218,10 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
-      AIProjectEndpoint: '${aiFoundry.properties.endpoints['AI Foundry API']}api/projects/projchat'
+      AIProjectEndpoint:  aiFoundry::project.properties.endpoints['AI Foundry API']
       BingSearchConnectionId: bingSearchConnectionId // TODO: Should be able to be removed once agent creation is out of this code.
-      DefaultModel: 'gpt-4o' // TODO: Should be able to be removed once agent creation is out of this code.
-      AIAgentId: 'TBD' // TODO: Use this once agent creation is out of this code.
+      DefaultModel: 'agent-model' // TODO: Should be able to be removed once agent creation is out of this code.
+      AIAgentId: 'Not yet set' // TODO: Use this once agent creation is out of this code.
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }
