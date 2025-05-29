@@ -200,7 +200,6 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       linuxFxVersion: 'DOTNETCORE|8.0'
       netFrameworkVersion: null
       windowsFxVersion: null
-      minTlsCipherSuite: 'TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256'
     }
   }
   dependsOn: [

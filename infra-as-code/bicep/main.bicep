@@ -41,6 +41,8 @@ var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 
 // ---- New resources ----
 
+// TODO: Add recommended Azure Policy assignments to RG prior to deploying resources.
+
 @description('This is the log sink for all Azure Diagnostics in the workload.')
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: 'log-workload'

@@ -170,7 +170,7 @@ The following steps are required to deploy the infrastructure from the command l
    :clock8: *This might take about 35 minutes.*
 
    ```bash
-   RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
+   RESOURCE_GROUP=rg-chat-baseline-${BASE_NAME}
    az group create -l $LOCATION -n $RESOURCE_GROUP
 
    PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv)
@@ -195,18 +195,17 @@ The AI agent definition would likely be deployed from your application's pipelin
    | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
-1. Open a PowerShell terminal. Log in and select your target subscription.
+1. Open PowerShell from the Terminal app. Log in and select your target subscription.
 
    ```powershell
    az login
    az account set --subscription xxxxx
    ```
 
-1. Set the base name and location to the same value it was when you deployed the resources.
+1. Set the base name to the same value it was when you deployed the resources.
 
    ```powershell
    $BASE_NAME="<exact same value used before>"
-   $LOCATION="eastus2"
    ```
 
 1. Generate some variables to set context within your jump box.
@@ -214,7 +213,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    *The following variables align with the defaults in this deployment. Update them if you customized anything.*
 
    ```powershell
-   $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
+   $RESOURCE_GROUP="rg-chat-baseline-${BASE_NAME}"
    $AI_FOUNDRY_NAME="aif${BASE_NAME}"
    $BING_CONNECTION_NAME="bingaiagent"
    $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/projchat/connections/${BING_CONNECTION_NAME}"
@@ -295,13 +294,14 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Update the app configuration to use the agent you deployed.
 
    ```powershell
-   # TODO -- Fill this out once the code is no longer creating the agent.
+   # TODO Capture and reuse the ID
+   az webapp config appsettings set -n app-${BASE_NAME} -g $RESOURCE_GROUP --settings AIAgentId=<ID value from the agent creation step>
    ```
 
-1. Restart the web app to launch the site.
+1. Restart the web app to load the site code and its updated configuation.
 
    ```powershell
-   az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
+   az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
    ```
 
 ### 5. Try it out! Test the deployed application that calls into the Azure AI Agent service
