@@ -1,9 +1,10 @@
 {
-    "name": "Azure OpenAI end-to-end baseline reference implementation",
+    "name": "AI Agent service chat baseline reference implementation",
     "image": "mcr.microsoft.com/devcontainers/dotnet:dev-8.0-jammy",
     "runArgs": ["--network=host"],
     "remoteUser": "vscode",
     "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {}
     },
     "customizations": {
         "vscode": {

@@ -1,8 +1,8 @@
-# Azure OpenAI and AI Agent service chat baseline reference implementation
+# AI Agent service chat baseline reference implementation
 
-This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Azure AI Agent service as the orchestrator and Azure OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
+This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Azure AI Agent service as the orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
 
-Follow this implementation to deploy an agent in [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
+Follow this implementation to deploy an agent in [Azure AI Foundry](https://learn.microsoft.com/azure/ai-foundry/) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
 - Creating agents and agent prompts
 - Querying data stores for grounding data
@@ -70,7 +70,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - App Service Plans: P1v3 (AZ), 3 instances
     - Azure AI Search (S - Standard): 1
     - Azure Cosmos DB: 1 account
-    - Azure OpenAI: GPT-4o model deployment with 50k tokens per minute (TPM) capacity
+    - OpenAI model: GPT-4o model deployment with 50k tokens per minute (TPM) capacity
     - DDoS Protection Plans: 1
     - Public IPv4 Addresses - Standard: 4
     - Standard DSv3 Family vCPU: 2
@@ -292,7 +292,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 
 ### 5. Try it out! Test the deployed application that calls into the Azure AI Agent service
 
-This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure AI Foundry agent API endpoint, which hosts the agent and its chat history. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
 
 | :computer: | Unless otherwise noted, the following steps are all performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
