@@ -95,7 +95,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
     name: 'agent-model'
     sku: {
       capacity: 50
-      name: 'GlobalStandard'
+      name: 'DataZoneStandard' // Production readiness, use provisioned deployments with automatic spillover https://learn.microsoft.com/azure/ai-services/openai/how-to/spillover-traffic-management.
     }
     properties: {
       model: {
@@ -104,10 +104,9 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
         version: '2024-11-20'  // Use a model version available in your region.
       }
       versionUpgradeOption: 'NoAutoUpgrade' // Production deployments should not auto-upgrade models.  Testing compatibility is important.
+      raiPolicyName: 'Microsoft.DefaultV2'  // If this isn't strict enough for your use case, create a custom RAI policy.
     }
   }
-
-  // TODO: Bring back the custom policy creation to showcase it.
 }
 
 // Role assignments

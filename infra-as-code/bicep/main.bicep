@@ -41,7 +41,11 @@ var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 
 // ---- New resources ----
 
-// TODO: Add recommended Azure Policy assignments to RG prior to deploying resources.
+@description('Deploy an example set of Azure Policies to help you govern your workload. Expand the policy set as desired.')
+module applyAzurePolicies 'azure-policies.bicep' = {
+  scope: resourceGroup()
+  params: {}
+}
 
 @description('This is the log sink for all Azure Diagnostics in the workload.')
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
@@ -63,6 +67,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 @description('Deploy Virtual Network, with subnets, NSGs, and DDoS Protection.')
 module deployVirtualNetwork 'network.bicep' = {
+  scope: resourceGroup()
   params: {
     location: location
   }
@@ -70,6 +75,7 @@ module deployVirtualNetwork 'network.bicep' = {
 
 @description('Control egress traffic through Azure Firewall restrictions.')
 module deployAzureFirewall 'azure-firewall.bicep' = {
+  scope: resourceGroup()
   params: {
     location: location
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
@@ -99,6 +105,7 @@ module deployJumpBox 'jump-box.bicep' = {
 
 @description('Deploy Azure AI Foundry with Azure AI Agent capability. No projects yet deployed.')
 module deployAzureAIFoundry 'ai-foundry.bicep' = {
+  scope: resourceGroup()
   params: {
     location: location
     baseName: baseName

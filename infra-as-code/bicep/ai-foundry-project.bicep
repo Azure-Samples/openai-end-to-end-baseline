@@ -147,8 +147,8 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       type: 'SystemAssigned'
     }
     properties: {
-      description: 'Chat using internet data'
-      displayName: 'ChatWithInternetData'
+      description: 'Chat using internet data in your Azure AI Agent.'
+      displayName: 'Chat with Internet Data'
     }
 
     @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent service.')
