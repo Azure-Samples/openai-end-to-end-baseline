@@ -44,7 +44,9 @@ var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 @description('Deploy an example set of Azure Policies to help you govern your workload. Expand the policy set as desired.')
 module applyAzurePolicies 'azure-policies.bicep' = {
   scope: resourceGroup()
-  params: {}
+  params: {
+    baseName: baseName
+  }
 }
 
 @description('This is the log sink for all Azure Diagnostics in the workload.')
@@ -208,7 +210,7 @@ module deployWebApp 'web-app.bicep' = {
     existingWebAppDeploymentStorageAccountName: deployWebAppStorage.outputs.appDeployStorageName
     existingWebApplicationInsightsResourceName: deployApplicationInsights.outputs.applicationInsightsName
     existingAzureAiFoundryResourceName: deployAzureAIFoundry.outputs.aiFoundryName
-    bingSearchConnectionId: deployAzureAiFoundryProject.outputs.bingSearchConnectionId
+    existingAzureAiFoundryProjectName: deployAzureAiFoundryProject.outputs.aiAgentProjectName
   }
 }
 

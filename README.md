@@ -229,6 +229,8 @@ The AI agent definition would likely be deployed from your application's pipelin
    az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
    ```
 
+1. Take note of the generated agent ID value, you'll use that when configuring the web application.
+
 ### 3. Test the agent from the Azure AI Foundry portal in the playground. *Optional.*
 
 Here you'll test your orchestration agent by invoking it directly from the Azure AI Foundry portal's playground experience. The Azure AI Foundry portal is only accessible from your private network, so you'll do this from your jump box.
@@ -280,8 +282,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Update the app configuration to use the agent you deployed.
 
    ```powershell
-   # TODO Capture and reuse the ID
-   az webapp config appsettings set -n app-${BASE_NAME} -g $RESOURCE_GROUP --settings AIAgentId=<ID value from the agent creation step>
+   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId=<ID from agent creation output>
    ```
 
 1. Restart the web app to load the site code and its updated configuation.

@@ -327,4 +327,4 @@ resource projectAISearchIndexDataContributorAssignment 'Microsoft.Authorization/
 
 // ---- Outputs ----
 
-output bingSearchConnectionId string = aiFoundry::project::bingGroundingConnection.id
+output aiAgentProjectName string = aiFoundry::project.name

@@ -79,7 +79,8 @@ resource storageDisableSharedKeyPolicy 'Microsoft.Authorization/policyDefinition
   scope: tenant()
 }
 
-// Policy assignments
+// ---- New resources (Policy assignments) ----
+
 @description('Policy assignment to audit Azure AI Services resources and ensure key access is disabled for enhanced security.')
 resource aiServicesKeyAccessAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
   name: guid(resourceGroup().id, aiServicesKeyAccessPolicy.id)

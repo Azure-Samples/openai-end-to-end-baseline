@@ -45,9 +45,9 @@ param existingWebApplicationInsightsResourceName string
 @minLength(2)
 param existingAzureAiFoundryResourceName string
 
-@description('The name of the existing Azure AI Foundry project connection for Bing grounding searches.')
+@description('The name of the existing Azure AI Foundry project name.')
 @minLength(2)
-param bingSearchConnectionId string
+param existingAzureAiFoundryProjectName string
 
 // variables
 var appName = 'app-${baseName}'
@@ -107,7 +107,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
   name: existingAzureAiFoundryResourceName
 
   resource project 'projects' existing = {
-    name: 'projchat'
+    name: existingAzureAiFoundryProjectName
   }
 }
 
@@ -158,7 +158,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   location: location
   kind: 'linux'
   sku: {
-    name: 'P1V3'  // az appservice list-locations --linux-workers-enabled --sku P1V4
+    name: 'P1V3'  // az appservice list-locations --linux-workers-enabled --sku P1V3
     capacity: 3
   }
   properties: {
@@ -219,9 +219,7 @@ resource webApp 'Microsoft.Web/sites@2024-04-01' = {
       AZURE_CLIENT_ID: appServiceManagedIdentity.properties.clientId
       ApplicationInsightsAgent_EXTENSION_VERSION: '~3'
       AIProjectEndpoint:  aiFoundry::project.properties.endpoints['AI Foundry API']
-      BingSearchConnectionId: bingSearchConnectionId // TODO: Should be able to be removed once agent creation is out of this code.
-      DefaultModel: 'agent-model' // TODO: Should be able to be removed once agent creation is out of this code.
-      AIAgentId: 'Not yet set' // TODO: Use this once agent creation is out of this code.
+      AIAgentId: 'Not yet set' // Will be set once the agent is created
       XDT_MicrosoftApplicationInsights_Mode: 'Recommended'
     }
   }
