@@ -18,25 +18,6 @@ builder.Services.AddSingleton((provider) =>
     return client;
 });
 
-builder.Services.AddSingleton((provider) =>
-{
-    var config = provider.GetRequiredService<IOptions<ChatApiOptions>>().Value;
-
-    BingGroundingToolDefinition bingGroundingTool = new(
-        new BingGroundingSearchToolParameters(
-            [
-                new BingGroundingSearchConfiguration(config.BingSearchConnectionId)
-                {
-                    Count = config.BingSearchResultsCount,
-                    Freshness = config.BingSearchResultsTimeRange
-                }
-            ]
-        )
-    );
-
-    return bingGroundingTool;
-});
-
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddCors(options =>

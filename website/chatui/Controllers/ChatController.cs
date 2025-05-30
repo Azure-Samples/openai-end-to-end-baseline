@@ -12,12 +12,10 @@ namespace chatui.Controllers;
 
 public class ChatController(
     PersistentAgentsClient client,
-    BingGroundingToolDefinition bingGroundingTool,
     IOptionsMonitor<ChatApiOptions> options,
     ILogger<ChatController> logger) : ControllerBase
 {
     private readonly PersistentAgentsClient _client = client;
-    private readonly BingGroundingToolDefinition _bingGroundingTool = bingGroundingTool;
     private readonly IOptionsMonitor<ChatApiOptions> _options = options;
     private readonly ILogger<ChatController> _logger = logger;
 
@@ -29,13 +27,8 @@ public class ChatController(
 
         _logger.LogDebug("Prompt received {Prompt}", prompt);
         var _config = _options.CurrentValue;
-        // TODO: Agent shouldn't be created here.
-        PersistentAgent agent = await _client.Administration.CreateAgentAsync(
-                model: _config.DefaultModel,
-                name: "Chatbot Agent",
-                instructions: "You are a helpful Chatbot agent.",
-                tools: [_bingGroundingTool]);
 
+        // TODO: Reuse existing context
         PersistentAgentThread thread = await _client.Threads.CreateThreadAsync();
 
         PersistentThreadMessage message = await _client.Messages.CreateMessageAsync(
@@ -43,7 +36,7 @@ public class ChatController(
             MessageRole.User,
             prompt);
 
-        ThreadRun run = await _client.Runs.CreateRunAsync(thread.Id, agent.Id);
+        ThreadRun run = await _client.Runs.CreateRunAsync(thread.Id, _config.AIAgentId);
 
         while (run.Status == RunStatus.Queued || run.Status == RunStatus.InProgress || run.Status == RunStatus.RequiresAction)
         {
@@ -51,7 +44,7 @@ public class ChatController(
             run = (await _client.Runs.GetRunAsync(thread.Id, run.Id)).Value;
         }
 
-        Pageable<PersistentThreadMessage> messages = _client.Messages.GetMessages(
+        Pageable<PersistentThreadMessage>  messages = _client.Messages.GetMessages(
             threadId: thread.Id, order: ListSortOrder.Ascending);
 
         var fullText = string.Concat(
