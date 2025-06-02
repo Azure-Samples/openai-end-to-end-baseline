@@ -1,5 +1,3 @@
-# From .NET Core 3.0 you can use the command: `dotnet new gitignore` to generate a customizable .gitignore file
-
 *.swp
 *.*~
 project.lock.json
@@ -35,7 +33,7 @@ msbuild.wrn
 
 # Visual Studio 2015
 .vs/
-README.md
+
 appgw.key
 appgw.pfx
 appgw.crt
