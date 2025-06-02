@@ -91,12 +91,12 @@ resource azureAiUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' ex
   scope: subscription()
 }
 
-// TODO: Should only be needed while the Web App is creating the agent. Remove once that code is removed.
-@description('Built-in Role: [Azure AI Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
+// If your web app/API code is going to be creating agents dynamically, you will need to assign a role such as this to App Service managed identity.
+/*@description('Built-in Role: [Azure AI Project Manager](https://learn.microsoft.com/azure/ai-foundry/concepts/rbac-azure-ai-foundry?pivots=fdp-project#azure-ai-user)')
 resource azureAiProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: 'eadc314b-1a2d-4efa-be10-5d325db5065e'
   scope: subscription()
-}
+}*/
 
 resource appServiceExistingPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' existing = {
   name: 'privatelink.azurewebsites.net'
@@ -141,7 +141,7 @@ resource azureAiUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
   }
 }
 
-@description('Grant the App Service managed identity Azure AI manager role permission so it create the Azure AI Foundry-hosted agent. Temporary until the web app code is updated to not require this role.')
+/*@description('Grant the App Service managed identity Azure AI manager role permission so it create the Azure AI Foundry-hosted agent. Only needed if your code creates agents directly.')
 resource azureAiManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: aiFoundry
   name: guid(aiFoundry.id, appServiceManagedIdentity.id, azureAiProjectManagerRole.id)
@@ -150,19 +150,20 @@ resource azureAiManagerRoleAssignment 'Microsoft.Authorization/roleAssignments@2
     principalType: 'ServicePrincipal'
     principalId: appServiceManagedIdentity.properties.principalId
   }
-}
+}*/
 
-@description('Linux, PremiumV4 App Service Plan to host the chat web application.')
+@description('Linux, PremiumV3 App Service Plan to host the chat web application.')
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: 'asp-${appName}${uniqueString(subscription().subscriptionId)}'
   location: location
   kind: 'linux'
   sku: {
-    name: 'P1V3'  // az appservice list-locations --linux-workers-enabled --sku P1V3
+    name: 'P1V3' // Some subscriptions do not have quota to premium web apps. If you encounter an error, request quota or to unblock yourself use 'S1' and set 'zoneRedundant' to 'false.'
+                 // az appservice list-locations --linux-workers-enabled --sku P1V3
     capacity: 3
   }
   properties: {
-    zoneRedundant: true
+    zoneRedundant: true // Some subscriptions do not have quota to support zone redundancy. If you encounter an error, set this to false.
     reserved: true
   }
 }

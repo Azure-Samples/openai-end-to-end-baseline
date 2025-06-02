@@ -21,7 +21,7 @@ var aiAgentsEgressSubnetPrefix = '192.168.3.0/24'
 var azureFirewallSubnetPrefix = '192.168.4.0/26'
 var azureFirewallManagementSubnetPrefix = '192.168.4.64/26'
 
-var enableDdosProtection = false // TODO: set this to true before merge to main
+var enableDdosProtection = false // Production readiness change: protect your public IPs in this architecture with DDoS protection by setting this to true.
 
 // ---- New resources ----
 

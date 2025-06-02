@@ -74,7 +74,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - DDoS Protection Plans: 1
     - Public IPv4 Addresses - Standard: 4
     - Standard DSv3 Family vCPU: 2
-    - Storage Accounts: 2    
+    - Storage Accounts: 2
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -227,9 +227,12 @@ The AI agent definition would likely be deployed from your application's pipelin
 
    # Deploy the agent
    az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
-   ```
 
-1. Take note of the generated agent ID value, you'll use that when configuring the web application.
+   # Capture the Agent's ID
+   $AGENT_ID="$(az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query 'data[0].id' -o tsv)"
+
+   echo $AGENT_ID
+   ```
 
 ### 3. Test the agent from the Azure AI Foundry portal in the playground. *Optional.*
 
@@ -282,7 +285,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
 1. Update the app configuration to use the agent you deployed.
 
    ```powershell
-   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId=<ID from agent creation output>
+   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
    ```
 
 1. Restart the web app to load the site code and its updated configuation.
@@ -320,7 +323,7 @@ This section will help you to validate that the workload is exposed correctly an
 
 ## :broom: Clean up resources
 
-Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection, CosmosDB, and the Azure Firewall. Promptly delete resources when you are done using them.
+Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $90 a day, and more if you enabled Azure DDoS Protection. Promptly delete resources when you are done using them.
 
 Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name or DNS entry; and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 

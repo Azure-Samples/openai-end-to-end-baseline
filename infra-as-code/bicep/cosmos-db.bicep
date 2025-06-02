@@ -67,7 +67,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
       {
         locationName: location
         failoverPriority: 0
-        isZoneRedundant: false // TODO: Set to true before merging
+        isZoneRedundant: true // Some subscriptions do not have quota to support zone redundancy. If you encounter an error, set this to false.
       }
     ]
     databaseAccountOfferType: 'Standard'
