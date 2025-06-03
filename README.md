@@ -330,19 +330,29 @@ Most Azure resources deployed in the prior steps will incur ongoing charges unle
 
 Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name or DNS entry; and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
-| :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
-| :-------: | :------------------------- |
+1. Delete the resource group as a way to delete all contained Azure resources.
 
-```bash
-# These deletes and purges take about 30 minutes to run.
+   | :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
+   | :-------: | :------------------------- |
 
-# This command will delete most of the resources, but will error out. That's expected.
-az group delete -n $RESOURCE_GROUP -y
+   :clock8: *This might take about 20 minutes.*
 
-# Continue, even if the previous command errored. Purge the soft delete resources.
-az keyvault purge -n kv-${BASE_NAME} -l $LOCATION
-az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n aif${BASE_NAME}
-```
+   ```bash
+   # This command will delete most of the resources, but will sometimes error out. That's expected.
+   az group delete -n $RESOURCE_GROUP -y
+
+   # Continue, even if the previous command errored. Purge the soft delete resources.
+   ```
+
+1. Purge soft-deleted resources.
+
+   ```bash
+   # Purge the soft delete resources.
+   az keyvault purge -n kv-${BASE_NAME} -l $LOCATION
+   az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n aif${BASE_NAME}
+   ```
+
+1. [Remove the Azure Policy assignments](https://portal.azure.com/#blade/Microsoft_Azure_Policy/PolicyMenuBlade/Compliance) scoped to the resource group. To identify those created by this implementation, look for ones that are prefixed with `[BASE_NAME] `.
 
 > [!TIP]
 > The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
