@@ -341,7 +341,7 @@ Additionally, a few of the resources deployed enter soft delete status which wil
    # This command will delete most of the resources, but will sometimes error out. That's expected.
    az group delete -n $RESOURCE_GROUP -y
 
-   # Continue, even if the previous command errored. Purge the soft delete resources.
+   # Continue, even if the previous command errored.
    ```
 
 1. Purge soft-deleted resources.
