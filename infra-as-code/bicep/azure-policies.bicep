@@ -86,7 +86,7 @@ resource aiServicesKeyAccessAssignment 'Microsoft.Authorization/policyAssignment
   name: guid(resourceGroup().id, aiServicesKeyAccessPolicy.id)
   scope: resourceGroup()
   properties: {
-    displayName: '${resourceGroup().name} - ${aiServicesKeyAccessPolicy.properties.displayName}'
+    displayName: '${baseName} - ${aiServicesKeyAccessPolicy.properties.displayName}'
     description: aiServicesKeyAccessPolicy.properties.description
     policyDefinitionId: aiServicesKeyAccessPolicy.id
     enforcementMode: 'Default'
@@ -103,7 +103,7 @@ resource aiServicesNetworkAccessAssignment 'Microsoft.Authorization/policyAssign
   name: guid(resourceGroup().id, aiServicesNetworkAccessPolicy.id)
   scope: resourceGroup()
   properties: {
-    displayName: '${resourceGroup().name} - ${aiServicesNetworkAccessPolicy.properties.displayName}'
+    displayName: '${baseName} - ${aiServicesNetworkAccessPolicy.properties.displayName}'
     description: aiServicesNetworkAccessPolicy.properties.description
     policyDefinitionId: aiServicesNetworkAccessPolicy.id
     enforcementMode: 'Default'

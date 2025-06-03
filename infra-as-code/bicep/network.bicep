@@ -220,7 +220,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   }
 }
 
-// App Gateway subnet NSG
+@description('The App Gateway subnet NSG')
 resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-appGatewaySubnet'
   location: location
@@ -313,7 +313,7 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01
   }
 }
 
-// App Service subnet NSG
+@description('The App Service subnet NSG')
 resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-appServicesSubnet'
   location: location
@@ -351,7 +351,7 @@ resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01
   }
 }
 
-// Private endpoints subnet NSG
+@description('The Private endpoints subnet NSG')
 resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-privateEndpointsSubnet'
   location: location
@@ -375,7 +375,7 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024
   }
 }
 
-// Build agents subnet NSG
+@description('The Build agents subnet NSG')
 resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-buildAgentsSubnet'
   location: location
@@ -399,7 +399,7 @@ resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-0
   }
 }
 
-// Azure AI Agent service egress subnet NSG
+@description('The Azure AI Agent service egress subnet NSG')
 resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-agentsEgressSubnet'
   location: location
@@ -637,7 +637,7 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' =
   }
 }
 
-// Jump box subnet NSG
+@description('The Jump box subnet NSG')
 resource jumpBoxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-jumpBoxesSubnet'
   location: location

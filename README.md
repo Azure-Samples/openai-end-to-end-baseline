@@ -15,6 +15,7 @@ This implementation builds off the [basic implementation](https://github.com/Azu
 - Network isolation
 - Bring-your-own Azure AI Agent service dependencies (for security and BC/DR control)
 - Added availability zone reliability
+- Limit egress network traffic with Azure Firewall
 
 ## Architecture
 
@@ -32,9 +33,10 @@ Azure AI Foundry hosts Azure AI Agent service as a capability. Azure AI Agent se
 
 Agents can be created via the Azure AI Foundry portal, [Azure AI Agents SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent), or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). The creation and invocation of agents are a data plane operation. Since the data plane to Azure AI Foundry is private, all three of those are restricted to being executed from within a private network connected to the private endpoint of Azure AI Foundry.
 
-Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to similate a deployment pipeline which could have created the agent.
+Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to simulate a deployment pipeline which could have created the agent.
 
-If using the Azure AI Foundry portal is desired, then that web browser experience must be performed from a VM within the network or from a workstation that has VPN access to the private network and can properly resolve private DNS records.
+
+If using the Azure AI Foundry portal is desired, then the web browser experience must be performed from a VM within the network or from a workstation that has VPN access to the private network and can properly resolve private DNS records.
 
 ### Invoking the agent from .NET code hosted in an Azure Web App
 
@@ -51,6 +53,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
   - The subscription must have all of the resource providers used in this deployment [registered](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider).
 
     - `Microsoft.AlertsManagement`
+    - `Microsoft.App`
     - `Microsoft.Bing`
     - `Microsoft.CognitiveServices`
     - `Microsoft.Compute`
