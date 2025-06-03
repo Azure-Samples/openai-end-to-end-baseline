@@ -136,6 +136,9 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
 @description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Agent service.')
 module deployBingAccount 'bing-grounding.bicep' = {
   scope: resourceGroup()
+  params: {
+    baseName: baseName
+  }
 }
 
 @description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Azure AI Agent service.')
