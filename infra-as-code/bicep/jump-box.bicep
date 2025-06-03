@@ -1,9 +1,6 @@
-@description('This is the base name for each Azure resource name (6-8 chars)')
-@minLength(6)
-@maxLength(8)
-param baseName string
+targetScope = 'resourceGroup'
 
-@description('The region in which this architecture is deployed.')
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
 @minLength(1)
 param location string = resourceGroup().location
 
@@ -11,9 +8,13 @@ param location string = resourceGroup().location
 @minLength(1)
 param virtualNetworkName string
 
-@description('The name of the Log Analytics Workspace used as the workload\'s common log sink.')
+@description('The name of the subnet for the jump box. Must be in the same virtual network that is provided.')
+@minLength(1)
+param jumpBoxSubnetName string
+
+@description('The name of the workload\'s existing Log Analytics workspace.')
 @minLength(4)
-param logWorkspaceName string
+param logAnalyticsWorkspaceName string
 
 @description('Specifies the name of the administrator account on the Windows jump box. Cannot end in "."\n\nDisallowed values: "administrator", "admin", "user", "user1", "test", "user2", "test1", "user3", "admin1", "1", "123", "a", "actuser", "adm", "admin2", "aspnet", "backup", "console", "david", "guest", "john", "owner", "root", "server", "sql", "support", "support_388945a0", "sys", "test2", "test3", "user4", "user5".\n\nDefault: vmadmin')
 @minLength(4)
@@ -28,17 +29,17 @@ param jumpBoxAdminPassword string
 
 // ---- Variables ----
 
-var bastionHostName = 'ab-${baseName}'
-var jumpBoxName = 'jmp-${baseName}'
+var bastionHostName = 'ab-jump-box'
+var jumpBoxName = 'jump-box'
 
 // ---- Existing resources ----
 
 @description('Existing virtual network for the solution.')
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing = {
   name: virtualNetworkName
 
   resource jumpBoxSubnet 'subnets' existing = {
-    name: 'snet-jumpbox'
+    name: jumpBoxSubnetName
   }
 
   resource bastionSubnet 'subnets' existing = {
@@ -47,14 +48,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2023-05-01' existing 
 }
 
 @description('Existing Log Analyitics workspace, used as the common log sink for the workload.')
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
 // New resources
 
 @description('Required public IP for the Azure Bastion service, used for jump box access.')
-resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
+resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: 'pip-${bastionHostName}'
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -77,7 +78,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
 }
 
 @description('Deploys Azure Bastion for secure access to the jump box.')
-resource bastion 'Microsoft.Network/bastionHosts@2024-01-01' = {
+resource bastion 'Microsoft.Network/bastionHosts@2024-05-01' = {
   name: bastionHostName
   location: location
   sku: {
@@ -110,7 +111,7 @@ resource bastion 'Microsoft.Network/bastionHosts@2024-01-01' = {
 }
 
 @description('Diagnostics settings for Azure Bastion')
-resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+resource azureDiagnosticsBastion 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: bastion
   properties: {
@@ -129,7 +130,7 @@ resource bastionDiagnosticsSettings 'Microsoft.Insights/diagnosticSettings@2021-
 }
 
 @description('Default VM Insights DCR rule, to be applied to the jump box.')
-resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-06-01' = {
+resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
   name: 'dcr-${jumpBoxName}'
   location: location
   kind: 'Windows'
@@ -181,8 +182,28 @@ resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2022-
   }
 }
 
-@description('VM will only receive a private IP.')
-resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
+@description('Enable Azure Diagnostics for the the jump box\'s DCR.')
+resource azureDiagnosticsDcr 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'default'
+  scope: virtualMachineInsightsDcr
+  properties: {
+    workspaceId: logWorkspace.id
+    logs: [
+      {
+        category: 'LogErrors'
+        categoryGroup: null
+        enabled: true
+        retentionPolicy: {
+          days: 0
+          enabled: false
+        }
+      }
+    ]
+  }
+}
+
+@description('The jump box virtual machine will only receive a private IP.')
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   name: 'nic-${jumpBoxName}'
   location: location
   properties: {
@@ -209,8 +230,8 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
   }
 }
 
-@description('The Azure ML and Azure OpenAI portal experiences are only able to be accessed from the virtual network, this jump box gives you access to those UIs.')
-resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = {
+@description('The Azure AI Foundry portal is only able to be accessed from the virtual network, this jump box gives you access to that portal.')
+resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
   name: 'vm-${jumpBoxName}'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachines', location, 1)
@@ -242,13 +263,12 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
       ]
     }
     osProfile: {
-      computerName: jumpBoxName
+      computerName: 'jumpbox'
       adminUsername: jumpBoxAdminName
       adminPassword: jumpBoxAdminPassword
       allowExtensionOperations: true
       windowsConfiguration: {
         enableAutomaticUpdates: true
-        enableVMAgentPlatformUpdates: true
         patchSettings: {
           patchMode: 'AutomaticByOS'
           assessmentMode: 'ImageDefault'
@@ -312,6 +332,22 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
     }
   }
 
+  @description('Install Azure CLI on the jump box.')
+  resource azureCliExtension 'extensions' = {
+    name: 'installAzureCLI'
+    location: location
+    properties: {
+      autoUpgradeMinorVersion: true
+      enableAutomaticUpgrade: false
+      publisher: 'Microsoft.Compute'
+      type: 'CustomScriptExtension'
+      typeHandlerVersion: '1.10'
+      settings: {
+        commandToExecute: 'powershell -ExecutionPolicy Unrestricted -Command "Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList \'/I AzureCLI.msi /quiet\'"'
+      }
+    }
+  }
+
   @description('Enable Azure Monitor Agent for observability though VM Insights.')
   resource amaExtension 'extensions' = {
     name: 'AzureMonitorWindowsAgent'
@@ -321,7 +357,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
       enableAutomaticUpgrade: true
       publisher: 'Microsoft.Azure.Monitor'
       type: 'AzureMonitorWindowsAgent'
-      typeHandlerVersion: '1.21'
+      typeHandlerVersion: '1.34'
     }
   }
 
@@ -343,7 +379,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2023-07-01' = 
 }
 
 @description('Associate jump box with Azure Monitor Agent VM Insights DCR.')
-resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2022-06-01' = {
+resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11' = {
   name: 'dcra-vminsights'
   scope: jumpBoxVirtualMachine
   properties: {

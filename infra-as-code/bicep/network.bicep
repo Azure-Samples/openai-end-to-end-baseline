@@ -1,41 +1,43 @@
+targetScope = 'resourceGroup'
+
 /*
-  Deploy vnet with subnets and NSGs
+  Establish the private network for the workload.
 */
 
-@description('This is the base name for each Azure resource name (6-8 chars)')
-param baseName string
-
-@description('The resource group location')
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
 param location string = resourceGroup().location
 
-// variables
-var vnetAddressPrefix = '10.0.0.0/16'
-var appGatewaySubnetPrefix = '10.0.1.0/24'
-var appServicesSubnetPrefix = '10.0.0.0/24'
-var privateEndpointsSubnetPrefix = '10.0.2.0/27'
-var agentsSubnetPrefix = '10.0.2.32/27'
-var bastionSubnetPrefix = '10.0.2.64/26'
-var jumpboxSubnetPrefix = '10.0.2.128/28'
-var trainingSubnetPrefix = '10.0.3.0/24'
-var scoringSubnetPrefix = '10.0.4.0/24'
+// Azure AI Agent service currently has a limitation on subnet prefixes.
+// 10.x was not supported, as such 192.168.x.x was used.
+var virtualNetworkAddressPrefix = '192.168.0.0/16'
+var appGatewaySubnetPrefix = '192.168.1.0/24'
+var appServicesSubnetPrefix = '192.168.0.0/24'
+var privateEndpointsSubnetPrefix = '192.168.2.0/27'
+var buildAgentsSubnetPrefix = '192.168.2.32/27'
+var bastionSubnetPrefix = '192.168.2.64/26'
+var jumpBoxSubnetPrefix = '192.168.2.128/28'
+var aiAgentsEgressSubnetPrefix = '192.168.3.0/24'
+var azureFirewallSubnetPrefix = '192.168.4.0/26'
+var azureFirewallManagementSubnetPrefix = '192.168.4.64/26'
 
-var enableDdosProtection = true
+var enableDdosProtection = false // Production readiness change: protect your public IPs in this architecture with DDoS protection by setting this to true.
 
-// ---- Networking resources ----
+// ---- New resources ----
 
 // DDoS Protection Plan
-// Cost otpimization: DDoS protection plans are relatively expensive. If deploying this as part of
-// a POC and your environment can be down during a targeted DDoS attack, consider not deploing
+// Cost optimization: DDoS protection plans are relatively expensive. If deploying this as part of
+// a POC and your environment can be down during a targeted DDoS attack, consider not deploying
 // this resource by setting `enableDdosProtection` to false.
 resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' = if (enableDdosProtection) {
-  name: 'ddos-${baseName}'
+  name: 'ddos-workload'
   location: location
   properties: {}
 }
 
-// Virtual network and subnets
-resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
-  name: 'vnet-${baseName}'
+@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, and Azure AI Agents service.')
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
+  name: 'vnet-workload'
   location: location
   properties: {
     enableDdosProtection: enableDdosProtection
@@ -46,18 +48,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
     }
     addressSpace: {
       addressPrefixes: [
-        vnetAddressPrefix
+        virtualNetworkAddressPrefix
       ]
     }
     subnets: [
       {
-        //App services plan subnet
+        // App services plan subnet
         name: 'snet-appServicePlan'
         properties: {
           addressPrefix: appServicesSubnetPrefix
-          networkSecurityGroup: {
-            id: appServiceSubnetNsg.id
-          }
           delegations: [
             {
               name: 'delegation'
@@ -66,6 +65,9 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
               }
             }
           ]
+          networkSecurityGroup: {
+            id: appServiceSubnetNsg.id
+          }
         }
       }
       {
@@ -73,6 +75,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         name: 'snet-appGateway'
         properties: {
           addressPrefix: appGatewaySubnetPrefix
+          delegations: []
           networkSecurityGroup: {
             id: appGatewaySubnetNsg.id
           }
@@ -85,24 +88,33 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         name: 'snet-privateEndpoints'
         properties: {
           addressPrefix: privateEndpointsSubnetPrefix
+          delegations: []
           networkSecurityGroup: {
             id: privateEndpointsSubnetNsg.id
           }
-          privateEndpointNetworkPolicies: 'NetworkSecurityGroupEnabled'
+          privateEndpointNetworkPolicies: 'Enabled' // Route Table and NSGs
           privateLinkServiceNetworkPolicies: 'Enabled'
           defaultOutboundAccess: false // This subnet should never be the source of egress traffic.
+          routeTable: {
+            id: egressRouteTable.id
+          }
         }
       }
       {
         // Build agents subnet
-        name: 'snet-agents'
+        name: 'snet-buildAgents'
         properties: {
-          addressPrefix: agentsSubnetPrefix
+          addressPrefix: buildAgentsSubnetPrefix
+          delegations: []
           networkSecurityGroup: {
-            id: agentsSubnetNsg.id
+            id: buildAgentsSubnetNsg.id
           }
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false // Force your build agent traffic through your firewall.
+          routeTable: {
+            id: egressRouteTable.id
+          }
         }
       }
       {
@@ -110,45 +122,72 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         name: 'AzureBastionSubnet'
         properties: {
           addressPrefix: bastionSubnetPrefix
+          delegations: []
           networkSecurityGroup: {
             id: bastionSubnetNsg.id
           }
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false
         }
       }
       {
-        // Jump box VMs subnet
-        name: 'snet-jumpbox'
+        // Jump box virtual machine subnet
+        name: 'snet-jumpBoxes'
         properties: {
-          addressPrefix: jumpboxSubnetPrefix
+          addressPrefix: jumpBoxSubnetPrefix
+          delegations: []
           networkSecurityGroup: {
-            id: jumpboxSubnetNsg.id
+            id: jumpBoxSubnetNsg.id
           }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false // Force agent traffic through your firewall.
+          routeTable: {
+            id: egressRouteTable.id
+          }
+        }
+      }
+      {
+        // Azure AI Agent service subnet for egress traffic
+        name: 'snet-agentsEgress'
+        properties: {
+          addressPrefix: aiAgentsEgressSubnetPrefix
+          delegations: [
+            {
+              name: 'Microsoft.App/environments'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+          networkSecurityGroup: {
+            id: azureAiAgentServiceSubnetNsg.id
+          }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false // Force agent traffic through your firewall.
+          routeTable: {
+            id: egressRouteTable.id
+          }
+        }
+      }
+      {
+        // Workload firewall for all egress traffic
+        name: 'AzureFirewallSubnet'
+        properties: {
+          addressPrefix: azureFirewallSubnetPrefix
+          delegations: []
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
       }
       {
-        // Training subnet
-        name: 'snet-training'
+        // Workload firewall for all egress traffic
+        name: 'AzureFirewallManagementSubnet'
         properties: {
-          addressPrefix: trainingSubnetPrefix
-          networkSecurityGroup: {
-            id: trainingSubnetNsg.id
-          }
-          privateEndpointNetworkPolicies: 'Disabled'
-          privateLinkServiceNetworkPolicies: 'Enabled'
-        }
-      }
-      {
-        // Scoring subnet
-        name: 'snet-scoring'
-        properties: {
-          addressPrefix: scoringSubnetPrefix
-          networkSecurityGroup: {
-            id: scoringSubnetNsg.id
-          }
+          addressPrefix: azureFirewallManagementSubnetPrefix
+          delegations: []
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
         }
@@ -164,33 +203,25 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
     name: 'snet-appServicePlan'
   }
 
-  resource privateEnpointsSubnet 'subnets' existing = {
+  resource privateEndpointsSubnet 'subnets' existing = {
     name: 'snet-privateEndpoints'
   }
 
-  resource agentsSubnet 'subnets' existing = {
-    name: 'snet-agents'
-  }
-
-  resource azureBastionSubnet 'subnets' existing = {
-    name: 'AzureBastionSubnet'
+  resource buildAgentsSubnet 'subnets' existing = {
+    name: 'snet-buildAgents'
   }
 
   resource jumpBoxSubnet 'subnets' existing = {
-    name: 'snet-jumpbox'
+    name: 'snet-jumpBoxes'
   }
 
-  resource trainingSubnet 'subnets' existing = {
-    name: 'snet-training'
-  }
-
-  resource scoringSubnet 'subnets' existing = {
-    name: 'snet-scoring'
+  resource agentsEgressSubnet 'subnets' existing = {
+    name: 'snet-agentsEgress'
   }
 }
 
-// App Gateway subnet NSG
-resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+@description('The App Gateway subnet NSG')
+resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-appGatewaySubnet'
   location: location
   properties: {
@@ -282,8 +313,8 @@ resource appGatewaySubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
   }
 }
 
-// App Service subnet NSG
-resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+@description('The App Service subnet NSG')
+resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-appServicesSubnet'
   location: location
   properties: {
@@ -320,8 +351,8 @@ resource appServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01
   }
 }
 
-// Private endpoints subnet NSG
-resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+@description('The Private endpoints subnet NSG')
+resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-privateEndpointsSubnet'
   location: location
   properties: {
@@ -344,20 +375,20 @@ resource privateEndpointsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022
   }
 }
 
-// Build agents subnet NSG
-resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
-  name: 'nsg-agentsSubnet'
+@description('The Build agents subnet NSG')
+resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: 'nsg-buildAgentsSubnet'
   location: location
   properties: {
     securityRules: [
       {
         name: 'DenyAllOutBound'
         properties: {
-          description: 'Deny outbound traffic from the build agents subnet. Note: adjust rules as needed after adding resources to the subnet'
+          description: 'Deny outbound traffic from the build agents subnet. Note: adjust rules as needed based on the resources added to the subnet'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
-          sourceAddressPrefix: appGatewaySubnetPrefix
+          sourceAddressPrefix: buildAgentsSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Deny'
           priority: 1000
@@ -368,44 +399,61 @@ resource agentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = 
   }
 }
 
-// Training subnet NSG
-resource trainingSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
-  name: 'nsg-trainingSubnet'
+@description('The Azure AI Agent service egress subnet NSG')
+resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: 'nsg-agentsEgressSubnet'
   location: location
   properties: {
     securityRules: [
       {
-        name: 'DenyAllOutBound'
+        name: 'DenyAllInBound'
         properties: {
-          description: 'Deny outbound traffic from the training subnet. Note: adjust rules as needed after adding resources to the subnet'
           protocol: '*'
           sourcePortRange: '*'
+          sourceAddressPrefix: '*'
           destinationPortRange: '*'
-          sourceAddressPrefix: trainingSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Deny'
           priority: 1000
-          direction: 'Outbound'
+          direction: 'Inbound'
         }
       }
-    ]
-  }
-}
-
-// Scoring subnet NSG
-resource scoringSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
-  name: 'nsg-scoringSubnet'
-  location: location
-  properties: {
-    securityRules: [
       {
-        name: 'DenyAllOutBound'
+        name: 'Agents.Out.Allow.PrivateEndpoints'
         properties: {
-          description: 'Deny outbound traffic from the scoring subnet. Note: adjust rules as needed after adding resources to the subnet'
+          description: 'Allow outbound traffic from the AI Agent egress subnet to the Private Endpoints subnet.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
-          sourceAddressPrefix: scoringSubnetPrefix
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: privateEndpointsSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'Agents.Out.AllowTcp443.Internet'
+        properties: {
+          description: 'Allow outbound traffic from the AI Agent egress subnet to Internet on 443 (Azure firewall to filter further)'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: 'Internet'
+          access: 'Allow'
+          priority: 110
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          description: 'Deny all other outbound traffic from the Azure AI Agent subnet.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Deny'
           priority: 1000
@@ -419,7 +467,7 @@ resource scoringSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
 // Bastion host subnet NSG
 // https://learn.microsoft.com/azure/bastion/bastion-nsg
 // https://github.com/Azure/azure-quickstart-templates/blob/master/quickstarts/microsoft.network/azure-bastion-nsg/main.bicep
-resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
+resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-bastionSubnet'
   location: location
   properties: {
@@ -589,14 +637,14 @@ resource bastionSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
   }
 }
 
-// Jump box subnet NSG
-resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' = {
-  name: 'nsg-jumpboxSubnet'
+@description('The Jump box subnet NSG')
+resource jumpBoxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: 'nsg-jumpBoxesSubnet'
   location: location
   properties: {
     securityRules: [
       {
-        name: 'Jumpbox.In.Allow.SshRdp'
+        name: 'JumpBox.In.Allow.SshRdp'
         properties: {
           description: 'Allow inbound RDP and SSH from the Bastion Host subnet'
           protocol: 'Tcp'
@@ -606,20 +654,20 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
             '22'
             '3389'
           ]
-          destinationAddressPrefix: jumpboxSubnetPrefix
+          destinationAddressPrefix: jumpBoxSubnetPrefix
           access: 'Allow'
           priority: 100
           direction: 'Inbound'
         }
       }
       {
-        name: 'Jumpbox.Out.Allow.PrivateEndpoints'
+        name: 'JumpBox.Out.Allow.PrivateEndpoints'
         properties: {
-          description: 'Allow outbound traffic from the jumpbox subnet to the Private Endpoints subnet.'
+          description: 'Allow outbound traffic from the jump box subnet to the Private Endpoints subnet.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
-          sourceAddressPrefix: jumpboxSubnetPrefix
+          sourceAddressPrefix: jumpBoxSubnetPrefix
           destinationAddressPrefix: privateEndpointsSubnetPrefix
           access: 'Allow'
           priority: 100
@@ -627,13 +675,13 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
         }
       }
       {
-        name: 'Jumpbox.Out.Allow.Internet'
+        name: 'JumpBox.Out.Allow.Internet'
         properties: {
           description: 'Allow outbound traffic from all VMs to Internet'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
-          sourceAddressPrefix: jumpboxSubnetPrefix
+          sourceAddressPrefix: jumpBoxSubnetPrefix
           destinationAddressPrefix: 'Internet'
           access: 'Allow'
           priority: 130
@@ -646,7 +694,7 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
-          sourceAddressPrefix: jumpboxSubnetPrefix
+          sourceAddressPrefix: jumpBoxSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Deny'
           priority: 1000
@@ -657,23 +705,188 @@ resource jumpboxSubnetNsg 'Microsoft.Network/networkSecurityGroups@2022-11-01' =
   }
 }
 
-@description('The name of the vnet.')
-output vnetNName string = vnet.name
+@description('Placeholder route table for egress traffic from subnets that we want to control routing for. When the firewall is created, the routes will be added.')
+resource egressRouteTable 'Microsoft.Network/routeTables@2024-05-01' = {
+  name: 'udr-internet-to-firewall'
+  location: location
+  properties: {
+    disableBgpRoutePropagation: true
+  }
+}
+
+// Create and link Private DNS Zones used in this workload
+
+@description('Azure AI Foundry related private DNS zone')
+resource cognitiveServicesPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.cognitiveservices.azure.com'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'cognitiveservices'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+@description('Azure AI Foundry related private DNS zone')
+resource aiFoundryPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.services.ai.azure.com'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'aifoundry'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+@description('Azure AI Foundry related private DNS zone')
+resource azureOpenAiPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.openai.azure.com'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'azureopenai'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+@description('Azure AI Search private DNS zone')
+resource aiSearchPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.search.windows.net'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'aisearch'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+@description('Blob Storage private DNS zone')
+resource blobStoragePrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.blob.${environment().suffixes.storage}'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'blobstorage'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+@description('Cosmos DB private DNS zone')
+resource cosmosDbPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.documents.azure.com'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'cosmosdb'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+@description('Azure Key Vault private DNS zone')
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.vaultcore.azure.net' //Cannot use 'privatelink.${environment().suffixes.keyvaultDns}', per https://github.com/Azure/bicep/issues/9708
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'keyvault'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+resource appServicePrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: 'privatelink.azurewebsites.net'
+  location: 'global'
+  properties: {}
+
+  resource link 'virtualNetworkLinks' = {
+    name: 'webapp'
+    location: 'global'
+    properties: {
+      virtualNetwork: {
+        id: virtualNetwork.id
+      }
+      registrationEnabled: false
+    }
+  }
+}
+
+// ---- Outputs ----
+
+@description('The name of the virtual network.')
+output virtualNetworkName string = virtualNetwork.name
 
 @description('The name of the app service plan subnet.')
-output appServicesSubnetName string = vnet::appServiceSubnet.name
+output appServicesSubnetName string = virtualNetwork::appServiceSubnet.name
 
-@description('The name of the app gatewaysubnet.')
-output appGatewaySubnetName string = vnet::appGatewaySubnet.name
-
-@description('The name of the private endpoints subnet.')
-output privateEndpointsSubnetName string = vnet::privateEnpointsSubnet.name
+@description('The name of the Azure Application Gateway subnet.')
+output applicationGatewaySubnetName string = virtualNetwork::appGatewaySubnet.name
 
 @description('The name of the private endpoints subnet.')
-output bastionSubnetName string = vnet::azureBastionSubnet.name
+output privateEndpointsSubnetName string = virtualNetwork::privateEndpointsSubnet.name
 
-@description('The name of the private endpoints subnet.')
-output jumpboxSubnetName string = vnet::jumpBoxSubnet.name
+@description('The name of the jump boxes subnet.')
+output jumpBoxesSubnetName string = virtualNetwork::jumpBoxSubnet.name
 
-@description('The name of the build agent subnet.')
-output agentSubnetName string = vnet::agentsSubnet.name
+@description('The name of the build agents subnet.')
+output buildAgentsSubnetName string = virtualNetwork::buildAgentsSubnet.name
+
+@description('The name of the Azure AI Agents egress subnet.')
+output agentsEgressSubnetName string = virtualNetwork::agentsEgressSubnet.name
+
+@description('The resource ID of the Azure AI Agents egress subnet.')
+output agentsEgressSubnetResourceId string = virtualNetwork::agentsEgressSubnet.id
+
+@description('The resource ID of the private endpoints subnet.')
+output privateEndpointsSubnetResourceId string = virtualNetwork::privateEndpointsSubnet.id
+
+@description('The name of the subnet for jump boxes.')
+output jumpBoxSubnetName string = virtualNetwork::jumpBoxSubnet.name

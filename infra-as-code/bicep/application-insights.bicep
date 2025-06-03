@@ -1,21 +1,25 @@
+targetScope = 'resourceGroup'
+
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
+param location string = resourceGroup().location
+
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
 @maxLength(8)
 param baseName string
 
-@description('The resource group location')
-param location string = resourceGroup().location
-
 @description('The name of the workload\'s existing Log Analytics workspace.')
-param logWorkspaceName string
+@minLength(4)
+param logAnalyticsWorkspaceName string
 
-// Existing resources
+// ---- Existing resources ----
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
-// New resources
+// ---- New resources ----
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: 'appi-${baseName}'
@@ -30,5 +34,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
     publicNetworkAccessForQuery: 'Enabled'
   }
 }
+
+// ---- Outputs ----
 
 output applicationInsightsName string = applicationInsights.name

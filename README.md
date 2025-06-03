@@ -1,56 +1,46 @@
-# Azure OpenAI end-to-end baseline reference implementation
+# AI Agent service chat baseline reference implementation
 
-This reference implementation illustrates an approach for authoring and running a chat application in a single region with prompt flow and Azure OpenAI. This repository supports the [Baseline OpenAI end-to-end chat reference architecture](https://learn.microsoft.com/en-us/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn and showcases a secure environment for authoring a chat flow and two options for deploying the flow:
+This reference implementation illustrates an approach running a chat application and an AI orchestration layer in a single region. It uses Azure AI Agent service as the orchestrator and OpenAI foundation models. This repository directly supports the [Baseline end-to-end chat reference architecture](https://learn.microsoft.com/azure/architecture/ai-ml/architecture/baseline-openai-e2e-chat) on Microsoft Learn.
 
-- An Azure Machine Learning managed online endpoint in a managed virtual network.
+Follow this implementation to deploy an agent in [Azure AI Foundry](https://learn.microsoft.com/azure/ai-foundry/) and uses Bing for grounding data. You'll be exposed to common generative AI chat application characteristics such as:
 
-  - If your application requires high availability and you favor using a managed online endpoint, it is recommended to extend this architecture by deploying multiple online endpoints behind a load balancer to improve resiliency.
-- A network-isolated, zone-redundant, highly available deployment in Azure App Service.
-
-The implementation will have you build and test a [prompt flow](https://microsoft.github.io/promptflow/) in an [Azure AI Foundry](https://learn.microsoft.com/azure/ai-studio/how-to/prompt-flow) project and deploy the flow. You'll be exposed to common generative AI chat application characteristics such as:
-
-- Creating prompts
+- Creating agents and agent prompts
 - Querying data stores for grounding data
-- Python code
-- Calling language models (such as GPT models)
+- Chat memory database
+- Orchestration logic
+- Calling language models (such as GPT models) from your agent
 
 This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
 - Network isolation
-- Security
-- Reliability
+- Bring-your-own Azure AI Agent service dependencies (for security and BC/DR control)
+- Added availability zone reliability
+- Limit egress network traffic with Azure Firewall
 
 ## Architecture
 
 The implementation covers the following scenarios:
 
-1. Authoring a flow - Authoring a flow using prompt flow in Azure AI Foundry
+- [Setting up Azure AI Foundry to host agents](#setting-up-azure-ai-foundry-to-host-agents)
+- [Deploying an agent into Azure AI Agent service](#deploying-an-agent-into-azure-ai-agent-service)
+- [Invoking the agent from .NET code hosted in an Azure Web App](#invoking-the-agent-from-net-code-hosted-in-an-azure-web-app)
 
-1. Deploying a flow to managed compute behind an Azure Machine Learning endpoint - The deployment of the executable flow created in the Azure AI Foundry portal to managed online endpoint. The client UI that is hosted in Azure App Service accesses the deployed flow.
+### Setting up Azure AI Foundry to host agents
 
-1. Deploying a flow to Azure App Service (Self-hosted option) - The deployment of an executable flow as a container to Azure App Service. The client UI that accesses the flow is also hosted in Azure App Service.
+Azure AI Foundry hosts Azure AI Agent service as a capability. Azure AI Agent service's REST APIs are exposed as a AI Foundry private endpoint within the network, and the agents' all egress through a delegated subnet which is routed through Azure Firewall for any internet traffic. This architecture deploys the Azure AI Agent service with its depedencies hosted within your own Azure subscription. As such, this architecture includes an Azure Storage account, Azure AI Search instance, and an Azure Cosmos DB account specifically for the Azure AI Agent service to manage.
 
-### Authoring a flow
+### Deploying an agent into Azure AI Agent service
 
-![Diagram of the authoring architecture using Azure AI Foundry. It demonstrates key architecture components and flow when using AI Foundry portal as an authoring environment. ](docs/media/openai-end-to-end-baseline-authoring.png)
+Agents can be created via the Azure AI Foundry portal, [Azure AI Agents SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent), or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). The creation and invocation of agents are a data plane operation. Since the data plane to Azure AI Foundry is private, all three of those are restricted to being executed from within a private network connected to the private endpoint of Azure AI Foundry.
 
-The authoring architecture diagram illustrates how flow authors [connect to an Azure AI Foundry through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. In this case, the author connects to the virtual network through Azure Bastion and a virtual machine. Connectivity to the virtual network is more commonly done in enterprises using private connectivity options like ExpressRoute or virtual network peering.
+Ideally agents should be source-controlled and a versioned asset. You then can deploy agents in a coordinated way with the rest of your workload's code. In this deployment guide, you'll create an agent from the jump box to simulate a deployment pipeline which could have created the agent.
 
-The diagram further illustrates how AI Foundry is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). With this configuration, a managed virtual network is created, along with managed private endpoints enabling connectivity to private resources such as the project's Azure Storage and Azure Container Registry. You can also create user-defined connections like private endpoints to connect to resources like Azure OpenAI service and Azure AI Search.
 
-### Deploying a flow to Azure Machine Learning managed online endpoint
+If using the Azure AI Foundry portal is desired, then the web browser experience must be performed from a VM within the network or from a workstation that has VPN access to the private network and can properly resolve private DNS records.
 
-![Diagram of the deploying a flow to managed online endpoint. The diagram illustrates the Azure services' relationships for an AI Foundry environment with a managed online endpoint. This diagram also demonstrates the private endpoints used to ensure private connectivity for the managed private endpoint in Azure AI Foundry.](docs/media/openai-end-to-end-baseline-aml-compute.png)
+### Invoking the agent from .NET code hosted in an Azure Web App
 
-The Azure AI Foundry deployment architecture diagram illustrates how a front-end web application, deployed into a [network-secured App Service](https://github.com/Azure-Samples/app-service-baseline-implementation), [connects to a managed online endpoint through a private endpoint](https://learn.microsoft.com/azure/ai-studio/how-to/configure-private-link) in a virtual network. Like the authoring flow, the diagram illustrates how the AI Foundry project is configured for [managed virtual network isolation](https://learn.microsoft.com/azure/ai-studio/how-to/configure-managed-network). The deployed flow connects to required resources such as Azure OpenAI and Azure AI Search through managed private endpoints.
-
-### Deploying a flow to Azure App Service (alternative)
-
-![Diagram of the deploying a flow to Azure App Service. This drawing emphasizes how AI Foundry compute and endpoints are bypassed, and Azure App Service and its virtual network become responsible for connecting to the private endpoints for dependencies.](docs/media/openai-end-to-end-baseline-app-services.png)
-
-The Azure App Service deployment architecture diagram illustrates how the same prompt flow is containerized and deployed to Azure App Service alongside the same front-end web application from the prior architecture. This solution is a completely self-hosted, externalized alternative to an Azure AI Foundry managed online endpoint.
-
-The flow is still authored in a network-isolated Azure AI Foundry project. To deploy an App Service in this architecture, the flows need to be containerized and pushed to the Azure Container Registry that is accessible through private endpoints by the App Service.
+A chat UI application is deployed into a private Azure App Service. The UI is accessed through Application Gateway (WAF). The .NET code uses the [Azure AI Agents SDK](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent) to connect to the workload's agent. The endpoint for the agent is exposed exclusively through the Azure AI Foundry private endpoint.
 
 ## Deployment guide
 
@@ -60,29 +50,34 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - An [Azure subscription](https://azure.microsoft.com/free/)
 
-  - The subscription must have the following resource providers [registered](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider).
+  - The subscription must have all of the resource providers used in this deployment [registered](https://learn.microsoft.com/azure/azure-resource-manager/management/resource-providers-and-types#register-resource-provider).
 
     - `Microsoft.AlertsManagement`
+    - `Microsoft.App`
+    - `Microsoft.Bing`
     - `Microsoft.CognitiveServices`
     - `Microsoft.Compute`
-    - `Microsoft.ContainerRegistry`
-    - `Microsoft.KeyVault`
+    - `Microsoft.DocumentDB`
     - `Microsoft.Insights`
-    - `Microsoft.MachineLearningServices`
+    - `Microsoft.KeyVault`
     - `Microsoft.ManagedIdentity`
     - `Microsoft.Network`
     - `Microsoft.OperationalInsights`
+    - `Microsoft.Search`
     - `Microsoft.Storage`
     - `Microsoft.Web`
 
-  - The subscription selected must have the following quota available in the location you'll select to deploy this implementation.
+  - The subscription must have the following quota available in the region you choose.
 
-    - Azure OpenAI: Standard, GPT-35-Turbo, 25K TPM
-    - Storage Accounts: 2 instances
+    - Application Gateways: 1 WAF_v2 tier instance
     - App Service Plans: P1v3 (AZ), 3 instances
-    - Azure DDoS protection plan: 1
-    - Standard, static Public IP Addresses: 2
-    - Standard DASv4 Family Cluster Dedicated vCPUs for machine learning: 8
+    - Azure AI Search (S - Standard): 1
+    - Azure Cosmos DB: 1 account
+    - OpenAI model: GPT-4o model deployment with 50k tokens per minute (TPM) capacity
+    - DDoS Protection Plans: 1
+    - Public IPv4 Addresses - Standard: 4
+    - Standard DSv3 Family vCPU: 2
+    - Storage Accounts: 2
 
 - Your deployment user must have the following permissions at the subscription scope.
 
@@ -91,13 +86,13 @@ Follow these instructions to deploy this example to your Azure subscription, try
 
 - The [Azure CLI installed](https://learn.microsoft.com/cli/azure/install-azure-cli)
 
-  If you're executing this from WSL, be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` should show `/usr/bin/az`.
+  > :bulb: If you're executing this from Windows Subsystem for Linux (WSL), be sure the Azure CLI is installed in WSL and is not using the version installed in Windows. `which az` must show `/usr/bin/az`.
 
-- The [OpenSSL CLI](https://docs.openssl.org/3.3/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
+- The [OpenSSL CLI](https://docs.openssl.org/3.5/man7/ossl-guide-introduction/#getting-and-installing-openssl) installed.
 
 ### 1. :rocket: Deploy the infrastructure
 
-The following steps are required to deploy the infrastructure from the command line.
+The following steps are required to deploy the infrastructure from the command line using the bicep files from this repository.
 
 1. In your shell, clone this repo and navigate to the root directory of this repository.
 
@@ -106,7 +101,7 @@ The following steps are required to deploy the infrastructure from the command l
    cd openai-end-to-end-baseline
    ```
 
-1. Log in and set your target subscription.
+1. Log in and select your target subscription.
 
    ```bash
    az login
@@ -115,7 +110,7 @@ The following steps are required to deploy the infrastructure from the command l
 
 1. Obtain the App gateway certificate
 
-   Azure Application Gateway includes support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic using standard TLS protocols. For production systems, you should use a publicly signed certificate backed by a public root certificate authority (CA). Here, we will use a self-signed certificate for demonstration purposes.
+   Azure Application Gateway includes support for secure TLS using Azure Key Vault and managed identities for Azure resources. This configuration enables end-to-end encryption of the network traffic going to the web application.
 
    - Set a variable for the domain used in the rest of this deployment.
 
@@ -125,7 +120,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Generate a client-facing, self-signed TLS certificate.
 
-     :warning: Do not use the certificate created by this script for actual deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your App Service solution, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
+     > :warning: Do not use the certificate created by this script for production deployments. The use of self-signed certificates are provided for ease of illustration purposes only. For your chat application traffic, use your organization's requirements for procurement and lifetime management of TLS certificates, *even for development purposes*.
 
      Create the certificate that will be presented to web clients by Azure Application Gateway for your domain.
 
@@ -136,7 +131,7 @@ The following steps are required to deploy the infrastructure from the command l
 
    - Base64 encode the client-facing certificate.
 
-     :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for proper storage in Key Vault later.
+     :bulb: No matter if you used a certificate from your organization or generated one from above, you'll need the certificate (as `.pfx`) to be Base64 encoded for storage in Key Vault.
 
      ```bash
      APP_GATEWAY_LISTENER_CERTIFICATE_APPSERV=$(cat appgw.pfx | base64 | tr -d '\n')
@@ -163,10 +158,10 @@ The following steps are required to deploy the infrastructure from the command l
 
    You will be prompted for an admin password for the jump box; it must satisfy the [complexity requirements for Windows](https://learn.microsoft.com/windows/security/threat-protection/security-policy-settings/password-must-meet-complexity-requirements).
 
-   :clock8: *This might take about 25 minutes.*
+   :clock8: *This might take about 35 minutes.*
 
    ```bash
-   RESOURCE_GROUP=rg-chat-baseline-${LOCATION}
+   RESOURCE_GROUP=rg-chat-baseline-${BASE_NAME}
    az group create -l $LOCATION -n $RESOURCE_GROUP
 
    PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv)
@@ -178,211 +173,133 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
-1. Apply workaround for Azure AI Foundry not deploying its managed network.
+### 2. Deploy an agent in the Azure AI Agent service
 
-   Azure AI Foundry tends to delay deploying its managed network, which causes problems when trying to access Azure AI Foundry's portal experience in the next step. Your final IaC implementation must account for this.
+To test this scenario, you'll be deploying an AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Azure AI Foundry. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from within the network.
 
-   :clock8: *This might take about 15 minutes.*
+The AI agent definition would likely be deployed from your application's pipeline running from a build agent in your workload's network or it could be deployed via singleton code in your web application. In this deployment, you'll create the agent from the jump box, which most closely simulates pipeline-based creation.
 
-   ```bash
-   az extension add --name ml
-   az ml workspace provision-network -n aihub-${BASE_NAME} -g $RESOURCE_GROUP
-   ```
+1. Connect to the virtual network via the deployed [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp). Alternatively, you can connect through a force-tunneled VPN or virtual network peering that you manually configure apart from these instructions.
 
-### 2. Deploy a prompt flow from the Azure AI Foundry portal
-
-To test this scenario, you'll be deploying a pre-built prompt flow. The prompt flow is called "Chat with Wikipedia" which adds a Wikipedia search as grounding data. Deploying a prompt flow requires data plane and control plane access. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from the network.
-
-1. Connect to the virtual network via [Azure Bastion and the jump box](https://learn.microsoft.com/azure/bastion/bastion-connect-vm-rdp-windows#rdp) or through a force-tunneled VPN or virtual network peering that you manually configure.
-
-   The username for the Windows jump box deployed in this solution is `vmadmin`.
+   The username for the Windows jump box deployed in this solution is `vmadmin`. You provided the password during the deployment.
 
    | :computer: | Unless otherwise noted, the following steps are performed from the jump box or from your VPN-connected workstation. The instructions are written as if you are using the provided Windows jump box.|
    | :--------: | :------------------------- |
 
-1. Open the Azure portal to your subscription and navigate to the Azure AI project named **aiproj-chat** in your resource group.
+1. Open PowerShell from the Terminal app. Log in and select your target subscription.
 
-   You'll need to sign in if this is the first time you are connecting through the jump box.
+   ```powershell
+   az login
+   az account set --subscription xxxxx
+   ```
 
-1. Open the Azure AI Foundry portal by clicking the **Launch studio** button.
+1. Set the base name to the same value it was when you deployed the resources.
 
-   This will take you directly into the 'Chat with Wikipedia project'. In the future, you can find all your AI Foundry hubs and projects by going to <https://ai.azure.com>.
+   ```powershell
+   $BASE_NAME="<exact same value used before>"
+   ```
 
-1. Click on **Prompt flow** in the left navigation.
+1. Generate some variables to set context within your jump box.
 
-1. On the **Flows** tab, click **+ Create**.
+   *The following variables align with the defaults in this deployment. Update them if you customized anything.*
 
-1. Under **Explore gallery**, find "Chat with Wikipedia" and click **Clone**.
+   ```powershell
+   $RESOURCE_GROUP="rg-chat-baseline-${BASE_NAME}"
+   $AI_FOUNDRY_NAME="aif${BASE_NAME}"
+   $BING_CONNECTION_NAME="bingaiagent"
+   $AI_FOUNDRY_PROJECT_NAME="projchat"
+   $MODEL_CONNECTION_NAME="agent-model"
+   $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${$AI_FOUNDRY_PROJECT_NAME}$/connections/${BING_CONNECTION_NAME}"
+   $AI_FOUNDRY_AGENT_CREATE_URL="https://${AI_FOUNDRY_NAME}.services.ai.azure.com/api/projects/${AI_FOUNDRY_PROJECT_NAME}/assistants?api-version=2025-05-15-preview"
 
-1. Set the Folder name to `chat_wiki` and click **Clone**.
+   echo $BING_CONNECTION_ID
+   echo $MODEL_CONNECTION_NAME
+   echo $AI_FOUNDRY_AGENT_CREATE_URL
+   ```
 
-   This copies a starter prompt flow template into your Azure Files storage account. This action is performed by the managed identity of the project. After the files are copied, then you're directed to a prompt flow editor. That editor experience uses your own identity for access to Azure Files.
+1. Deploy the agent.
 
-   :bug: Occasionally, you might receive the following error:
+   *This step simulates deploying an AI agent through your pipeline from a network-connected build agent.*
 
-   > CloudDependencyPermission: This request is not authorized to perform this operation using this permission. Please grant workspace/registry read access to the source storage account.
+   ```powershell
+   # Use the agent definition on disk
+   Invoke-WebRequest -Uri "https://github.com/Azure-Samples/openai-end-to-end-baseline/raw/refs/heads/main/agents/chat-with-bing.json" -OutFile "chat-with-bing.json"
 
-   If this happens, simply choose a new folder name and click the **Clone** button again. You'll need to remember the new folder name to adjust the instructions later.
+   # Update to match your environment
+   ${c:chat-with-bing-output.json} = ${c:chat-with-bing.json} -replace 'MODEL_CONNECTION_NAME', $MODEL_CONNECTION_NAME -replace 'BING_CONNECTION_ID', $BING_CONNECTION_ID
 
-1. Connect the `extract_query_from_question` prompt flow step to your Azure OpenAI model deployment.
+   # Deploy the agent
+   az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
 
-   - For **Connection**, select 'aoai' from the dropdown menu. This is your deployed Azure OpenAI instance.
-   - For **deployment_name**, select 'gpt35' from the dropdown menu. This is the model you've deployed in that Azure OpenAI instance.
-   - For **response_format**, select '{"type":"text"}' from the dropdown menu
+   # Capture the Agent's ID
+   $AGENT_ID="$(az rest -u $AI_FOUNDRY_AGENT_CREATE_URL -m 'get' --resource 'https://ai.azure.com' --query 'data[0].id' -o tsv)"
 
-1. Also connect the `augmented_chat` prompt flow step to your Azure OpenAI model deployment.
+   echo $AGENT_ID
+   ```
 
-   - For **Connection**, select the same 'aoai' from the dropdown menu.
-   - For **deployment_name**, select the same 'gpt35' from the dropdown menu.
-   - For **response_format**, also select '{"type":"text"}' from the dropdown menu.
+### 3. Test the agent from the Azure AI Foundry portal in the playground. *Optional.*
 
-1. Click **Save** on the whole flow.
+Here you'll test your orchestration agent by invoking it directly from the Azure AI Foundry portal's playground experience. The Azure AI Foundry portal is only accessible from your private network, so you'll do this from your jump box.
 
-### 3. Test the prompt flow from the Azure AI Foundry portal
+*This step testing step is completely optional.*
 
-Here you'll test your flow by invoking it directly from the Azure AI Foundry portal. The flow still requires you to bring compute to execute it from. The compute you'll use when in the portal is the default *Serverless* offering, which is only used for portal-based prompt flow experiences. The interactions against Azure OpenAI are performed by your identity; the bicep template has already granted your user data plane access. The Serverless compute is run from the managed virtual network and is beholden to the egress network rules defined.
+1. Open the Azure portal to your subscription.
 
-1. Click **Start compute session**.
+   You'll need to sign in to the Azure portal, and resolve any Entra ID Conditional Access policies on your account, if this is the first time you are connecting through the jump box.
 
-1. :clock8: Wait for that button to change to *Compute session running*. This might take about ten minutes.
+1. Navigate to the Azure AI Foundry project named **projchat** in your resource group and open the Azure AI Foundry portal by clicking the **Go to Azure AI Foundry portal** button.
 
-   *Do not advance until the serverless compute session is running.*
+   This will take you directly into the 'Chat project'. Alternatively, you can find all your AI Foundry accounts and projects by going to <https://ai.azure.com> and you do not need to use the Azure portal to access them.
 
-1. Click the enabled **Chat** button on the UI.
+1. Click **Agents** in the side navigation.
 
-1. Enter a question that would require grounding data through recent Wikipedia content, such as a notable current event.
+1. Select the agent named 'Baseline Chatbot Agent'.
+
+1. Click the **Try in playground** button.
+
+1. Enter a question that would require grounding data through recent internet content, such as a notable recent event or the weather today in your location.
 
 1. A grounded response to your question should appear on the UI.
 
-### 4. Deploy the prompt flow to an Azure Machine Learning managed online endpoint
+### 4. Publish the chat front-end web app
 
-Here you'll take your tested flow and deploy it to a managed online endpoint using Azure AI Foundry.
-
-1. Click the **Deploy** button in the UI.
-
-1. Choose **Existing** endpoint and select the one called *ept-chat-BASE_NAME*.
-
-1. Set the following Basic settings and click **Next**.
-
-   - **Deployment name**: ept-chat-deployment
-   - **Virtual machine**: Choose a small virtual machine size from which you have quota. 'Standard_D2as_v4' is plenty for this sample.
-   - **Instance count**: 3. *This is the recommended minimum count.*
-   - **Inferencing data collection**: Enabled
-
-1. Set the following Advanced settings and click **Next**.
-
-   - **Deployment tags**: You can leave blank.
-   - **Environment**: Use environment of current flow definition.
-   - **Application Insights diagnostics**: Enabled
-
-1. Ensure the Output & connections settings are still set to the same connection name and deployment name as configured in the prompt flow and click **Next**.
-
-1. Click the **Create** button.
-
-   There is a notice on the final screen that says:
-
-   > Following connection(s) are using Microsoft Entra ID based authentication. You need to manually grant the endpoint identity access to the related resource of these connection(s).
-   > - aoai
-
-   This has already been taken care of by your IaC deployment. The managed online endpoint identity already has this permission to Azure OpenAI, so there is no action for you to take.
-
-1. :clock9: Wait for the deployment to finish creating.
-
-   The deployment can take over 15 minutes to create. To check on the process, navigate to the deployments screen using the **Models + endpoints** link in the left navigation. If you are asked about unsaved changes, just click **Confirm**.
-
-   Eventually 'ept-chat-deployment' will be on this list and the deployment will be listed with a State of 'Succeeded' and have 100% traffic allocation. Use the **Refresh** button as needed.
-
-   *Do not advance until this deployment is complete.*
-
-### 5. Test the Azure Machine Learning online endpoint from the network
-
-As a quick checkpoint of progress, you should test to make sure your Azure Machine Learning managed online endpoint is able to be called from the network. These steps test the network and authorization configuration of that endpoint.
-
-1. Install some tooling on the jump box.
-
-   Since your jump box is acting as a developer workstation and build agent, you'll need some tooling installed. Install the Azure CLI and Miniconda. The instructions that follow can be run from new Terminal session to install both.
-
-   ```powershell
-   winget install -e --id=Microsoft.AzureCLI
-   winget install -e --id=Anaconda.Miniconda3
-   ```
-
-   Restart your terminal to get `az` included in your path and install the ML Azure CLI extension.
-
-   ```powershell
-   az extension add --name ml
-   ```
-
-1. Close your terminal.
-
-1. Open an **Anaconda PowerShell Prompt** instance from the Start Menu.
-
-   You'll need a PowerShell prompt with a Python environnment available eventually in these instructions. It's best to open it now to only need to set environment variables once.
-
-1. Log in through the Azure CLI so the terminal has access to your subscription.
-
-   If prompted, choose **No, sign in to this app only**.
-
-1. Carry over some context from your workstation.
-
-   ```powershell
-   $BASE_NAME="SET TO SAME VALUE YOU USED BEFORE"
-   ```
-
-   ```powershell
-   $LOCATION="SET TO THE SAME VALUE YOU USED BEFORE"
-   ```
-
-   ```powershell
-   $RESOURCE_GROUP="rg-chat-baseline-${LOCATION}"
-   ```
-
-1. Execute an HTTP request to the online endpoint.
-
-   Feel free to adjust for your own question.
-
-   ```powershell
-   New-Item "request.json" -ItemType File -Value '{"question":"Who were the top three medal winning countries in the 2024 Paris Olympics?"}'
-   az ml online-endpoint invoke -w aiproj-chat -n ept-chat-${BASE_NAME} -g $RESOURCE_GROUP -r request.json
-   ```
-
-1. A grounded response to your question should appear in the output. This test emulates any compute platform that is on the virtual network that would be calling the `/score` API on the managed online endpoint.
-
-### 6. Publish the chat front-end web app
-
-Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into prompt flow. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
+Workloads build chat functionality into an application. Those interfaces usually call APIs which in turn call into your orchestrator. This implementation comes with such an interface. You'll deploy it to Azure App Service using its [run from package](https://learn.microsoft.com/azure/app-service/deploy-run-package) capabilities.
 
 In a production environment, you use a CI/CD pipeline to:
 
 - Build your web application
 - Create the project zip package
-- Upload the zip file to your storage account from compute that is in or connected to the workload's virtual network.
+- Upload the zip file to your Storage account from compute that is in or connected to the workload's virtual network.
 
-For this deployment guide, you'll continue using your jump box (or VPN-connected workstation) to simulate part of that process.
+For this deployment guide, you'll continue using your jump box to simulate part of that process.
 
-1. Using the same Powershell terminal session from previous steps, download the web UI.
+1. Using the same PowerShell terminal session from previous steps, download the web UI.
 
    ```powershell
    Invoke-WebRequest -Uri https://github.com/Azure-Samples/openai-end-to-end-baseline/raw/refs/heads/main/website/chatui.zip -OutFile chatui.zip
    ```
 
-   If you are using a VPN-connected workstation, download the same zip to your workstation.
-
 1. Upload the web application to Azure Storage, where the web app will load the code from.
 
    ```powershell
-   az storage blob upload -f chatui.zip --account-name "st${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
+   az storage blob upload -f chatui.zip --account-name "stwebapp${BASE_NAME}" --auth-mode login -c deploy -n chatui.zip
    ```
 
-1. Restart the web app to launch the site. *(This can be done from your workstation or the jump box.)*
+1. Update the app configuration to use the agent you deployed.
 
    ```powershell
-   az webapp restart --name "app-${BASE_NAME}" --resource-group "${RESOURCE_GROUP}"
+   az webapp config appsettings set -n "app-${BASE_NAME}" -g $RESOURCE_GROUP --settings AIAgentId="${AGENT_ID}"
    ```
 
-### 7. Test the deployed application that calls into the Azure Machine Learning managed online endpoint
+1. Restart the web app to load the site code and its updated configuation.
 
-This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure Machine Learning managed online endpoint, which contains the hosted prompt flow. The hosted prompt flow will interface with Wikipedia for grounding data and Azure OpenAI for generative responses.
+   ```powershell
+   az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
+   ```
+
+### 5. Try it out! Test the deployed application that calls into the Azure AI Agent service
+
+This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure AI Foundry agent API endpoint, which hosts the agent and its chat history. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
 
 | :computer: | Unless otherwise noted, the following steps are all performed from your original workstation, not from the jump box. |
 | :--------: | :------------------------- |
@@ -405,141 +322,44 @@ This section will help you to validate that the workload is exposed correctly an
 
    > :bulb: It may take up to a few minutes for the App Service to start properly. Remember to include the protocol prefix `https://` in the URL you type in your browser's address bar. A TLS warning will be present due to using a self-signed certificate. You can ignore it or import the self-signed cert (`appgw.pfx`) to your user's trusted root store.
 
-1. Try it out!
-
-   Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included context from Wikipedia such as recent data or events.
-
-### 8. Rehost the prompt flow in Azure App Service
-
-This is a second option for deploying the prompt flow code. With this option, you deploy the flow to Azure App Service instead of the managed online endpoint.
-
-You will need access to the prompt flow files for this experience, since we'll be building a container out of them. While you could download them from your jump box and transfer them to your workstation (through git or though .zip), these instructions will just use the jump box as your prompt flow development environment. Using the jump box again simulates a build agent in the network. To perform these build and deploy tasks, you'll need to install some developer tools on the jump box.
-
-| :computer: | Unless otherwise noted, the following steps are all performed from the jump box or from your VPN-connected workstation. |
-| :--------: | :------------------------- |
-
-1. From your *existing* **Anaconda PowerShell Prompt** instance, start a conda session and install the promptflow tools (pf CLI).
-
-   ```powershell
-   conda create -y --name pf python=3.12
-   conda activate pf
-
-   pip install promptflow[azure] promptflow-tools bs4
-   ```
-
-1. Open the Prompt flow UI again in your Azure AI Foundry project.
-
-1. Expand the **Files** tab in the upper-right pane of the UI.
-
-1. Click on the download icon to download the flow as a zip file.
-
-1. Unzip the prompt flow zip file you downloaded.
-
-   *Ensure this file name is set to the directory name you used when first cloning this prompt flow.*
-
-   ```powershell
-   cd Downloads
-   Expand-Archive chat_wiki.zip
-   cd chat_wiki
-   ```
-
-1. Add packages to requirements.txt, which ensures they are installed in your container.
-
-   ```powershell
-   Add-Content requirements.txt -Value @'
-   promptflow[azure]
-   promptflow-tools
-   python-dotenv
-   bs4
-   '@
-   ```
-
-1. Create a file for the Azure OpenAI connection named **aoai.yaml** and register it.
-
-   ```powershell
-   New-Item aoai.yaml -ItemType File -Value @'
-   $schema: https://azuremlschemas.azureedge.net/promptflow/latest/AzureOpenAIConnection.schema.json
-   name: aoai
-   type: azure_open_ai
-   api_base: "${env:OPENAICONNECTION_API_BASE}"
-   api_type: "azure"
-   api_version: "2024-02-01"
-   auth_mode: "meid_token"
-   '@
-
-   pf connection create -f aoai.yaml
-   ```
-
-   > :bulb: The App Service is configured with App Settings that surface as environment variables for ```OPENAICONNECTION_API_BASE```.
-
-1. Bundle the prompt flow to support creating a container image.
-
-   ```bash
-   pf flow build --source ./ --output dist --format docker
-   ```
-
-   The following code will create a directory named 'dist' with a Dockerfile and all the required flow code files.
-
-1. Build the container image and push it to your Azure Container Registry.
-
-   ```powershell
-   cd dist
-
-   $NAME_OF_ACR="cr${BASE_NAME}"
-   $ACR_CONTAINER_NAME="aoai"
-   $IMAGE_NAME="wikichatflow"
-   $IMAGE_TAG="1.0"
-   $FULL_IMAGE_NAME="${ACR_CONTAINER_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-
-   az acr build --agent-pool imgbuild -t $FULL_IMAGE_NAME -r $NAME_OF_ACR .
-   ```
-
-1. Set the container image on the Web App that will be hosting the prompt flow.
-
-   ```powershell
-   $PF_APP_SERVICE_NAME="app-$BASE_NAME-pf"
-   $ACR_IMAGE_NAME="${NAME_OF_ACR}.azurecr.io/${FULL_IMAGE_NAME}"
-
-   az webapp config container set -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP -i $ACR_IMAGE_NAME -r "https://${NAME_OF_ACR}.azurecr.io"
-   az webapp deployment container config -e true -n $PF_APP_SERVICE_NAME -g $RESOURCE_GROUP
-   ```
-
-1. Modify the configuration setting in the App Service that has the chat UI and point it to your deployed prompt flow endpoint hosted in App Service instead of the managed online endpoint.
-
-   ```powershell
-   $UI_APP_SERVICE_NAME="app-$BASE_NAME"
-   $ENDPOINT_URL="https://$PF_APP_SERVICE_NAME.azurewebsites.net/score"
-
-   az webapp config appsettings set --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP --settings chatApiEndpoint=$ENDPOINT_URL
-   az webapp restart --name $UI_APP_SERVICE_NAME --resource-group $RESOURCE_GROUP
-   ```
-
-## :checkered_flag: Try it out. Test the final deployment
-
-| :computer: | Unless otherwise noted, the remaining steps are performed from your original workstation, not from the jump box. |
-| :--------: | :------------------------- |
-
-Browse to the site (e.g. <https://www.contoso.com>) once again. Once there, ask your solution a question. Like before, your question should involve something that would only be known if the RAG process included context from Wikipedia such as recent data or events.
-
-In this final configuration, your chat UI is interacting with the prompt flow code hosted in another Web App in your Azure App Service instance. Your Azure Machine Learning online endpoint is not used, and Wikipedia and Azure OpenAI are being called right from your prompt flow Web App.
+   Once you're there, ask your solution a question. Your question should involve something that would only be known if the RAG process included context from Bing such as recent weather or events.
 
 ## :broom: Clean up resources
 
-Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $100 a day, mostly due to Azure DDoS Protection and Azure AI Foundry's managed network's firewall. Promptly delete resources when you are done using them.
+Most Azure resources deployed in the prior steps will incur ongoing charges unless removed. This deployment is typically over $90 a day, and more if you enabled Azure DDoS Protection. Promptly delete resources when you are done using them.
 
-Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
+Additionally, a few of the resources deployed enter soft delete status which will restrict the ability to redeploy another resource with the same name or DNS entry; and might not release quota. It's best to purge any soft deleted resources once you are done exploring. Use the following commands to delete the deployed resources and resource group and to purge each of the resources with soft delete.
 
-| :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
-| :--------: | :------------------------- |
+1. Delete the resource group as a way to delete all contained Azure resources.
 
-```bash
-# These deletes and purges take about 30 minutes to run.
-az group delete -n $RESOURCE_GROUP -y
+   | :warning: | This will completely delete any data you may have included in this example. That data and this deployment will be unrecoverable. |
+   | :-------: | :------------------------- |
 
-# Purge the soft delete resources
-az keyvault purge -n kv-${BASE_NAME} -l $LOCATION
-az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n oai-${BASE_NAME}
-```
+   :clock8: *This might take about 20 minutes.*
+
+   ```bash
+   # This command will delete most of the resources, but will sometimes error out. That's expected.
+   az group delete -n $RESOURCE_GROUP -y
+
+   # Continue, even if the previous command errored.
+   ```
+
+1. Purge soft-deleted resources.
+
+   ```bash
+   # Purge the soft delete resources.
+   az keyvault purge -n kv-${BASE_NAME} -l $LOCATION
+   az cognitiveservices account purge -g $RESOURCE_GROUP -l $LOCATION -n aif${BASE_NAME}
+   ```
+
+1. [Remove the Azure Policy assignments](https://portal.azure.com/#blade/Microsoft_Azure_Policy/PolicyMenuBlade/Compliance) scoped to the resource group. To identify those created by this implementation, look for ones that are prefixed with `[BASE_NAME] `.
+
+> [!TIP]
+> The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Agent subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted AI Agent service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
+>
+> The lingering resources do not have a cost associated with them existing in your subscription.
+>
+> If the resource group didn't fully delete, re-execute the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
 
 ## Contributions
 

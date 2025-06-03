@@ -1,25 +1,33 @@
+targetScope = 'resourceGroup'
+
 /*
   Deploy an Azure Application Gateway with WAF v2 and a custom domain name.
 */
+
+@description('The region in which this architecture is deployed. Should match the region of the resource group.')
+@minLength(1)
+param location string = resourceGroup().location
 
 @description('This is the base name for each Azure resource name (6-8 chars)')
 @minLength(6)
 @maxLength(8)
 param baseName string
 
-@description('The resource group location')
-param location string = resourceGroup().location
+@description('The name of the workload\'s existing Log Analytics workspace.')
+@minLength(4)
+param logAnalyticsWorkspaceName string
 
 @description('Domain name to use for App Gateway')
 param customDomainName string
 
 @description('The name of the existing virtual network that this Application Gateway instance will be deployed into.')
-param vnetName string
+@minLength(1)
+param virtualNetworkName string
 
 @description('The name of the existing subnet for Application Gateway. Must in in the provided virtual network and sized appropriately.')
-param appGatewaySubnetName string
+param applicationGatewaySubnetName string
 
-@description('The name of the existing webapp that will be the backend origin for the primary application gateway route.')
+@description('The name of the existing webapp that will be the backend origin for the primary Application Gateway route.')
 param appName string
 
 @description('The name of the existing Key Vault that contains the SSL certificate for the Application Gateway.')
@@ -29,9 +37,6 @@ param keyVaultName string
 #disable-next-line secure-secrets-in-params
 param gatewayCertSecretKey string
 
-@description('The name of the workload\'s existing Log Analytics workspace.')
-param logWorkspaceName string
-
 //variables
 var appGatewayName = 'agw-${baseName}'
 var appGatewayManagedIdentityName = 'id-${appGatewayName}'
@@ -40,20 +45,21 @@ var appGatewayFqdn = 'fe-${baseName}'
 var wafPolicyName= 'waf-${baseName}'
 
 // ---- Existing resources ----
-resource vnet 'Microsoft.Network/virtualNetworks@2022-11-01' existing =  {
-  name: vnetName
 
-  resource appGatewaySubnet 'subnets' existing = {
-    name: appGatewaySubnetName
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' existing =  {
+  name: virtualNetworkName
+
+  resource applicationGatewaySubnet 'subnets' existing = {
+    name: applicationGatewaySubnetName
   }
 }
 
-resource webApp 'Microsoft.Web/sites@2022-09-01' existing = {
+resource webApp 'Microsoft.Web/sites@2024-04-01' existing = {
   name: appName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' existing = {
-  name: logWorkspaceName
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+  name: logAnalyticsWorkspaceName
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
@@ -64,22 +70,22 @@ resource keyVault 'Microsoft.KeyVault/vaults@2024-11-01' existing = {
   }
 }
 
-// Built-in Azure RBAC role that is applied to a Key Vault to grant with secrets content read privileges. Granted to both Key Vault and our workload's identity.
+@description('Built-in Role: [Key Vault Secrets User](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-secrets-user)')
 resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
 }
 
-// ---- App Gateway resources ----
+// ---- New resources ----
 
 // Managed Identity for App Gateway.
-resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: appGatewayManagedIdentityName
   location: location
 }
 
-// Grant the Azure Application Gateway managed identity with Key Vault secrets role permissions; this allows pulling certificates.
-module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignment.bicep' = {
+@description('Grant the Application Gateway managed identity Key Vault secrets user role permissions. This allows pulling certificates.')
+module grantAppGatewaySecretsUserRoleAssignment './modules/keyvaultRoleAssignment.bicep' = {
   name: 'appGatewaySecretsUserRoleAssignmentDeploy'
   params: {
     roleDefinitionId: keyVaultSecretsUserRole.id
@@ -89,7 +95,7 @@ module appGatewaySecretsUserRoleAssignmentModule './modules/keyvaultRoleAssignme
 }
 
 //External IP for App Gateway
-resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
+resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: appGatewayPublicIpName
   location: location
   zones: pickZones('Microsoft.Network', 'publicIPAddresses', location, 3)
@@ -107,25 +113,31 @@ resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2022-11-01' = {
 }
 
 //WAF policy definition
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2023-05-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
   name: wafPolicyName
   location: location
   properties: {
     policySettings: {
+      requestBodyCheck: true
+      requestBodyEnforcement: true
+      maxRequestBodySizeInKb: 128
+      requestBodyInspectLimitInKB: 128
       fileUploadLimitInMb: 10
+      fileUploadEnforcement: true
+      jsChallengeCookieExpirationInMins: 30
       state: 'Enabled'
       mode: 'Prevention'
     }
     managedRules: {
       managedRuleSets: [
         {
-          ruleSetType: 'OWASP'
-          ruleSetVersion: '3.2'
+          ruleSetType: 'Microsoft_DefaultRuleSet'
+          ruleSetVersion: '2.1'
           ruleGroupOverrides: []
         }
         {
           ruleSetType: 'Microsoft_BotManagerRuleSet'
-          ruleSetVersion: '1.0'
+          ruleSetVersion: '1.1'
           ruleGroupOverrides: []
         }
       ]
@@ -134,7 +146,7 @@ resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPo
 }
 
 //App Gateway
-resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
+resource appGateway 'Microsoft.Network/applicationGateways@2024-05-01' = {
   name: appGatewayName
   location: location
   zones: pickZones('Microsoft.Network', 'applicationGateways', location, 3)
@@ -163,7 +175,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
         name: 'appGatewayIpConfig'
         properties: {
           subnet: {
-            id: vnet::appGatewaySubnet.id
+            id: virtualNetwork::applicationGatewaySubnet.id
           }
         }
       }
@@ -211,7 +223,7 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
     firewallPolicy: {
       id: wafPolicy.id
     }
-    enableHttp2: false
+    enableHttp2: true
     sslCertificates: [
       {
         name: '${appGatewayName}-ssl-certificate'
@@ -291,12 +303,12 @@ resource appGateway 'Microsoft.Network/applicationGateways@2024-01-01' = {
     }
   }
   dependsOn: [
-    appGatewaySecretsUserRoleAssignmentModule
+    grantAppGatewaySecretsUserRoleAssignment
   ]
 }
 
-//Application Gateway diagnostic settings
-resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+@description('Enable Application Gateway diagnostic settings')
+resource azureDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'default'
   scope: appGateway
   properties: {
@@ -331,5 +343,7 @@ resource appGatewayDiagSettings 'Microsoft.Insights/diagnosticSettings@2021-05-0
   }
 }
 
-@description('The name of the app gateway resource.')
-output appGatewayName string = appGateway.name
+// ---- Outputs ----
+
+@description('The name of the Azure Application Gateway resource.')
+output applicationGatewayName string = appGateway.name
