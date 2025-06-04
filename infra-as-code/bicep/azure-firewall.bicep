@@ -120,7 +120,8 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
     }
   }
 
-  @description('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
+  @descriptiou('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
+
   resource applicationRules 'ruleCollectionGroups' = {
     name: 'DefaultApplicationRuleCollectionGroup'
     properties: {
@@ -134,6 +135,28 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
             type: 'Allow'
           }
           rules: [
+            // Production readiness change: refine your rule sets to restrict egress traffic exclusively to the external services and endpoints your agent depends on. The following application rule demonstrates how to scope access specifically to Grounding with Bing.
+            // {
+            //   ruleType: 'ApplicationRule'
+            //   name: 'allow-groundingwithbing'
+            //   description: 'Supports required communication for the Azure Monitor addon in AKS'
+            //   protocols: [
+            //     {
+            //       protocolType: 'Https'
+            //       port: 443
+            //     }
+            //   ]
+            //   fqdnTags: []
+            //   webCategories: []
+            //   targetFqdns: [
+            //     'api.bing.microsoft.com'
+            //   ]
+            //   targetUrls: []
+            //   terminateTLS: false
+            //   sourceAddresses: ['${virtualNetwork::agentsEgressSubnet.properties.addressPrefix}']
+            //   destinationAddresses: []
+            //   httpHeadersToInsert: []
+            // }
             {
               ruleType: 'ApplicationRule'
               name: 'allow-dependencies'
@@ -228,7 +251,7 @@ resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
             id: virtualNetwork::firewall.id
           }
         }
-        
+
       }
     ]
     firewallPolicy: {
