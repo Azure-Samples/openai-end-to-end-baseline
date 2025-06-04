@@ -139,7 +139,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
             // {
             //   ruleType: 'ApplicationRule'
             //   name: 'allow-groundingwithbing'
-            //   description: 'Supports required communication for the Azure Monitor addon in AKS'
+            //   description: 'Supports required communication for the Grounding with Bing in Azure AI Agents Service'
             //   protocols: [
             //     {
             //       protocolType: 'Https'
