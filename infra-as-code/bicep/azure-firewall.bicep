@@ -111,7 +111,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
               name: 'allow-dependencies'
               ipProtocols: ['Any']
               sourceAddresses: ['${virtualNetwork::jumpBoxesSubnet.properties.addressPrefix}']
-              destinationAddresses: ['*']
+              destinationAddresses: ['*'] // Production readiness change: tighten destination address to ensure egress traffic is restricted to the minimal required spaces.
               destinationPorts: ['*']
             }
           ]
