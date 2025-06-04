@@ -175,10 +175,13 @@
     const BOT_NAME = "Chatbot";
     const PERSON_NAME = "";
 
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
         const chatForm = document.querySelector(".msger-inputarea");
         const chatContainer = document.querySelector(".msger-chat");
         const messageInput = chatForm?.elements?.message;
+
+        const { id } = await createThread();
+        const threadId = id;
 
         addChatMessage(BOT_NAME, "left", "How can I help you today?");
 
@@ -202,7 +205,7 @@
         });
 
         async function sendPrompt(prompt) {
-            const response = await fetch("/chat/completions", {
+            const response = await fetch(`/chat/completions/${threadId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(prompt)
@@ -211,6 +214,20 @@
             if (!response.ok) {
                 const errorMessage = await response.text().catch(() => response.statusText);
                 throw new Error(`Error sending prompt: ${errorMessage}`);
+            }
+
+            return response.json();
+        }
+
+        async function createThread() {
+            const response = await fetch("/chat/threads", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text().catch(() => response.statusText);
+                throw new Error(`Error creating session: ${errorMessage}`);
             }
 
             return response.json();
