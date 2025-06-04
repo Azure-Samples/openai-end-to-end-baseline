@@ -181,7 +181,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
               ]
               fqdnTags: []
               webCategories: []
-              targetFqdns: ['*']
+              targetFqdns: ['*'] // Production readiness change: specify target FQDNs to ensure only approved resources can be accessed from your jumpbox.
               targetUrls: []
               terminateTLS: false
               sourceAddresses: ['${virtualNetwork::jumpBoxesSubnet.properties.addressPrefix}']
