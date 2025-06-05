@@ -111,7 +111,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
               name: 'allow-dependencies'
               ipProtocols: ['Any']
               sourceAddresses: ['${virtualNetwork::jumpBoxesSubnet.properties.addressPrefix}']
-              destinationAddresses: ['*']
+              destinationAddresses: ['*'] // Production readiness change: tighten destination address to ensure egress traffic is restricted to the minimal required spaces.
               destinationPorts: ['*']
             }
           ]
@@ -120,7 +120,8 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
     }
   }
 
-  @description('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
+  @descriptiou('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
+
   resource applicationRules 'ruleCollectionGroups' = {
     name: 'DefaultApplicationRuleCollectionGroup'
     properties: {
@@ -145,7 +146,10 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
               ]
               fqdnTags: []
               webCategories: []
-              targetFqdns: ['*']
+              targetFqdns: [
+                 '*'
+                 // 'api.bing.microsoft.com' // Production readiness change: refine your target FQDNs to restrict egress traffic exclusively to the external services and endpoints your agent depends on. For instance this fqnd scopes access specifically to Grounding with Bing.
+              ]
               targetUrls: []
               terminateTLS: false
               sourceAddresses: ['${virtualNetwork::agentsEgressSubnet.properties.addressPrefix}']
@@ -177,7 +181,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
               ]
               fqdnTags: []
               webCategories: []
-              targetFqdns: ['*']
+              targetFqdns: ['*'] // Production readiness change: specify target FQDNs to ensure only approved resources can be accessed from your jumpbox.
               targetUrls: []
               terminateTLS: false
               sourceAddresses: ['${virtualNetwork::jumpBoxesSubnet.properties.addressPrefix}']
@@ -228,7 +232,6 @@ resource azureFirewall 'Microsoft.Network/azureFirewalls@2024-05-01' = {
             id: virtualNetwork::firewall.id
           }
         }
-        
       }
     ]
     firewallPolicy: {
