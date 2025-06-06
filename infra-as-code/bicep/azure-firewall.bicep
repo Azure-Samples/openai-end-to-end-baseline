@@ -120,8 +120,7 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2024-05-01' = {
     }
   }
 
-  @descriptiou('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
-
+  @description('Add rules for the Azure AI agent egress and jump boxes subnets. Extend to support other subnets as needed.')
   resource applicationRules 'ruleCollectionGroups' = {
     name: 'DefaultApplicationRuleCollectionGroup'
     properties: {
