@@ -67,7 +67,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-previ
       {
         locationName: location
         failoverPriority: 0
-        isZoneRedundant: true // Some subscriptions do not have quota to support zone redundancy. If you encounter an error, set this to false.
+        isZoneRedundant: false // Production readiness change: Some subscriptions do not have quota to support zone redundancy in their selected region. Before going to production, test this capability and if not available, work with Microsoft support to ensure you have capacity in your region and enable this.
       }
     ]
     databaseAccountOfferType: 'Standard'

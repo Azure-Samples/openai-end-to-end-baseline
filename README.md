@@ -361,6 +361,10 @@ Additionally, a few of the resources deployed enter soft delete status which wil
 >
 > If the resource group didn't fully delete, re-execute the `az group delete -n $RESOURCE_GROUP -y` command after an hour to complete the cleanup.
 
+## Production rediness changes
+
+The bicep included in this repository has a few settings that are made to enable a smoother deployment experience when you are first trying this out. These settings are not recommended for production deployments, and you should evaluate each of the settings before deploying to production. Those settings all have a comment next to them that starts with `Production readiness change:`.
+
 ## Contributions
 
 Please see our [Contributor guide](./CONTRIBUTING.md).
