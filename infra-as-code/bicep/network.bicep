@@ -8,7 +8,7 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
-// Azure AI Agent service currently has a limitation on subnet prefixes.
+// Azure AI Foundry Agent Service currently has a limitation on subnet prefixes.
 // 10.x was not supported, as such 192.168.x.x was used.
 var virtualNetworkAddressPrefix = '192.168.0.0/16'
 var appGatewaySubnetPrefix = '192.168.1.0/24'
@@ -35,7 +35,7 @@ resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' =
   properties: {}
 }
 
-@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, and Azure AI Agents service.')
+@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, and Azure AI Foundry Agents Service.')
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: 'vnet-workload'
   location: location
@@ -149,7 +149,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
         }
       }
       {
-        // Azure AI Agent service subnet for egress traffic
+        // Azure AI Foundry Agent Service subnet for egress traffic
         name: 'snet-agentsEgress'
         properties: {
           addressPrefix: aiAgentsEgressSubnetPrefix
@@ -399,7 +399,7 @@ resource buildAgentsSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-0
   }
 }
 
-@description('The Azure AI Agent service egress subnet NSG')
+@description('The Azure AI Foundry Agent Service egress subnet NSG')
 resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: 'nsg-agentsEgressSubnet'
   location: location
@@ -421,7 +421,7 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
       {
         name: 'Agents.Out.Allow.PrivateEndpoints'
         properties: {
-          description: 'Allow outbound traffic from the AI Agent egress subnet to the Private Endpoints subnet.'
+          description: 'Allow outbound traffic from the Azure AI Foundry Agent egress subnet to the Private Endpoints subnet.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
@@ -435,7 +435,7 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
       {
         name: 'Agents.Out.AllowTcp443.Internet'
         properties: {
-          description: 'Allow outbound traffic from the AI Agent egress subnet to Internet on 443 (Azure firewall to filter further)'
+          description: 'Allow outbound traffic from the Azure AI Foundry Agent egress subnet to Internet on 443 (Azure firewall to filter further)'
           protocol: 'Tcp'
           sourcePortRange: '*'
           destinationPortRange: '443'
@@ -449,7 +449,7 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
       {
         name: 'DenyAllOutBound'
         properties: {
-          description: 'Deny all other outbound traffic from the Azure AI Agent subnet.'
+          description: 'Deny all other outbound traffic from the Azure AI Foundry Agent subnet.'
           protocol: '*'
           sourcePortRange: '*'
           destinationPortRange: '*'
@@ -879,10 +879,10 @@ output jumpBoxesSubnetName string = virtualNetwork::jumpBoxSubnet.name
 @description('The name of the build agents subnet.')
 output buildAgentsSubnetName string = virtualNetwork::buildAgentsSubnet.name
 
-@description('The name of the Azure AI Agents egress subnet.')
+@description('The name of the Azure AI Foundry Agents egress subnet.')
 output agentsEgressSubnetName string = virtualNetwork::agentsEgressSubnet.name
 
-@description('The resource ID of the Azure AI Agents egress subnet.')
+@description('The resource ID of the Azure AI Foundry Agents egress subnet.')
 output agentsEgressSubnetResourceId string = virtualNetwork::agentsEgressSubnet.id
 
 @description('The resource ID of the private endpoints subnet.')

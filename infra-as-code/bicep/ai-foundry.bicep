@@ -13,7 +13,7 @@ param baseName string
 @minLength(4)
 param logAnalyticsWorkspaceName string
 
-@description('The resource ID for the subnet that the Azure AI Agents will egress through.')
+@description('The resource ID for the subnet that the Azure AI Foundry Agents will egress through.')
 @minLength(1)
 param agentSubnetResourceId string
 
@@ -58,7 +58,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 // ---- New resources ----
 
-@description('Deploy Azure AI Foundry (account) with Azure AI Agent service capability.')
+@description('Deploy Azure AI Foundry (account) with Foundry Agent Service capability.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
   name: aiFoundryName
   location: location
@@ -90,7 +90,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = {
     ]
   }
 
-  @description('Models are managed at the account level. Deploy the GPT model that will be used for the Azure AI Agent logic.')
+  @description('Models are managed at the account level. Deploy the GPT model that will be used for the Azure AI Foundry Agent logic.')
   resource model 'deployments' = {
     name: 'agent-model'
     sku: {

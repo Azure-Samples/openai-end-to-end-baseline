@@ -9,7 +9,7 @@ param location string = resourceGroup().location
 @maxLength(8)
 param baseName string
 
-@description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')
+@description('Assign your user some roles to support access to the Azure AI Foundry Agent dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
 param debugUserPrincipalId string
@@ -62,7 +62,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     isNfsV3Enabled: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false // This Azure AI Agents service binary files scenario doesn't require double encryption, but if your scenario does, please enable.
+      requireInfrastructureEncryption: false // The Azure AI Foundry Agent Service's binary files in this scenario doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
