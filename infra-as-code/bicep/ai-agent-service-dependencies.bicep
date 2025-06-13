@@ -24,7 +24,7 @@ param privateEndpointSubnetResourceId string
 
 // ---- New resources ----
 
-@description('Deploy Azure Storage account for the Azure AI Foundry Agent service (dependency). This is used for binaries uploaded within threads or as "knowledge" uploaded as part of an agent.')
+@description('Deploy Azure Storage account for the Azure AI Foundry Agent Service (dependency). This is used for binaries uploaded within threads or as "knowledge" uploaded as part of an agent.')
 module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
   scope: resourceGroup()
   params: {
@@ -36,7 +36,7 @@ module deployAgentStorageAccount 'ai-agent-blob-storage.bicep' = {
   }
 }
 
-@description('Deploy Azure Cosmos DB account for the Azure AI Foundry Agent service (dependency). This is used for storing agent definitions and threads.')
+@description('Deploy Azure Cosmos DB account for the Azure AI Foundry Agent Service (dependency). This is used for storing agent definitions and threads.')
 module deployCosmosDbThreadStorageAccount 'cosmos-db.bicep' = {
   scope: resourceGroup()
   params: {
@@ -48,7 +48,7 @@ module deployCosmosDbThreadStorageAccount 'cosmos-db.bicep' = {
   }
 }
 
-@description('Deploy Azure AI Search instance for the Azure AI Foundry Agent service (dependency). This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
+@description('Deploy Azure AI Search instance for the Azure AI Foundry Agent Service (dependency). This is used when a user uploads a file to the agent, and the agent needs to search for information in that file.')
 module deployAzureAISearchService 'ai-search.bicep' = {
   scope: resourceGroup()
   params: {

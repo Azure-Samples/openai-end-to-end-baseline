@@ -13,7 +13,7 @@ Follow this implementation to deploy an agent in [Azure AI Foundry](https://lear
 This implementation builds off the [basic implementation](https://github.com/Azure-Samples/openai-end-to-end-basic), and adds common production requirements such as:
 
 - Network isolation
-- Bring-your-own Azure AI Foundry Agent service dependencies (for security and BC/DR control)
+- Bring-your-own Azure AI Foundry Agent Service dependencies (for security and BC/DR control)
 - Added availability zone reliability
 - Limit egress network traffic with Azure Firewall
 
@@ -22,12 +22,12 @@ This implementation builds off the [basic implementation](https://github.com/Azu
 The implementation covers the following scenarios:
 
 - [Setting up Azure AI Foundry to host agents](#setting-up-azure-ai-foundry-to-host-agents)
-- [Deploying an agent into Azure AI Foundry Agent service](#deploying-an-agent-into-azure-ai-agent-service)
+- [Deploying an agent into Azure AI Foundry Agent Service](#deploying-an-agent-into-azure-ai-agent-service)
 - [Invoking the agent from .NET code hosted in an Azure Web App](#invoking-the-agent-from-net-code-hosted-in-an-azure-web-app)
 
 ### Setting up Azure AI Foundry to host agents
 
-Azure AI Foundry hosts Azure AI Foundry Agent service as a capability. Azure AI Foundry Agent service's REST APIs are exposed as a AI Foundry private endpoint within the network, and the agents' all egress through a delegated subnet which is routed through Azure Firewall for any internet traffic. This architecture deploys the Azure AI Foundry Agent service with its depedencies hosted within your own Azure subscription. As such, this architecture includes an Azure Storage account, Azure AI Search instance, and an Azure Cosmos DB account specifically for the Azure AI Foundry Agent service to manage.
+Azure AI Foundry hosts Azure AI Foundry Agent Service as a capability. Foundry Agent service's REST APIs are exposed as an AI Foundry private endpoint within the network, and the agents' all egress through a delegated subnet which is routed through Azure Firewall for any internet traffic. This architecture deploys the Foundry Agent Service with its dependencies hosted within your own Azure subscription. As such, this architecture includes an Azure Storage account, Azure AI Search instance, and an Azure Cosmos DB account specifically for the Foundry Agent Service to manage.
 
 ### Deploying an agent into Azure AI Foundry Agent service
 
@@ -173,7 +173,7 @@ The following steps are required to deploy the infrastructure from the command l
      -p yourPrincipalId=${PRINCIPAL_ID}
    ```
 
-### 2. Deploy an agent in the Azure AI Foundry Agent service
+### 2. Deploy an agent in the Azure AI Foundry Agent Service
 
 To test this scenario, you'll be deploying an AI agent included in this repository. The agent uses a GPT model combined with a Bing search for grounding data. Deploying an AI agent requires data plane access to Azure AI Foundry. In this architecture, a network perimeter is established, and you must interact with the Azure AI Foundry portal and its resources from within the network.
 
@@ -297,7 +297,7 @@ For this deployment guide, you'll continue using your jump box to simulate part 
    az webapp restart --name "app-${BASE_NAME}" --resource-group $RESOURCE_GROUP
    ```
 
-### 5. Try it out! Test the deployed application that calls into the Azure AI Foundry Agent service
+### 5. Try it out! Test the deployed application that calls into the Azure AI Foundry Agent Service
 
 This section will help you to validate that the workload is exposed correctly and responding to HTTP requests. This will validate that traffic is flowing through Application Gateway, into your Web App, and from your Web App, into the Azure AI Foundry agent API endpoint, which hosts the agent and its chat history. The agent will interface with Bing for grounding data and an OpenAI model for generative responses.
 
@@ -355,7 +355,7 @@ Additionally, a few of the resources deployed enter soft delete status which wil
 1. [Remove the Azure Policy assignments](https://portal.azure.com/#blade/Microsoft_Azure_Policy/PolicyMenuBlade/Compliance) scoped to the resource group. To identify those created by this implementation, look for ones that are prefixed with `[BASE_NAME] `.
 
 > [!TIP]
-> The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Foundry Agent service subnet (`snet-agentsEgress`) retains a latent Microsoft-managed deletgated connection (`serviceAssociationLink`) to the deleted Azure AI Foundry Agent service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
+> The `vnet-workload` and associated networking resources are sometimes blocked from being deleted with the above instructions. This is because the Azure AI Foundry Agent Service subnet (`snet-agentsEgress`) retains a latent Microsoft-managed delegated connection (`serviceAssociationLink`) to the deleted Foundry Agent Service backend. The virtual network and associated resources typically become free to delete about an hour after purging the Azure AI Foundry account.
 >
 > The lingering resources do not have a cost associated with them existing in your subscription.
 >

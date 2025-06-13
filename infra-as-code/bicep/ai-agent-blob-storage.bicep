@@ -62,7 +62,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     isNfsV3Enabled: false
     encryption: {
       keySource: 'Microsoft.Storage'
-      requireInfrastructureEncryption: false // This Azure AI Foundry Agents service binary files scenario doesn't require double encryption, but if your scenario does, please enable.
+      requireInfrastructureEncryption: false // The Azure AI Foundry Agent Service's binary files in this scenario doesn't require double encryption, but if your scenario does, please enable.
       services: {
         blob: {
           enabled: true
