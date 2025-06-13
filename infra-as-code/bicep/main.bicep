@@ -92,6 +92,7 @@ module deployJumpBox 'jump-box.bicep' = {
   scope: resourceGroup()
   params: {
     location: location
+    baseName: baseName
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     jumpBoxSubnetName: deployVirtualNetwork.outputs.jumpBoxSubnetName
