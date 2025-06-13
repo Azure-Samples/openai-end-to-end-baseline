@@ -17,7 +17,7 @@ param logAnalyticsWorkspaceName string
 @minLength(1)
 param privateEndpointSubnetResourceId string
 
-@description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')
+@description('Assign your user some roles to support access to the Azure AI Foundry Agent dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
 param debugUserPrincipalId string

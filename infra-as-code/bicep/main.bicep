@@ -103,9 +103,9 @@ module deployJumpBox 'jump-box.bicep' = {
   ]
 }
 
-// Deploy the Azure AI Foundry account and Azure AI Agent service components.
+// Deploy the Azure AI Foundry account and Azure AI Foundry Agent service components.
 
-@description('Deploy Azure AI Foundry with Azure AI Agent capability. No projects yet deployed.')
+@description('Deploy Azure AI Foundry with Azure AI Foundry Agent capability. No projects yet deployed.')
 module deployAzureAIFoundry 'ai-foundry.bicep' = {
   scope: resourceGroup()
   params: {
@@ -121,7 +121,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
   ]
 }
 
-@description('Deploys the Azure AI Agent dependencies, Azure Storage, Azure AI Search, and Cosmos DB.')
+@description('Deploys the Azure AI Foundry Agent dependencies, Azure Storage, Azure AI Search, and Cosmos DB.')
 module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
   scope: resourceGroup()
   params: {
@@ -133,7 +133,7 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
   }
 }
 
-@description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Agent service.')
+@description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Foundry Agent service.')
 module deployBingAccount 'bing-grounding.bicep' = {
   scope: resourceGroup()
   params: {
@@ -141,7 +141,7 @@ module deployBingAccount 'bing-grounding.bicep' = {
   }
 }
 
-@description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Azure AI Agent service.')
+@description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Azure AI Foundry Agent service.')
 module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
   scope: resourceGroup()
   params: {
@@ -199,7 +199,7 @@ module deployApplicationInsights 'application-insights.bicep' = {
   }
 }
 
-@description('Deploy the web app for the front end demo UI. The web application will call into the Azure AI Agent service.')
+@description('Deploy the web app for the front end demo UI. The web application will call into the Azure AI Foundry Agent service.')
 module deployWebApp 'web-app.bicep' = {
   scope: resourceGroup()
   params: {

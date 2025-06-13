@@ -41,7 +41,7 @@ param existingWebAppDeploymentStorageAccountName string
 @minLength(1)
 param existingWebApplicationInsightsResourceName string
 
-@description('The name of the existing Azure AI Foundry instance that the the Azure Web App code will be calling for Azure AI Agent service agents.')
+@description('The name of the existing Azure AI Foundry instance that the the Azure Web App code will be calling for Azure AI Foundry Agent service agents.')
 @minLength(2)
 param existingAzureAiFoundryResourceName string
 
@@ -102,7 +102,7 @@ resource appServiceExistingPrivateDnsZone 'Microsoft.Network/privateDnsZones@202
   name: 'privatelink.azurewebsites.net'
 }
 
-@description('Existing Azure AI Foundry account. This account is where the agents hosted in Azure AI Agent service will be deployed. The web app code calls to these agents.')
+@description('Existing Azure AI Foundry account. This account is where the agents hosted in Azure AI Foundry Agent service will be deployed. The web app code calls to these agents.')
 resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
   name: existingAzureAiFoundryResourceName
 

@@ -8,19 +8,19 @@ param location string = resourceGroup().location
 @minLength(2)
 param existingAiFoundryName string
 
-@description('The existing Azure Cosmos DB account that is going to be used as the Azure AI Agent thread storage database (dependency).')
+@description('The existing Azure Cosmos DB account that is going to be used as the Azure AI Foundry Agent thread storage database (dependency).')
 @minLength(3)
 param existingCosmosDbAccountName string
 
-@description('The existing Azure Storage account that is going to be used as the Azure AI Agent blob store (dependency).')
+@description('The existing Azure Storage account that is going to be used as the Azure AI Foundry Agent blob store (dependency).')
 @minLength(3)
 param existingStorageAccountName string
 
-@description('The existing Azure AI Search account that is going to be used as the Azure AI Agent vector store (dependency).')
+@description('The existing Azure AI Search account that is going to be used as the Azure AI Foundry Agent vector store (dependency).')
 @minLength(1)
 param existingAISearchAccountName string
 
-@description('The existing Bing grounding data account that is available to Azure AI Agent agents in this project.')
+@description('The existing Bing grounding data account that is available to Azure AI Foundry Agent agents in this project.')
 @minLength(1)
 param existingBingAccountName string
 
@@ -147,11 +147,11 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       type: 'SystemAssigned'
     }
     properties: {
-      description: 'Chat using internet data in your Azure AI Agent.'
+      description: 'Chat using internet data in your Azure AI Foundry Agent.'
       displayName: 'Chat with Internet Data'
     }
 
-    @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Agent service.')
+    @description('Create project connection to CosmosDB (thread storage); dependency for Azure AI Foundry Agent service.')
     resource threadStorageConnection 'connections' = {
       name: cosmosDbAccount.name
       properties: {
@@ -169,7 +169,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    @description('Create project connection to the Azure Storage account; dependency for Azure AI Agent service.')
+    @description('Create project connection to the Azure Storage account; dependency for Azure AI Foundry Agent service.')
     resource storageConnection 'connections' = {
       name: agentStorageAccount.name
       properties: {
@@ -189,7 +189,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    @description('Create project connection to Azure AI Search; dependency for Azure AI Agent service.')
+    @description('Create project connection to Azure AI Search; dependency for Azure AI Foundry Agent service.')
     resource aiSearchConnection 'connections' = {
       name: azureAISearchService.name
       properties: {
@@ -231,8 +231,8 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
       ]
     }
 
-    
-    @description('Create the Azure AI Agent service.')
+
+    @description('Create the Azure AI Foundry Agent service.')
     resource aiAgentService 'capabilityHosts' = {
       name: 'projectagents'
       properties: {
@@ -265,7 +265,7 @@ resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' exi
         isSharedToAll: false
       }
       dependsOn: [
-        aiAgentService  // Deploy after the Azure AI Agent service is provisioned, not a dependency.
+        aiAgentService  // Deploy after the Azure AI Foundry Agent service is provisioned, not a dependency.
       ]
     }
   }
@@ -295,7 +295,7 @@ resource projectBlobDataContributorAssignment 'Microsoft.Authorization/roleAssig
 
 resource projectBlobDataOwnerConditionalAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(aiFoundry::project.id, storageBlobDataOwnerRole.id, agentStorageAccount.id)
-  scope: agentStorageAccount  
+  scope: agentStorageAccount
   properties: {
     principalId: aiFoundry::project.identity.principalId
     roleDefinitionId: storageBlobDataOwnerRole.id

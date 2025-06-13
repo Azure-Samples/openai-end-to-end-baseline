@@ -13,7 +13,7 @@ param baseName string
 @minLength(4)
 param logAnalyticsWorkspaceName string
 
-@description('Assign your user some roles to support access to the Azure AI Agent dependencies for troubleshooting post deployment')
+@description('Assign your user some roles to support access to the Azure AI Foundry Agent dependencies for troubleshooting post deployment')
 @maxLength(36)
 @minLength(36)
 param debugUserPrincipalId string
@@ -40,7 +40,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 // ---- New resources ----
 
-@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Azure AI Agent service. It\'s used to store threads and agent definitions.')
+@description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Azure AI Foundry Agent service. It\'s used to store threads and agent definitions.')
 resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2024-12-01-preview' = {
   name: 'cdb-ai-agent-threads-${baseName}'
   location: location
