@@ -4,6 +4,11 @@ targetScope = 'resourceGroup'
 @minLength(1)
 param location string = resourceGroup().location
 
+@description('This is the base name for each Azure resource name (6-8 chars)')
+@minLength(6)
+@maxLength(8)
+param baseName string
+
 @description('The name of the virtual network in this resource group.')
 @minLength(1)
 param virtualNetworkName string
@@ -70,7 +75,7 @@ resource bastionPublicIp 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
     }
     deleteOption: 'Delete'
     dnsSettings: {
-      domainNameLabel: bastionHostName
+      domainNameLabel: '${bastionHostName}-${baseName}'
     }
     publicIPAddressVersion: 'IPv4'
     publicIPAllocationMethod: 'Static'
