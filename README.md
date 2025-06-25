@@ -29,6 +29,20 @@ The implementation covers the following scenarios:
 
 Azure AI Foundry hosts Azure AI Foundry Agent Service as a capability. Foundry Agent service's REST APIs are exposed as an AI Foundry private endpoint within the network, and the agents' all egress through a delegated subnet which is routed through Azure Firewall for any internet traffic. This architecture deploys the Foundry Agent Service with its dependencies hosted within your own Azure subscription. As such, this architecture includes an Azure Storage account, Azure AI Search instance, and an Azure Cosmos DB account specifically for the Foundry Agent Service to manage.
 
+![Diagram that shows a baseline end-to-end chat architecture that uses Azure AI Foundry.](docs/media/baseline-azure-ai-foundry.svg)
+
+*Download a [Visio file](docs/media/baseline-azure-ai-foundry.vsdx) of this architecture.*
+
+#### Workflow
+
+1. An application user interacts with a chat UI. The requests are routed through Azure Application Gateway. Azure Web Application Firewall inspects these requests before it forwards them to the back-end App Service.
+1. When the web application receives a user query or instruction, it invokes the purpose-built agent. The web application communicates with the agent via the Azure AI Agent SDK. The web application calls the agent over a private endpoint and authenticates to Azure AI Foundry by using its managed identity.
+1. The agent processes the user's request based on the instructions in its system prompt. To fulfill the user's intent, the agent uses a configured language model and connected tools and knowledge stores.
+1. The agent connects to the knowledge store (Azure AI Search) in the private network via a private endpoint.
+1. Requests to external knowledge stores or tools, such as Wikipedia or Bing, traverse Azure Firewall for inspection and egress policy enforcement.
+1. The agent connects to its configured language model and passes relevant context.
+1. Before the agent returns the response to the UI, it persists the request, the generated response, and a list of consulted knowledge stores into a dedicated memory database. This database maintains the complete conversation history, which enables context-aware interactions and allows users to resume conversations with the agent without losing prior context.
+
 ### Deploying an agent into Azure AI Foundry Agent service
 
 Agents can be created via the Azure AI Foundry portal, [Azure AI Persistent Agents client library](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/ai/Azure.AI.Agents.Persistent), or the [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiagents/). The creation and invocation of agents are a data plane operation. Since the data plane to Azure AI Foundry is private, all three of those are restricted to being executed from within a private network connected to the private endpoint of Azure AI Foundry.
