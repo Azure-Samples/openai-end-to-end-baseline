@@ -43,6 +43,7 @@ var varCuaid = 'a52aa8a8-44a8-46e9-b7a5-189ab3a64409'
 
 @description('Deploy an example set of Azure Policies to help you govern your workload. Expand the policy set as desired.')
 module applyAzurePolicies 'azure-policies.bicep' = {
+  name: 'policiesDeploy'
   scope: resourceGroup()
   params: {
     baseName: baseName
@@ -69,6 +70,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 
 @description('Deploy Virtual Network, with subnets, NSGs, and DDoS Protection.')
 module deployVirtualNetwork 'network.bicep' = {
+  name: 'networkDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -77,6 +79,7 @@ module deployVirtualNetwork 'network.bicep' = {
 
 @description('Control egress traffic through Azure Firewall restrictions.')
 module deployAzureFirewall 'azure-firewall.bicep' = {
+  name: 'azureFirewallDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -89,6 +92,7 @@ module deployAzureFirewall 'azure-firewall.bicep' = {
 
 @description('Deploys Azure Bastion and the jump box, which is used for private access to Azure AI Foundry and its dependencies.')
 module deployJumpBox 'jump-box.bicep' = {
+  name: 'jumpBoxDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -108,6 +112,7 @@ module deployJumpBox 'jump-box.bicep' = {
 
 @description('Deploy Azure AI Foundry with Azure AI Foundry Agent capability. No projects yet deployed.')
 module deployAzureAIFoundry 'ai-foundry.bicep' = {
+  name: 'aiFoundryDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -124,6 +129,7 @@ module deployAzureAIFoundry 'ai-foundry.bicep' = {
 
 @description('Deploys the Azure AI Foundry Agent dependencies, Azure Storage, Azure AI Search, and Cosmos DB.')
 module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = {
+  name: 'aiAgentServiceDependenciesDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -136,6 +142,7 @@ module deployAIAgentServiceDependencies 'ai-agent-service-dependencies.bicep' = 
 
 @description('Deploy the Bing account for Internet grounding data to be used by agents in the Azure AI Foundry Agent Service.')
 module deployBingAccount 'bing-grounding.bicep' = {
+  name: 'bingGroundingDeploy'
   scope: resourceGroup()
   params: {
     baseName: baseName
@@ -144,6 +151,7 @@ module deployBingAccount 'bing-grounding.bicep' = {
 
 @description('Deploy the Azure AI Foundry project into the AI Foundry account. This is the project is the home of the Foundry Agent Service.')
 module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
+  name: 'aiFoundryProjectDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -163,6 +171,7 @@ module deployAzureAiFoundryProject 'ai-foundry-project.bicep' = {
 
 @description('Deploy an Azure Storage account that is used by the Azure Web App for the deployed application code.')
 module deployWebAppStorage 'web-app-storage.bicep' = {
+  name: 'webAppStorageDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -179,6 +188,7 @@ module deployWebAppStorage 'web-app-storage.bicep' = {
 
 @description('Deploy Azure Key Vault. In this architecture, it\'s used to store the certificate for the Application Gateway.')
 module deployKeyVault 'key-vault.bicep' = {
+  name: 'keyVaultDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -192,6 +202,7 @@ module deployKeyVault 'key-vault.bicep' = {
 
 @description('Deploy Application Insights. Used by the Azure Web App to monitor the deployed application and connected to the Azure AI Foundry project.')
 module deployApplicationInsights 'application-insights.bicep' = {
+  name: 'applicationInsightsDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -202,6 +213,7 @@ module deployApplicationInsights 'application-insights.bicep' = {
 
 @description('Deploy the web app for the front end demo UI. The web application will call into the Azure AI Foundry Agent Service.')
 module deployWebApp 'web-app.bicep' = {
+  name: 'webAppDeploy'
   scope: resourceGroup()
   params: {
     location: location
@@ -220,6 +232,7 @@ module deployWebApp 'web-app.bicep' = {
 
 @description('Deploy an Azure Application Gateway with WAF and a custom domain name + TLS cert.')
 module deployApplicationGateway 'application-gateway.bicep' = {
+  name: 'applicationGatewayDeploy'
   scope: resourceGroup()
   params: {
     location: location
