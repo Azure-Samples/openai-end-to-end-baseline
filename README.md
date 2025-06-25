@@ -223,7 +223,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    $BING_CONNECTION_NAME="bingaiagent"
    $AI_FOUNDRY_PROJECT_NAME="projchat"
    $MODEL_CONNECTION_NAME="agent-model"
-   $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${$AI_FOUNDRY_PROJECT_NAME}$/connections/${BING_CONNECTION_NAME}"
+   $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${AI_FOUNDRY_PROJECT_NAME}/connections/${BING_CONNECTION_NAME}"
    $AI_FOUNDRY_AGENT_CREATE_URL="https://${AI_FOUNDRY_NAME}.services.ai.azure.com/api/projects/${AI_FOUNDRY_PROJECT_NAME}/assistants?api-version=2025-05-15-preview"
 
    echo $BING_CONNECTION_ID
