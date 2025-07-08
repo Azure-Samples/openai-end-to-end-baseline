@@ -220,7 +220,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    ```powershell
    $RESOURCE_GROUP="rg-chat-baseline-${BASE_NAME}"
    $AI_FOUNDRY_NAME="aif${BASE_NAME}"
-   $BING_CONNECTION_NAME="bingaiagent"
+   $BING_CONNECTION_NAME="bingaiagent${BASE_NAME}"
    $AI_FOUNDRY_PROJECT_NAME="projchat"
    $MODEL_CONNECTION_NAME="agent-model"
    $BING_CONNECTION_ID="$(az cognitiveservices account show -n $AI_FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${AI_FOUNDRY_PROJECT_NAME}/connections/${BING_CONNECTION_NAME}"
