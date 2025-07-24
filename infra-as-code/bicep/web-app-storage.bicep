@@ -61,7 +61,7 @@ resource appDeployStorage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   name: 'stwebapp${baseName}'
   location: location
   sku: {
-    name: 'Standard_ZRS'
+    name: 'Standard_ZRS'  // This SKU has limited regional availability https://github.com/MicrosoftDocs/azure-docs/blob/main/includes/storage-redundancy-standard-zrs.md, if you would like to deploy this implementation to a region outside this list, you'll need to choose a storage SKU that is supported but still meets your workload's non-functional requirements.
   }
   kind: 'StorageV2'
   properties: {
