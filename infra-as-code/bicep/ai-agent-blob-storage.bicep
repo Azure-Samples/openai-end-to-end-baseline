@@ -43,7 +43,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   name: 'stagent${baseName}'
   location: location
   sku: {
-    name: 'Standard_GZRS'
+    name: 'Standard_GZRS'  // This SKU has limited regional availability https://github.com/MicrosoftDocs/azure-docs/blob/main/includes/storage-redundancy-standard-gzrs.md, if you would like to deploy this implementation to a region outside this list, you'll need to choose a storage SKU that is supported but still meets your workload's non-functional requirements.
   }
   kind: 'StorageV2'
   properties: {

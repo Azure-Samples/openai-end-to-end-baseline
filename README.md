@@ -81,7 +81,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - `Microsoft.Storage`
     - `Microsoft.Web`
 
-  - The subscription must have the following quota available in the region you choose.
+  - The subscription must have the following quota and SKU availability in the region you choose.
 
     - Application Gateways: 1 WAF_v2 tier instance
     - App Service Plans: P1v3 (AZ), 3 instances
@@ -91,7 +91,9 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - DDoS Protection Plans: 1
     - Public IPv4 Addresses - Standard: 4
     - Standard DSv3 Family vCPU: 2
-    - Storage Accounts: 2
+    - Grounding with Bing (G1): 1
+    - Storage Account (Standard_ZRS): 1
+    - Storage Account (Standard_GZRS): 1
 
 - Your deployment user must have the following permissions at the subscription scope.
 
