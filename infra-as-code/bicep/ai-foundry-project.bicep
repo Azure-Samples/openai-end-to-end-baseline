@@ -137,7 +137,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing
 // ---- New resources ----
 
 @description('Existing Azure AI Foundry account. The project will be created as a child resource of this account.')
-resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing  = {
+resource aiFoundry 'Microsoft.CognitiveServices/accounts@2025-06-01' existing  = {
   name: existingAiFoundryName
 
   resource project 'projects' = {
