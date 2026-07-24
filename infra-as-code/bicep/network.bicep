@@ -463,6 +463,23 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
         }
       }
       {
+        name: 'Agents.Out.Allow.McpServers'
+        properties: {
+          description: 'Allow Foundry agents to reach private MCP servers in the workload virtual network.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRanges: [
+            '443'
+            '31443'
+          ]
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 110
+          direction: 'Outbound'
+        }
+      }
+      {
         name: 'Agents.Out.AllowTcp443.Internet'
         properties: {
           description: 'Allow outbound traffic from the Foundry Agent egress subnet to Internet on 443 (Azure firewall to filter further)'
@@ -472,7 +489,7 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
           sourceAddressPrefix: aiAgentsEgressSubnetPrefix
           destinationAddressPrefix: 'Internet'
           access: 'Allow'
-          priority: 110
+          priority: 120
           direction: 'Outbound'
         }
       }
@@ -500,6 +517,23 @@ resource mcpServersSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01
   location: location
   properties: {
     securityRules: [
+      {
+        name: 'McpServers.In.Allow.Https.FromAgents'
+        properties: {
+          description: 'Allow Foundry agents to reach private MCP servers through the internal Container Apps load balancer.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRanges: [
+            '443'
+            '31443'
+          ]
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
       {
         name: 'McpServers.In.Allow.LoadBalancer'
         properties: {
