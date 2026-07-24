@@ -20,6 +20,7 @@ var jumpBoxSubnetPrefix = '192.168.2.128/28'
 var aiAgentsEgressSubnetPrefix = '192.168.3.0/24'
 var azureFirewallSubnetPrefix = '192.168.4.0/26'
 var azureFirewallManagementSubnetPrefix = '192.168.4.64/26'
+var mcpServersSubnetPrefix = '192.168.5.0/24'
 
 var enableDdosProtection = false // Production readiness change: protect your public IPs in this architecture with DDoS protection by setting this to true.
 
@@ -35,7 +36,7 @@ resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' =
   properties: {}
 }
 
-@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, and Foundry Agents Service.')
+@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, Foundry Agent Service, and private MCP servers.')
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
   name: 'vnet-workload'
   location: location
@@ -175,6 +176,24 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
         }
       }
       {
+        // Reserved subnet for a private Azure Container Apps environment that hosts MCP servers
+        name: 'snet-mcpServers'
+        properties: {
+          addressPrefix: mcpServersSubnetPrefix
+          delegations: [
+            {
+              name: 'Microsoft.App/environments'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false // Prevent implicit outbound access from the reserved subnet.
+        }
+      }
+      {
         // Workload firewall for all egress traffic
         name: 'AzureFirewallSubnet'
         properties: {
@@ -221,6 +240,10 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
 
   resource agentsEgressSubnet 'subnets' existing = {
     name: 'snet-agentsEgress'
+  }
+
+  resource mcpServersSubnet 'subnets' existing = {
+    name: 'snet-mcpServers'
   }
 }
 
@@ -888,6 +911,12 @@ output agentsEgressSubnetName string = virtualNetwork::agentsEgressSubnet.name
 
 @description('The resource ID of the Foundry Agents Service egress subnet.')
 output agentsEgressSubnetResourceId string = virtualNetwork::agentsEgressSubnet.id
+
+@description('The name of the subnet reserved for private MCP servers.')
+output mcpServersSubnetName string = virtualNetwork::mcpServersSubnet.name
+
+@description('The resource ID of the subnet reserved for private MCP servers.')
+output mcpServersSubnetResourceId string = virtualNetwork::mcpServersSubnet.id
 
 @description('The resource ID of the private endpoints subnet.')
 output privateEndpointsSubnetResourceId string = virtualNetwork::privateEndpointsSubnet.id
