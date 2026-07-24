@@ -193,7 +193,10 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
           }
           privateEndpointNetworkPolicies: 'Disabled'
           privateLinkServiceNetworkPolicies: 'Enabled'
-          defaultOutboundAccess: false // Prevent implicit outbound access from the reserved subnet.
+          defaultOutboundAccess: false // Force private MCP server traffic through the firewall.
+          routeTable: {
+            id: egressRouteTable.id
+          }
         }
       }
       {

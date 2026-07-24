@@ -86,6 +86,7 @@ module deployAzureFirewall 'azure-firewall.bicep' = {
     logAnalyticsWorkspaceName: logAnalyticsWorkspace.name
     virtualNetworkName: deployVirtualNetwork.outputs.virtualNetworkName
     agentsEgressSubnetName: deployVirtualNetwork.outputs.agentsEgressSubnetName
+    mcpServersSubnetName: deployVirtualNetwork.outputs.mcpServersSubnetName
     jumpBoxesSubnetName: deployVirtualNetwork.outputs.jumpBoxesSubnetName
   }
 }
