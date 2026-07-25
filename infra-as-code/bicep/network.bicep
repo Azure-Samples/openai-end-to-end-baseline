@@ -543,7 +543,7 @@ resource mcpServersSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01
           description: 'Allow Azure Load Balancer health probes for a future Container Apps environment.'
           protocol: 'Tcp'
           sourcePortRange: '*'
-          destinationPortRange: '30000-32767'
+          destinationPortRange: '30000-32767' // Production readiness change: after the Container Apps environment is created, narrow this range to its two immutable load-balancer probe ports.
           sourceAddressPrefix: 'AzureLoadBalancer'
           destinationAddressPrefix: mcpServersSubnetPrefix
           access: 'Allow'
