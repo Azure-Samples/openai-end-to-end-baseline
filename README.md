@@ -248,10 +248,12 @@ The AI agent definition would likely be deployed from your application's pipelin
    $chat_agent.definition.model = $MODEL_CONNECTION_NAME
    $chat_agent.definition.tools[0].bing_grounding.search_configurations[0].project_connection_id = $BING_CONNECTION_ID
 
-   $chat_agent | ConvertTo-Json -Depth 10 | Set-Content .\chat-with-bing-output.json
+   $AGENT_BODY = $chat_agent | ConvertTo-Json -Depth 10 -Compress
+   $AGENT_BODY = $AGENT_BODY -replace '":','": '
+   $AGENT_BODY = $AGENT_BODY.Replace('"','\"')
 
    # Persist the agent
-   az rest -u $FOUNDRY_AGENT_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
+   az rest -u $FOUNDRY_AGENT_URL -m "post" --resource "https://ai.azure.com" -b $AGENT_BODY
 
    # Capture the agent's name and latest version
    $AGENT_RESPONSE=$(az rest -u $FOUNDRY_AGENT_URL -m 'get' --resource 'https://ai.azure.com' -o json)
