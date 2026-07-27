@@ -88,7 +88,7 @@ Follow these instructions to deploy this example to your Azure subscription, try
     - App Service Plans: P1v3 (AZ), 3 instances
     - Azure AI Search (S - Standard): 1
     - Azure Cosmos DB: 1 account
-    - OpenAI model: GPT-4.1 model deployment with 50k tokens per minute (TPM) capacity
+    - OpenAI model: GPT-5.4 model deployment with 50k tokens per minute (TPM) capacity
     - DDoS Protection Plans: 1
     - Public IPv4 Addresses - Standard: 4
     - Standard DSv3 Family vCPU: 2
@@ -227,7 +227,7 @@ The AI agent definition would likely be deployed from your application's pipelin
    $FOUNDRY_PROJECT_NAME="projchat"
    $MODEL_CONNECTION_NAME="agent-model"
    $BING_CONNECTION_ID="$(az cognitiveservices account show -n $FOUNDRY_NAME -g $RESOURCE_GROUP --query 'id' --out tsv)/projects/${FOUNDRY_PROJECT_NAME}/connections/${BING_CONNECTION_NAME}"
-   $FOUNDRY_AGENT_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/agents?api-version=2025-11-15-preview"
+   $FOUNDRY_AGENT_URL="https://${FOUNDRY_NAME}.services.ai.azure.com/api/projects/${FOUNDRY_PROJECT_NAME}/agents?api-version=v1"
 
    echo $BING_CONNECTION_ID
    echo $MODEL_CONNECTION_NAME
@@ -248,10 +248,12 @@ The AI agent definition would likely be deployed from your application's pipelin
    $chat_agent.definition.model = $MODEL_CONNECTION_NAME
    $chat_agent.definition.tools[0].bing_grounding.search_configurations[0].project_connection_id = $BING_CONNECTION_ID
 
-   $chat_agent | ConvertTo-Json -Depth 10 | Set-Content .\chat-with-bing-output.json
+   $AGENT_BODY = $chat_agent | ConvertTo-Json -Depth 10 -Compress
+   $AGENT_BODY = $AGENT_BODY -replace '":','": '
+   $AGENT_BODY = $AGENT_BODY.Replace('"','\"')
 
    # Persist the agent
-   az rest -u $FOUNDRY_AGENT_URL -m "post" --resource "https://ai.azure.com" -b @chat-with-bing-output.json
+   az rest -u $FOUNDRY_AGENT_URL -m "post" --resource "https://ai.azure.com" -b $AGENT_BODY
 
    # Capture the agent's name and latest version
    $AGENT_RESPONSE=$(az rest -u $FOUNDRY_AGENT_URL -m 'get' --resource 'https://ai.azure.com' -o json)
