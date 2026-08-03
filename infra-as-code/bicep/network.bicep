@@ -20,6 +20,7 @@ var jumpBoxSubnetPrefix = '192.168.2.128/28'
 var aiAgentsEgressSubnetPrefix = '192.168.3.0/24'
 var azureFirewallSubnetPrefix = '192.168.4.0/26'
 var azureFirewallManagementSubnetPrefix = '192.168.4.64/26'
+var mcpServersSubnetPrefix = '192.168.5.0/24'
 
 var enableDdosProtection = false // Production readiness change: protect your public IPs in this architecture with DDoS protection by setting this to true.
 
@@ -35,7 +36,7 @@ resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' =
   properties: {}
 }
 
-@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, and Foundry Agents Service.')
+@description('Virtual Network for the workload. Contains subnets for App Gateway, App Service Plan, Private Endpoints, Build Agents, Bastion Host, Jump Box, Foundry Agent Service, and private MCP servers.')
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
   name: 'vnet-workload'
   location: location
@@ -175,6 +176,30 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
         }
       }
       {
+        // Reserved subnet for a private Azure Container Apps environment that hosts MCP servers
+        name: 'snet-mcpServers'
+        properties: {
+          addressPrefix: mcpServersSubnetPrefix
+          delegations: [
+            {
+              name: 'Microsoft.App/environments'
+              properties: {
+                serviceName: 'Microsoft.App/environments'
+              }
+            }
+          ]
+          networkSecurityGroup: {
+            id: mcpServersSubnetNsg.id
+          }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Enabled'
+          defaultOutboundAccess: false // Force private MCP server traffic through the firewall.
+          routeTable: {
+            id: egressRouteTable.id
+          }
+        }
+      }
+      {
         // Workload firewall for all egress traffic
         name: 'AzureFirewallSubnet'
         properties: {
@@ -221,6 +246,10 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' = {
 
   resource agentsEgressSubnet 'subnets' existing = {
     name: 'snet-agentsEgress'
+  }
+
+  resource mcpServersSubnet 'subnets' existing = {
+    name: 'snet-mcpServers'
   }
 }
 
@@ -437,6 +466,23 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
         }
       }
       {
+        name: 'Agents.Out.Allow.McpServers'
+        properties: {
+          description: 'Allow Foundry agents to reach private MCP servers in the workload virtual network.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRanges: [
+            '443'
+            '31443'
+          ]
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 110
+          direction: 'Outbound'
+        }
+      }
+      {
         name: 'Agents.Out.AllowTcp443.Internet'
         properties: {
           description: 'Allow outbound traffic from the Foundry Agent egress subnet to Internet on 443 (Azure firewall to filter further)'
@@ -446,7 +492,7 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
           sourceAddressPrefix: aiAgentsEgressSubnetPrefix
           destinationAddressPrefix: 'Internet'
           access: 'Allow'
-          priority: 110
+          priority: 120
           direction: 'Outbound'
         }
       }
@@ -458,6 +504,200 @@ resource azureAiAgentServiceSubnetNsg 'Microsoft.Network/networkSecurityGroups@2
           sourcePortRange: '*'
           destinationPortRange: '*'
           sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
+}
+
+@description('The private MCP servers subnet NSG')
+resource mcpServersSubnetNsg 'Microsoft.Network/networkSecurityGroups@2025-07-01' = {
+  name: 'nsg-mcpServersSubnet'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'McpServers.In.Allow.Https.FromAgents'
+        properties: {
+          description: 'Allow Foundry agents to reach private MCP servers through the internal Container Apps load balancer.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRanges: [
+            '443'
+            '31443'
+          ]
+          sourceAddressPrefix: aiAgentsEgressSubnetPrefix
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'McpServers.In.Allow.LoadBalancer'
+        properties: {
+          description: 'Allow Azure Load Balancer health probes for a future Container Apps environment.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '30000-32767' // Production readiness change: after the Container Apps environment is created, narrow this range to its two immutable load-balancer probe ports.
+          sourceAddressPrefix: 'AzureLoadBalancer'
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 110
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'McpServers.In.Allow.IntraSubnet'
+        properties: {
+          description: 'Allow communication between resources in the Container Apps environment subnet.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 120
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'DenyAllInBound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationPortRange: '*'
+          destinationAddressPrefix: '*'
+          access: 'Deny'
+          priority: 1000
+          direction: 'Inbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.IntraSubnet'
+        properties: {
+          description: 'Allow communication between resources in the Container Apps environment subnet.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: mcpServersSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.PrivateEndpoints'
+        properties: {
+          description: 'Allow private MCP servers to reach workload services through private endpoints.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: privateEndpointsSubnetPrefix
+          access: 'Allow'
+          priority: 110
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.AzureDns'
+        properties: {
+          description: 'Allow the Container Apps environment to resolve DNS names through Azure DNS.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '53'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: '168.63.129.16'
+          access: 'Allow'
+          priority: 120
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.MicrosoftContainerRegistry'
+        properties: {
+          description: 'Allow Container Apps to pull platform images from Microsoft Artifact Registry.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: 'MicrosoftContainerRegistry'
+          access: 'Allow'
+          priority: 130
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.AzureFrontDoor'
+        properties: {
+          description: 'Allow the Azure Front Door dependency for Microsoft Artifact Registry.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: 'AzureFrontDoor.FirstParty'
+          access: 'Allow'
+          priority: 140
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.AzureActiveDirectory'
+        properties: {
+          description: 'Allow private MCP servers to authenticate by using managed identities.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: 'AzureActiveDirectory'
+          access: 'Allow'
+          priority: 150
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.Allow.AzureMonitor'
+        properties: {
+          description: 'Allow private MCP servers to send telemetry to Azure Monitor.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: 'AzureMonitor'
+          access: 'Allow'
+          priority: 160
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'McpServers.Out.AllowTcp443.Internet'
+        properties: {
+          description: 'Allow HTTPS egress through Azure Firewall for Container Apps platform and MCP server dependencies.'
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: mcpServersSubnetPrefix
+          destinationAddressPrefix: 'Internet'
+          access: 'Allow'
+          priority: 170
+          direction: 'Outbound'
+        }
+      }
+      {
+        name: 'DenyAllOutBound'
+        properties: {
+          description: 'Deny all other outbound traffic from the private MCP servers subnet.'
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: mcpServersSubnetPrefix
           destinationAddressPrefix: '*'
           access: 'Deny'
           priority: 1000
@@ -888,6 +1128,12 @@ output agentsEgressSubnetName string = virtualNetwork::agentsEgressSubnet.name
 
 @description('The resource ID of the Foundry Agents Service egress subnet.')
 output agentsEgressSubnetResourceId string = virtualNetwork::agentsEgressSubnet.id
+
+@description('The name of the subnet reserved for private MCP servers.')
+output mcpServersSubnetName string = virtualNetwork::mcpServersSubnet.name
+
+@description('The resource ID of the subnet reserved for private MCP servers.')
+output mcpServersSubnetResourceId string = virtualNetwork::mcpServersSubnet.id
 
 @description('The resource ID of the private endpoints subnet.')
 output privateEndpointsSubnetResourceId string = virtualNetwork::privateEndpointsSubnet.id

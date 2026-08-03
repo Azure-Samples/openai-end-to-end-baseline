@@ -16,6 +16,10 @@ param logAnalyticsWorkspaceName string
 @minLength(8)
 param agentsEgressSubnetName string
 
+@description('The name of the subnet reserved for private MCP servers. Must be in the same virtual network that is provided.')
+@minLength(8)
+param mcpServersSubnetName string
+
 @description('The name of the subnet containing your jump boxes. Must be in the same virtual network that is provided.')
 @minLength(8)
 param jumpBoxesSubnetName string
@@ -32,6 +36,10 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing 
 
   resource agentsEgressSubnet 'subnets' existing = {
     name: agentsEgressSubnetName
+  }
+
+  resource mcpServersSubnet 'subnets' existing = {
+    name: mcpServersSubnetName
   }
 
   resource jumpBoxesSubnet 'subnets' existing = {
@@ -100,6 +108,29 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2025-07-01' = {
       ruleCollections: [
         {
           ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+          name: 'mcp-platform-egress'
+          priority: 900
+          action: {
+            type: 'Allow'
+          }
+          rules: [
+            {
+              ruleType: 'NetworkRule'
+              name: 'allow-container-apps-platform'
+              ipProtocols: ['TCP']
+              sourceAddresses: ['${virtualNetwork::mcpServersSubnet.properties.addressPrefix}']
+              destinationAddresses: [
+                'MicrosoftContainerRegistry'
+                'AzureFrontDoor.FirstParty'
+                'AzureActiveDirectory'
+                'AzureMonitor'
+              ]
+              destinationPorts: ['443']
+            }
+          ]
+        }
+        {
+          ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
           name: 'jump-box-egress'
           priority: 1000
           action: {
@@ -126,6 +157,39 @@ resource azureFirewallPolicy 'Microsoft.Network/firewallPolicies@2025-07-01' = {
     properties: {
       priority: 300
       ruleCollections: [
+        {
+          ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+          name: 'mcp-server-egress'
+          priority: 900
+          action: {
+            type: 'Allow'
+          }
+          rules: [
+            {
+              ruleType: 'ApplicationRule'
+              name: 'allow-container-apps-dependencies'
+              protocols: [
+                {
+                  protocolType: 'Https'
+                  port: 443
+                }
+              ]
+              fqdnTags: []
+              webCategories: []
+              targetFqdns: [
+                'packages.aks.azure.com'
+                'acs-mirror.azureedge.net'
+                '*.identity.azure.net'
+                // 'api.example.org' // Add the public FQDNs that your MCP servers require.
+              ]
+              targetUrls: []
+              terminateTLS: false
+              sourceAddresses: ['${virtualNetwork::mcpServersSubnet.properties.addressPrefix}']
+              destinationAddresses: []
+              httpHeadersToInsert: []
+            }
+          ]
+        }
         {
           ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
           name: 'agent-egress'
