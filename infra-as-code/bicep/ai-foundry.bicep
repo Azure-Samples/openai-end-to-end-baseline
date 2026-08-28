@@ -46,7 +46,7 @@ resource azureOpenAiLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024
 }
 
 @description('Existing: Built-in Cognitive Services User role.')
-resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'a97b65f3-24c7-4388-baec-2e87135dc908'
   scope: subscription()
 }

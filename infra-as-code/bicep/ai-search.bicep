@@ -41,12 +41,12 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
   name: logAnalyticsWorkspaceName
 }
 
-resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
   scope: subscription()
 }
 
-resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
   scope: subscription()
 }

@@ -80,20 +80,20 @@ resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' exis
 }
 
 @description('Built-in Role: [Storage Blob Data Reader](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#storage-blob-data-reader)')
-resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource blobDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
   scope: subscription()
 }
 
 @description('Built-in Role: [Foundry User](https://learn.microsoft.com/azure/foundry/concepts/rbac-foundry#built-in-roles)')
-resource foundryUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource foundryUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '53ca6127-db72-4b80-b1b0-d745d6d5456d'
   scope: subscription()
 }
 
 // If your web app/API code is going to be creating agents dynamically, you will need to assign a role such as this to App Service managed identity.
 /*@description('Built-in Role: [Foundry Project Manager](https://learn.microsoft.com/azure/foundry/concepts/rbac-foundry#built-in-roles)')
-resource foundryProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource foundryProjectManagerRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'eadc314b-1a2d-4efa-be10-5d325db5065e'
   scope: subscription()
 }*/

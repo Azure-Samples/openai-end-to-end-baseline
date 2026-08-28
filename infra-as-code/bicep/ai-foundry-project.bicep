@@ -65,7 +65,7 @@ resource azureAISearchService 'Microsoft.Search/searchServices@2025-05-01' exist
 }
 
 // Storage Blob Data Owner Role
-resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
   scope: subscription()
 }

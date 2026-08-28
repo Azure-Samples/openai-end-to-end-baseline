@@ -38,13 +38,13 @@ resource cosmosDbLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06
 }
 
 // Cosmos DB Account Reader Role
-resource cosmosDbAccountReaderRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource cosmosDbAccountReaderRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'fbdf93bf-df7d-467e-a4d2-9458aa1360c8'
   scope: subscription()
 }
 
 // Cosmos DB Account Operator Role
-resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource cosmosDbOperatorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '230815da-be43-4aae-9cb4-875f7bd000aa'
   scope: subscription()
 }
