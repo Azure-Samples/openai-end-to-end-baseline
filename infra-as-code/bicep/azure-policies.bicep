@@ -82,7 +82,7 @@ resource storageDisableSharedKeyPolicy 'Microsoft.Authorization/policyDefinition
 // ---- New resources (Policy assignments) ----
 
 @description('Policy assignment to audit Azure AI Services resources and ensure key access is disabled for enhanced security.')
-resource aiServicesKeyAccessAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource aiServicesKeyAccessAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, aiServicesKeyAccessPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -99,7 +99,7 @@ resource aiServicesKeyAccessAssignment 'Microsoft.Authorization/policyAssignment
 }
 
 @description('Policy assignment to audit and restrict network access for Azure AI Services resources to improve security posture.')
-resource aiServicesNetworkAccessAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource aiServicesNetworkAccessAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, aiServicesNetworkAccessPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -116,7 +116,7 @@ resource aiServicesNetworkAccessAssignment 'Microsoft.Authorization/policyAssign
 }
 
 @description('Policy assignment to audit Cosmos DB accounts and ensure zone redundancy is configured for high availability.')
-resource cosmosDbZoneRedundantAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource cosmosDbZoneRedundantAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, cosmosDbZoneRedundantPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -133,7 +133,7 @@ resource cosmosDbZoneRedundantAssignment 'Microsoft.Authorization/policyAssignme
 }
 
 @description('Policy assignment to audit Cosmos DB accounts and ensure they use private endpoints for secure connectivity.')
-resource cosmosDbPrivateLinkAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource cosmosDbPrivateLinkAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, cosmosDbPrivateLinkPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -150,7 +150,7 @@ resource cosmosDbPrivateLinkAssignment 'Microsoft.Authorization/policyAssignment
 }
 
 @description('Policy assignment to audit Cosmos DB accounts and ensure local authentication methods are disabled for improved security.')
-resource cosmosDbDisableLocalAuthAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource cosmosDbDisableLocalAuthAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, cosmosDbDisableLocalAuthPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -167,7 +167,7 @@ resource cosmosDbDisableLocalAuthAssignment 'Microsoft.Authorization/policyAssig
 }
 
 @description('Policy assignment to audit Cosmos DB accounts and ensure public network access is disabled to enhance security.')
-resource cosmosDbDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource cosmosDbDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, cosmosDbDisablePublicNetworkPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -184,7 +184,7 @@ resource cosmosDbDisablePublicNetworkAssignment 'Microsoft.Authorization/policyA
 }
 
 @description('Policy assignment to audit Azure AI Search services and ensure public network access is disabled for enhanced security.')
-resource searchDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource searchDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, searchDisablePublicNetworkPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -201,7 +201,7 @@ resource searchDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAss
 }
 
 @description('Policy assignment to audit Azure AI Search services and ensure zone redundancy is configured for high availability.')
-resource searchZoneRedundantAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource searchZoneRedundantAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, searchZoneRedundantPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -218,7 +218,7 @@ resource searchZoneRedundantAssignment 'Microsoft.Authorization/policyAssignment
 }
 
 @description('Policy assignment to audit Azure AI Search services and ensure local authentication methods are disabled for improved security.')
-resource searchDisableLocalAuthAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource searchDisableLocalAuthAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, searchDisableLocalAuthPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -235,7 +235,7 @@ resource searchDisableLocalAuthAssignment 'Microsoft.Authorization/policyAssignm
 }
 
 @description('Policy assignment to audit Storage accounts and ensure public network access is disabled for enhanced security.')
-resource storageDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource storageDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, storageDisablePublicNetworkPolicy.id)
   scope: resourceGroup()
   properties: {
@@ -252,7 +252,7 @@ resource storageDisablePublicNetworkAssignment 'Microsoft.Authorization/policyAs
 }
 
 @description('Policy assignment to audit Storage accounts and ensure shared key access is prevented for improved security posture.')
-resource storageDisableSharedKeyAssignment 'Microsoft.Authorization/policyAssignments@2025-01-01' = {
+resource storageDisableSharedKeyAssignment 'Microsoft.Authorization/policyAssignments@2026-06-01' = {
   name: guid(resourceGroup().id, storageDisableSharedKeyPolicy.id)
   scope: resourceGroup()
   properties: {
