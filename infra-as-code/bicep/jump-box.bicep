@@ -135,7 +135,7 @@ resource azureDiagnosticsBastion 'Microsoft.Insights/diagnosticSettings@2021-05-
 }
 
 @description('Default VM Insights DCR rule, to be applied to the jump box.')
-resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2024-03-11' = {
   name: 'dcr-${jumpBoxName}'
   location: location
   kind: 'Windows'
