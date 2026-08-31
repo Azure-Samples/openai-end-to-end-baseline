@@ -208,10 +208,11 @@ resource azureDiagnosticsDcr 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
 }
 
 @description('The jump box virtual machine will only receive a private IP.')
-resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2025-07-01' = {
   name: 'nic-${jumpBoxName}'
   location: location
   properties: {
+    disableTcpStateTracking: false
     nicType: 'Standard'
     auxiliaryMode: 'None'
     auxiliarySku: 'None'
