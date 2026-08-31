@@ -114,9 +114,15 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2026-05-15-preview' exist
 // ---- New resources ----
 
 @description('Managed Identity for App Service')
-resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
+resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' = {
   name: 'id-${appName}'
   location: location
+  properties: {
+    isolationScope: 'Regional'
+    assignmentRestrictions: {
+      providers: ['Microsoft.Web', 'Microsoft.Authorization', 'Microsoft.CognitiveServices']
+    }
+  }
 }
 
 @description('Grant the App Service managed identity storage data reader role permissions')

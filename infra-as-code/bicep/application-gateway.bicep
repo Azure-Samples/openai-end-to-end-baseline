@@ -79,9 +79,15 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-0
 // ---- New resources ----
 
 // Managed Identity for App Gateway.
-resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
+resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' = {
   name: appGatewayManagedIdentityName
   location: location
+  properties: {
+    isolationScope: 'Regional'
+    assignmentRestrictions: {
+      providers: ['Microsoft.Network', 'Microsoft.KeyVault']
+    }
+  }
 }
 
 @description('Grant the Application Gateway managed identity Key Vault secrets user role permissions. This allows pulling certificates.')

@@ -25,9 +25,15 @@ param privateEndpointSubnetResourceId string
 // ---- New resources ----
 
 @description('The User Managed Identity for the Foundry project. Foundry will use this identity for all agent interactions with the connected dependencies.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' = {
   name: 'mi-agent-${baseName}'
   location: location
+  properties: {
+    isolationScope: 'Regional'
+    assignmentRestrictions: {
+      providers: ['Microsoft.Storage', 'Microsoft.DocumentDB', 'Microsoft.Search']
+    }
+  }
 }
 
 @description('Deploy Azure Storage account for the Foundry Agent Service (dependency). This is used for binaries uploaded within threads or as "knowledge" uploaded as part of an agent.')
