@@ -53,7 +53,7 @@ resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefini
 
 // ---- New resources ----
 
-resource azureAiSearchService 'Microsoft.Search/searchServices@2025-05-01' = {
+resource azureAiSearchService 'Microsoft.Search/searchServices@2026-03-01-preview' = {
   name: 'ais-ai-agent-vector-store-${baseName}'
   location: location
   identity: {

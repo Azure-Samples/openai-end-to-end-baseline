@@ -60,7 +60,7 @@ resource agentStorageAccount 'Microsoft.Storage/storageAccounts@2026-04-01' exis
   name: existingStorageAccountName
 }
 
-resource azureAISearchService 'Microsoft.Search/searchServices@2025-05-01' existing = {
+resource azureAISearchService 'Microsoft.Search/searchServices@2026-03-01-preview' existing = {
   name: existingAISearchAccountName
 }
 
