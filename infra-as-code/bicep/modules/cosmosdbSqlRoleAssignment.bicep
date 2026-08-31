@@ -30,7 +30,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-previ
 
 // ---- Role assignment ----
 @description('Assign the project\'s managed identity the ability to read and write data in this collection within enterprise_memory database.')
-resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2026-03-15' = {
+resource sqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2026-04-01-preview' = {
   name: guid(principalId, roleDefinitionId, existingCosmosDbName, existingCosmosCollectionTypeName)
   parent: cosmosDbAccount
   properties: {
