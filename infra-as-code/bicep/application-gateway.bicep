@@ -119,7 +119,7 @@ resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
 }
 
 //WAF policy definition
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2025-07-01' = {
   name: wafPolicyName
   location: location
   properties: {
