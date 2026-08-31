@@ -56,7 +56,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02
 // ---- New resources ----
 
 @description('Deploy an Azure Cosmos DB account. This is a BYO dependency for the Foundry Agent Service. It\'s used to store threads and agent definitions.')
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-03-15' = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-preview' = {
   name: 'cdb-ai-agent-threads-${baseName}'
   location: location
   kind: 'GlobalDocumentDB'
@@ -74,7 +74,15 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-03-15' = {
     virtualNetworkRules: []
     networkAclBypass: 'None'
     networkAclBypassResourceIds: []
-    // Removed diagnosticLogSettings due to BCP037: this API version does not allow that property on database account properties.
+    diagnosticLogSettings: {
+      enableFullTextQuery: 'True'
+    }
+    enableMaterializedViews: false
+    enableAllVersionsAndDeletesChangeFeed: false
+    softDeleteConfiguration: {
+      softDeletionEnabled: true
+      softDeleteRetentionPeriodInMinutes: 10080
+    }
     enableBurstCapacity: false
     locations: [
       {

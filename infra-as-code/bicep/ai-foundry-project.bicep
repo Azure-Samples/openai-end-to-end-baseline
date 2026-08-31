@@ -47,7 +47,7 @@ var workspaceIdAsGuid = '${substring(workspaceId, 0, 8)}-${substring(workspaceId
 var scopeAllContainers = '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroup().name}/providers/Microsoft.DocumentDB/databaseAccounts/${cosmosDbAccount.name}/dbs/enterprise_memory'
 
 @description('Existing Azure Cosmos DB account. Will be assigning Data Contributor role to the Foundry project\'s identity.')
-resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-03-15' existing = {
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-preview' existing = {
   name: existingCosmosDbAccountName
 
   @description('Built-in Cosmos DB Data Contributor role that can be assigned to Entra identities to grant data access on a Cosmos DB database.')
