@@ -48,7 +48,7 @@ resource blobStorageLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024
   name: 'privatelink.blob.${environment().suffixes.storage}'
 }
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 

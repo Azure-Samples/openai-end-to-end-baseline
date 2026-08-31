@@ -37,7 +37,7 @@ resource aiSearchLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06
   name: 'privatelink.search.windows.net'
 }
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 

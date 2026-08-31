@@ -75,7 +75,7 @@ resource webAppDeploymentStorageAccount 'Microsoft.Storage/storageAccounts@2026-
   name: existingWebAppDeploymentStorageAccountName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 

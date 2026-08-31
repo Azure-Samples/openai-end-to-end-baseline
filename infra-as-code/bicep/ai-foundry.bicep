@@ -52,7 +52,7 @@ resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022
 }
 
 @description('Existing: Log sink for Azure Diagnostics.')
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
