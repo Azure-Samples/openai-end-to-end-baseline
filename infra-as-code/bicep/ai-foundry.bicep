@@ -73,9 +73,6 @@ resource foundry 'Microsoft.CognitiveServices/accounts@2026-05-15-preview' = {
     customSubDomainName: foundryName
     allowProjectManagement: true // Foundry account + projects
     disableLocalAuth: true
-    foundryAutoUpgrade : {
-      mode: 'Disabled'
-    }
     networkAcls: {
       bypass: 'None'
       ipRules: []
