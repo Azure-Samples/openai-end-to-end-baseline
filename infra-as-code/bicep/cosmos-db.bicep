@@ -79,10 +79,6 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-previ
     }
     enableMaterializedViews: false
     enableAllVersionsAndDeletesChangeFeed: false
-    softDeleteConfiguration: {
-      softDeletionEnabled: true
-      softDeleteRetentionPeriodInMinutes: 10080
-    }
     enableBurstCapacity: false
     locations: [
       {
