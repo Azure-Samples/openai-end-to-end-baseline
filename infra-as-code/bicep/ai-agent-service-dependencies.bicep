@@ -31,7 +31,7 @@ resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentit
   properties: {
     isolationScope: 'Regional'
     assignmentRestrictions: {
-      providers: ['Microsoft.Storage', 'Microsoft.DocumentDB', 'Microsoft.Search']
+      providers: ['Microsoft.Storage', 'Microsoft.DocumentDB', 'Microsoft.Search', 'Microsoft.CognitiveServices']
     }
   }
 }
