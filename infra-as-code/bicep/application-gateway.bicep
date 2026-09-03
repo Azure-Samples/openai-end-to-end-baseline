@@ -58,11 +58,11 @@ resource webApp 'Microsoft.Web/sites@2025-03-01' existing = {
   name: appName
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' existing = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-03-01-preview' existing = {
   name: keyVaultName
 
   resource kvsGatewayPublicCert 'secrets' existing = {
@@ -71,7 +71,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' existing = {
 }
 
 @description('Built-in Role: [Key Vault Secrets User](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#key-vault-secrets-user)')
-resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '4633458b-17de-408a-b874-0445c86b69e6'
   scope: subscription()
 }
@@ -79,9 +79,15 @@ resource keyVaultSecretsUserRole 'Microsoft.Authorization/roleDefinitions@2022-0
 // ---- New resources ----
 
 // Managed Identity for App Gateway.
-resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
+resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' = {
   name: appGatewayManagedIdentityName
   location: location
+  properties: {
+    isolationScope: 'Regional'
+    assignmentRestrictions: {
+      providers: ['Microsoft.Network/applicationGateways']
+    }
+  }
 }
 
 @description('Grant the Application Gateway managed identity Key Vault secrets user role permissions. This allows pulling certificates.')
@@ -113,7 +119,7 @@ resource appGatewayPublicIp 'Microsoft.Network/publicIPAddresses@2025-07-01' = {
 }
 
 //WAF policy definition
-resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2024-05-01' = {
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2025-07-01' = {
   name: wafPolicyName
   location: location
   properties: {

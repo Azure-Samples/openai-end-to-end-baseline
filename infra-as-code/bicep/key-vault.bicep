@@ -39,7 +39,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing 
   }
 }
 
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
@@ -50,7 +50,7 @@ resource existingKeyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-
 
 // ---- New resources ----
 
-resource keyVault 'Microsoft.KeyVault/vaults@2026-02-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2026-03-01-preview' = {
   name: 'kv-${baseName}'
   location: location
   properties: {

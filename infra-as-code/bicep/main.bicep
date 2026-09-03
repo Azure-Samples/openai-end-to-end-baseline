@@ -51,7 +51,7 @@ module applyAzurePolicies 'azure-policies.bicep' = {
 }
 
 @description('This is the log sink for all Azure Diagnostics in the workload.')
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' = {
   name: 'log-workload'
   location: location
   properties: {

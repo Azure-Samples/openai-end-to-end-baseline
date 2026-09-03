@@ -30,7 +30,7 @@ var enableDdosProtection = false // Production readiness change: protect your pu
 // Cost optimization: DDoS protection plans are relatively expensive. If deploying this as part of
 // a POC and your environment can be down during a targeted DDoS attack, consider not deploying
 // this resource by setting `enableDdosProtection` to false.
-resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2024-01-01' = if (enableDdosProtection) {
+resource ddosProtectionPlan 'Microsoft.Network/ddosProtectionPlans@2025-07-01' = if (enableDdosProtection) {
   name: 'ddos-workload'
   location: location
   properties: {}

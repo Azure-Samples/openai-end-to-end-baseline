@@ -9,6 +9,6 @@
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Agents.AI.Foundry" Version="1.0.0-*" />
+    <PackageReference Include="Microsoft.Agents.AI.Foundry" Version="1.20.0-preview.260831.1" />
   </ItemGroup>
 </Project>

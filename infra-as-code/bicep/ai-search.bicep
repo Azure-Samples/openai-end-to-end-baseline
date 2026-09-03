@@ -29,7 +29,7 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
@@ -37,23 +37,23 @@ resource aiSearchLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024-06
   name: 'privatelink.search.windows.net'
 }
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
-resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource azureAISearchIndexDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '8ebe5a00-799e-43f5-93ac-243d3dce84a7'
   scope: subscription()
 }
 
-resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource azureAISearchServiceContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: '7ca78c08-252a-4471-8644-bb5ff32d4ba0'
   scope: subscription()
 }
 
 // ---- New resources ----
 
-resource azureAiSearchService 'Microsoft.Search/searchServices@2025-05-01' = {
+resource azureAiSearchService 'Microsoft.Search/searchServices@2026-03-01-preview' = {
   name: 'ais-ai-agent-vector-store-${baseName}'
   location: location
   identity: {

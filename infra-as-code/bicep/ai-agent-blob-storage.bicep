@@ -29,17 +29,17 @@ param existingAgentUserManagedIdentityName string
 // ---- Existing resources ----
 
 @description('Existing User Managed Identity for the Foundry project.')
-resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
+resource agentUserManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-05-31-preview' existing = {
   name: existingAgentUserManagedIdentityName
 }
 
-resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b'
   scope: subscription()
 }
 
 // Storage Blob Data Contributor
-resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource storageBlobDataContributorRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
   scope: subscription()
 }
@@ -48,7 +48,7 @@ resource blobStorageLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024
   name: 'privatelink.blob.${environment().suffixes.storage}'
 }
 
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 

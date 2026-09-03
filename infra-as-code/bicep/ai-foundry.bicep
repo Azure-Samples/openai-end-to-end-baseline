@@ -46,20 +46,20 @@ resource azureOpenAiLinkedPrivateDnsZone 'Microsoft.Network/privateDnsZones@2024
 }
 
 @description('Existing: Built-in Cognitive Services User role.')
-resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+resource cognitiveServicesUserRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
   name: 'a97b65f3-24c7-4388-baec-2e87135dc908'
   scope: subscription()
 }
 
 @description('Existing: Log sink for Azure Diagnostics.')
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
 // ---- New resources ----
 
 @description('Deploy Microsoft Foundry (account) with Foundry Agent Service capability.')
-resource foundry 'Microsoft.CognitiveServices/accounts@2026-03-01' = {
+resource foundry 'Microsoft.CognitiveServices/accounts@2026-05-15-preview' = {
   name: foundryName
   location: location
   kind: 'AIServices'

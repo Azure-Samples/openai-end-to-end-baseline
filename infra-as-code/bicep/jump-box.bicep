@@ -53,7 +53,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2025-07-01' existing 
 }
 
 @description('Existing Log Analyitics workspace, used as the common log sink for the workload.')
-resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = {
+resource logWorkspace 'Microsoft.OperationalInsights/workspaces@2025-07-01' existing = {
   name: logAnalyticsWorkspaceName
 }
 
@@ -135,7 +135,7 @@ resource azureDiagnosticsBastion 'Microsoft.Insights/diagnosticSettings@2021-05-
 }
 
 @description('Default VM Insights DCR rule, to be applied to the jump box.')
-resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2023-03-11' = {
+resource virtualMachineInsightsDcr 'Microsoft.Insights/dataCollectionRules@2024-03-11' = {
   name: 'dcr-${jumpBoxName}'
   location: location
   kind: 'Windows'
@@ -208,10 +208,11 @@ resource azureDiagnosticsDcr 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
 }
 
 @description('The jump box virtual machine will only receive a private IP.')
-resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
+resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2025-07-01' = {
   name: 'nic-${jumpBoxName}'
   location: location
   properties: {
+    disableTcpStateTracking: false
     nicType: 'Standard'
     auxiliaryMode: 'None'
     auxiliarySku: 'None'
@@ -236,7 +237,7 @@ resource jumpBoxPrivateNic 'Microsoft.Network/networkInterfaces@2024-05-01' = {
 }
 
 @description('The Foundry portal is only able to be accessed from the virtual network, this jump box gives you access to that portal.')
-resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = {
+resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2026-03-01' = {
   name: 'vm-${jumpBoxName}'
   location: location
   zones: pickZones('Microsoft.Compute', 'virtualMachines', location, 1)
@@ -384,7 +385,7 @@ resource jumpBoxVirtualMachine 'Microsoft.Compute/virtualMachines@2024-11-01' = 
 }
 
 @description('Associate jump box with Azure Monitor Agent VM Insights DCR.')
-resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2023-03-11' = {
+resource jumpBoxDcrAssociation 'Microsoft.Insights/dataCollectionRuleAssociations@2024-03-11' = {
   name: 'dcra-vminsights'
   scope: jumpBoxVirtualMachine
   properties: {
