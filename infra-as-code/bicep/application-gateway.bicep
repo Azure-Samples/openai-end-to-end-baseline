@@ -85,7 +85,7 @@ resource appGatewayManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
   properties: {
     isolationScope: 'Regional'
     assignmentRestrictions: {
-      providers: ['Microsoft.Network', 'Microsoft.KeyVault']
+      providers: ['Microsoft.Network/applicationGateways']
     }
   }
 }

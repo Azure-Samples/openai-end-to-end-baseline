@@ -120,7 +120,7 @@ resource appServiceManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
   properties: {
     isolationScope: 'Regional'
     assignmentRestrictions: {
-      providers: ['Microsoft.Web', 'Microsoft.Authorization', 'Microsoft.CognitiveServices']
+      providers: ['Microsoft.Web/sites']
     }
   }
 }
