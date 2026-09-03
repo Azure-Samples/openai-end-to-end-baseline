@@ -75,7 +75,7 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2026-04-01-previ
     networkAclBypass: 'None'
     networkAclBypassResourceIds: []
     diagnosticLogSettings: {
-      enableFullTextQuery: 'True'
+      enableFullTextQuery: 'False'
     }
     enableMaterializedViews: false
     enableAllVersionsAndDeletesChangeFeed: false
